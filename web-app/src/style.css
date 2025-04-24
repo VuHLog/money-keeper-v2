@@ -3,57 +3,50 @@
 @tailwind utilities;
 
 @layer base {
-  html, body {
-    @apply h-full m-0 p-0;
+  /* Set height for root elements */
+  html {
+    @apply h-full w-full m-0 p-0;
+    height: 100%;
   }
   
   body {
-    @apply bg-background text-text;
+    @apply w-full m-0 p-0;
+    min-height: 100%;
+    height: auto !important;
+    background-color: #f2f2f7 !important;
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
   }
 
   #app {
-    @apply h-full;
+    @apply w-full;
+    min-height: 100%;
+    height: auto !important;
   }
 }
 
-/* Remove default styles */
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-}
-
+/* Remove all conflicting styles */
 :root {
   font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
   line-height: 1.5;
   font-weight: 400;
-
-  color-scheme: light dark;
-  color: rgba(255, 255, 255, 0.87);
-  background-color: #242424;
-
+  color-scheme: light;
+  /* Remove background-color from :root */
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
-a {
-  font-weight: 500;
-  color: #646cff;
-  text-decoration: inherit;
-}
-a:hover {
-  color: #535bf2;
+/* Remove these styles as they conflict with our layout */
+body {
+  min-width: 320px;
 }
 
-body {
+/* Keep only necessary app styles */
+#app {
+  width: 100%;
   margin: 0;
-  display: flex;
-  place-items: center;
-  min-width: 320px;
-  min-height: 100vh;
+  padding: 0;
 }
 
 h1 {
@@ -84,13 +77,6 @@ button:focus-visible {
   padding: 2em;
 }
 
-#app {
-  max-width: 1280px;
-  margin: 0 auto;
-  padding: 2rem;
-  text-align: center;
-}
-
 @media (prefers-color-scheme: light) {
   :root {
     color: #213547;
@@ -102,4 +88,20 @@ button:focus-visible {
   button {
     background-color: #f9f9f9;
   }
+}
+
+.date-picker-popper {
+  @apply !border-gray-200 !shadow-lg;
+}
+
+.el-picker-panel {
+  @apply !border-gray-200;
+}
+
+.el-date-picker__header {
+  @apply !text-text;
+}
+
+.el-date-table td.current:not(.disabled) span {
+  @apply !bg-primary !text-white;
 }

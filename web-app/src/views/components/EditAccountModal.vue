@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, watch } from 'vue'
+import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
 import { formatCurrency } from '@/utils/formatters'
 
@@ -18,13 +18,48 @@ const props = defineProps({
 const emit = defineEmits(['close', 'update'])
 
 const bankList = [
-  { id: 'vcb', name: 'Vietcombank' },
-  { id: 'tcb', name: 'Techcombank' },
-  { id: 'mb', name: 'MB Bank' },
-  { id: 'acb', name: 'ACB' },
-  { id: 'bidv', name: 'BIDV' },
-  { id: 'vtb', name: 'VietinBank' },
-  { id: 'other', name: 'Ngân hàng khác' }
+  { 
+    id: 'vcb', 
+    name: 'Vietcombank',
+    icon: 'building-columns',
+    color: 'text-[#1e4d2b]'
+  },
+  { 
+    id: 'tcb', 
+    name: 'Techcombank',
+    icon: 'building-columns',
+    color: 'text-[#f53b47]'
+  },
+  { 
+    id: 'mb', 
+    name: 'MB Bank',
+    icon: 'building-columns',
+    color: 'text-[#1414b3]'
+  },
+  { 
+    id: 'acb', 
+    name: 'ACB',
+    icon: 'building-columns',
+    color: 'text-[#0066b3]'
+  },
+  { 
+    id: 'bidv', 
+    name: 'BIDV',
+    icon: 'building-columns',
+    color: 'text-[#1e589d]'
+  },
+  { 
+    id: 'vtb', 
+    name: 'VietinBank',
+    icon: 'building-columns',
+    color: 'text-[#00529c]'
+  },
+  { 
+    id: 'other', 
+    name: 'Ngân hàng khác',
+    icon: 'building',
+    color: 'text-gray-400'
+  }
 ]
 
 const editingAccount = ref(null)
@@ -227,6 +262,30 @@ const filteredBanks = computed(() => {
   const query = bankSearchQuery.value.toLowerCase()
   return bankList.filter(bank => bank.name.toLowerCase().includes(query))
 })
+
+// Function để đóng tất cả dropdown khi click ra ngoài
+const handleClickOutside = (event) => {
+  // Xử lý dropdown loại tài khoản
+  const typeDropdownEl = document.querySelector('.edit-type-dropdown-container')
+  if (typeDropdownEl && !typeDropdownEl.contains(event.target) && isTypeDropdownOpen.value) {
+    isTypeDropdownOpen.value = false
+  }
+  
+  // Xử lý dropdown ngân hàng
+  const bankDropdownEl = document.querySelector('.edit-bank-dropdown-container')
+  if (bankDropdownEl && !bankDropdownEl.contains(event.target) && isBankDropdownOpen.value) {
+    isBankDropdownOpen.value = false
+  }
+}
+
+// Thêm và xóa event listener khi component được mount và unmount
+onMounted(() => {
+  document.addEventListener('mousedown', handleClickOutside)
+})
+
+onUnmounted(() => {
+  document.removeEventListener('mousedown', handleClickOutside)
+})
 </script>
 
 <template>
@@ -300,12 +359,13 @@ const filteredBanks = computed(() => {
               <input 
                 v-model="formattedBalance"
                 type="text"
-                class="w-full px-3 py-2 border border-gray-100 rounded-lg focus:outline-none focus:ring-1 focus:ring-primary/20"
+                class="w-full px-3 py-2 border border-gray-100 rounded-lg focus:outline-none focus:ring-1 focus:ring-primary/20 transition-colors"
                 :class="[
-                  errors.balance ? 'border-danger/50 focus:border-danger focus:ring-danger/20' : 'border-gray-100 focus:border-primary/50'
+
+                  errors.balance ? 'border-danger/50 focus:border-danger focus:ring-danger/20' : 'border-gray-100 focus:border-primary/50',
+                  formattedBalance ? 'bg-white' : 'bg-gray-50'
                 ]"
                 placeholder="0 ₫"
-                min="0"
               />
               <p v-if="errors.balance" class="mt-1 text-sm text-danger">
                 {{ errors.balance }}
@@ -319,9 +379,11 @@ const filteredBanks = computed(() => {
               <input 
                 v-model="newAccount.name"
                 type="text"
-                class="w-full px-3 py-2 border border-gray-100 rounded-lg focus:outline-none focus:ring-1 focus:ring-primary/20"
+                class="w-full px-3 py-2 border border-gray-100 rounded-lg focus:outline-none focus:ring-1 focus:ring-primary/20 transition-colors"
                 :class="[
-                  errors.name ? 'border-danger/50 focus:border-danger focus:ring-danger/20' : 'border-gray-100 focus:border-primary/50'
+
+                  errors.name ? 'border-danger/50 focus:border-danger focus:ring-danger/20' : 'border-gray-100 focus:border-primary/50',
+                  newAccount.name ? 'bg-white' : 'bg-gray-50'
                 ]"
                 placeholder="Nhập tên tài khoản"
               />
@@ -334,11 +396,12 @@ const filteredBanks = computed(() => {
               <label class="block text-sm font-medium text-text-secondary mb-1">
                 Loại tài khoản <span class="text-danger">*</span>
               </label>
-              <div class="relative">
+              <div class="relative edit-type-dropdown-container">
                 <!-- Selected Value Display -->
                 <div 
                   class="flex items-center w-full px-3 py-2 border border-gray-100 rounded-lg cursor-pointer hover:border-gray-200"
                   :class="[
+
                     {'ring-1 ring-primary/20 border-primary/50': isTypeDropdownOpen},
                     errors.type ? 'border-danger/50' : ''
                   ]"
@@ -389,7 +452,7 @@ const filteredBanks = computed(() => {
               <label class="block text-sm font-medium text-text-secondary mb-1">
                 Ngân hàng <span class="text-danger">*</span>
               </label>
-              <div class="relative">
+              <div class="relative edit-bank-dropdown-container">
                 <div 
                   class="flex items-center w-full px-3 py-2 border border-gray-100 rounded-lg cursor-pointer hover:border-gray-200"
                   :class="[
@@ -399,6 +462,12 @@ const filteredBanks = computed(() => {
                   @click="isBankDropdownOpen = !isBankDropdownOpen"
                 >
                   <div class="flex items-center flex-1">
+                    <font-awesome-icon 
+                      v-if="selectedBank.icon"
+                      :icon="['fas', selectedBank.icon]" 
+                      :class="selectedBank.color"
+                      class="mr-2"
+                    />
                     <span>{{ selectedBank.name }}</span>
                   </div>
                   <font-awesome-icon 
@@ -413,10 +482,12 @@ const filteredBanks = computed(() => {
                   class="absolute z-10 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg divide-y divide-gray-100"
                 >
                   <div class="p-2">
+                    <!-- Bank search input -->
                     <input
                       v-model="bankSearchQuery"
                       type="text"
-                      class="w-full px-3 py-2 border border-gray-100 rounded-lg focus:outline-none focus:ring-1 focus:ring-primary/20 focus:border-primary/50"
+                      class="w-full px-3 py-2 border border-gray-100 rounded-lg focus:outline-none focus:ring-1 focus:ring-primary/20 transition-colors"
+                      :class="bankSearchQuery ? 'bg-white' : 'bg-gray-50'"
                       placeholder="Tìm kiếm ngân hàng..."
                       @click.stop
                     />
@@ -426,13 +497,18 @@ const filteredBanks = computed(() => {
                       v-for="bank in filteredBanks" 
                       :key="bank.id"
                       class="flex items-center px-3 py-2 cursor-pointer hover:bg-gray-50"
-                      :class="{'bg-primary/5': bank.id === newAccount.value.bankId}"
+                      :class="{'bg-primary/5': bank.id === newAccount.bankId}"
                       @click="() => {
-                        newAccount.value.bankId = bank.id;
+                        newAccount.bankId = bank.id;
                         isBankDropdownOpen = false;
-                        bankSearchQuery.value = '';
+                        bankSearchQuery = '';
                       }"
                     >
+                      <font-awesome-icon 
+                        :icon="['fas', bank.icon]" 
+                        :class="bank.color"
+                        class="mr-2"
+                      />
                       <span>{{ bank.name }}</span>
                     </div>
                     <div 
@@ -456,12 +532,13 @@ const filteredBanks = computed(() => {
               <input 
                 v-model="formattedCreditLimit"
                 type="text"
-                class="w-full px-3 py-2 border border-gray-100 rounded-lg focus:outline-none focus:ring-1 focus:ring-primary/20"
+                class="w-full px-3 py-2 border border-gray-100 rounded-lg focus:outline-none focus:ring-1 focus:ring-primary/20 transition-colors"
                 :class="[
-                  errors.creditLimit ? 'border-danger/50 focus:border-danger focus:ring-danger/20' : 'border-gray-100 focus:border-primary/50'
+
+                  errors.creditLimit ? 'border-danger/50 focus:border-danger focus:ring-danger/20' : 'border-gray-100 focus:border-primary/50',
+                  formattedCreditLimit ? 'bg-white' : 'bg-gray-50'
                 ]"
                 placeholder="0 ₫"
-                min="0"
               />
               <p v-if="errors.creditLimit" class="mt-1 text-sm text-danger">
                 {{ errors.creditLimit }}
@@ -475,7 +552,8 @@ const filteredBanks = computed(() => {
               <input 
                 v-model="newAccount.description"
                 type="text"
-                class="w-full px-3 py-2 border border-gray-100 rounded-lg focus:outline-none focus:ring-1 focus:ring-primary/20 focus:border-primary/50"
+                class="w-full px-3 py-2 border border-gray-100 rounded-lg focus:outline-none focus:ring-1 focus:ring-primary/20 focus:border-primary/50 transition-colors"
+                :class="newAccount.description ? 'bg-white' : 'bg-gray-50'"
                 placeholder="Nhập diễn giải cho tài khoản"
               />
             </div>
@@ -501,4 +579,4 @@ const filteredBanks = computed(() => {
       </div>
     </div>
   </Teleport>
-</template> 
+</template>

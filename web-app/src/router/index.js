@@ -13,54 +13,54 @@ const routes = [
   {
     path: '/register',
     name: 'Register',
-    component: () => import('../views/auth/Register.vue')
+    component: () => import('@pages/auth/Register.vue')
   },
   {
     path: '/dashboard',
     name: 'Dashboard',
-    component: () => import('../views/Dashboard.vue'),
+    component: () => import('@pages/Dashboard.vue'),
     // meta: { requiresAuth: true }
   },
   {
     path: '/accounts',
     name: 'Accounts',
-    component: () => import('../views/Accounts.vue'),
+    component: () => import('@pages/Accounts.vue'),
     // meta: { requiresAuth: true }
   },
   {
     path: '/income',
     name: 'Income',
-    component: () => import('../views/Income.vue'),
+    component: () => import('@pages/Income.vue'),
     // meta: { requiresAuth: true }
   },
   {
     path: '/expense',
     name: 'Expense',
-    component: () => import('../views/Expense.vue'),
+    component: () => import('@pages/Expense.vue'),
     // meta: { requiresAuth: true }
   },
   {
     path: '/categories',
     name: 'Categories',
-    component: () => import('../views/Categories.vue'),
+    component: () => import('@pages/Categories.vue'),
     // meta: { requiresAuth: true }
   },
   {
     path: '/statistics',
     name: 'Statistics',
-    component: () => import('../views/Statistics.vue'),
+    component: () => import('@pages/Statistics.vue'),
     // meta: { requiresAuth: true }
   },
   {
     path: '/history',
     name: 'History',
-    component: () => import('../views/History.vue'),
+    component: () => import('@pages/History.vue'),
     // meta: { requiresAuth: true }
   },
   {
     path: '/profile',
     name: 'Profile',
-    component: () => import('../views/Profile.vue'),
+    component: () => import('@pages/Profile.vue'),
     // meta: { requiresAuth: true }
   }
 ]
