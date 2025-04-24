@@ -4,24 +4,29 @@ import { useRoute } from 'vue-router'
 import Header from '@/views/components/Header.vue'
 import Sidebar from '@/views/components/Sidebar.vue'
 
+// State management for sidebar and screen size
 const route = useRoute()
 const isSidebarOpen = ref(true)
 const isLargeScreen = ref(window.innerWidth >= 1024)
 
+// Check if route requires authentication
 const isAuthenticated = computed(() => {
   return route.meta.requiresAuth
 })
 
+// Toggle sidebar visibility
 const toggleSidebar = () => {
   isSidebarOpen.value = !isSidebarOpen.value
 }
 
+// Close sidebar on mobile when clicking outside
 const closeSidebar = () => {
   if (!isLargeScreen.value) {
     isSidebarOpen.value = false
   }
 }
 
+// Handle screen resize and update sidebar state
 const handleResize = () => {
   isLargeScreen.value = window.innerWidth >= 1024
   if (isLargeScreen.value) {
@@ -31,6 +36,7 @@ const handleResize = () => {
   }
 }
 
+// Lifecycle hooks for resize event listener
 onMounted(() => {
   handleResize()
   window.addEventListener('resize', handleResize)
@@ -42,9 +48,11 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <div class="h-full flex min-h-screen bg-background">
-    <div v-if="!isAuthenticated" class="flex-1 flex flex-col h-full">
-      <!-- Sidebar -->
+  <!-- Root container -->
+  <div class="min-h-screen bg-background flex">
+    <!-- Main layout container when not authenticated -->
+    <div v-if="!isAuthenticated" class="flex-1 flex flex-col w-full">
+      <!-- Sidebar component with responsive behavior -->
       <Sidebar 
         :is-open="isSidebarOpen" 
         class="fixed inset-y-0 left-0 z-50 transform transition-transform duration-300 ease-in-out"
@@ -54,14 +62,15 @@ onUnmounted(() => {
         }"
       />
 
-      <!-- Main Content -->
+      <!-- Main content area -->
       <div 
-        class="flex-1 flex flex-col h-full w-full transition-all duration-300 ease-in-out"
+        class="flex-1 flex flex-col w-full transition-all duration-300 ease-in-out"
         :class="{
           'lg:pl-64': isSidebarOpen && isLargeScreen,
           'lg:pl-16': !isSidebarOpen && isLargeScreen
         }"
       >
+        <!-- Fixed header with responsive padding -->
         <Header 
           @toggle-sidebar="toggleSidebar"
           class="fixed top-0 right-0 left-0 z-40 transition-all duration-300 ease-in-out"
@@ -71,16 +80,17 @@ onUnmounted(() => {
           }"
         />
         
-        <main class="flex-1 pt-16 min-h-full bg-background w-full">
-          <div class="h-full w-full px-4 sm:px-6 lg:px-8">
-            <div class="w-full max-w-full py-4">
+        <!-- Main content with router view -->
+        <main class="flex-1 pt-16 w-full bg-background">
+          <div class="w-full px-0 sm:px-1">
+            <div class="w-full py-4">
               <router-view />
             </div>
           </div>
         </main>
       </div>
 
-      <!-- Overlay for mobile -->
+      <!-- Mobile overlay for sidebar -->
       <div 
         v-if="isSidebarOpen && !isLargeScreen" 
         @click="closeSidebar"
@@ -88,29 +98,35 @@ onUnmounted(() => {
       ></div>
     </div>
     
+    <!-- Router view for authenticated routes -->
     <router-view v-else />
   </div>
 </template>
 
 <style>
+/* Import Tailwind CSS utilities */
 @import 'tailwindcss/base';
 @import 'tailwindcss/components';
 @import 'tailwindcss/utilities';
 
+/* Global styles for root elements */
 html, body {
-  @apply h-full m-0 p-0;
+  @apply min-h-screen w-full m-0 p-0 bg-background;
 }
 
+/* Base text styles */
 body {
-  @apply bg-background text-text;
+  @apply text-text;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
 }
 
+/* App container styles */
 #app {
-  @apply h-full;
+  @apply min-h-screen w-full bg-background;
 }
 
+/* Main content area styles */
 main {
-  min-height: calc(100vh - 4rem);
+  @apply w-full bg-background;
 }
 </style>

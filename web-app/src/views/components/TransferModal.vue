@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, watch } from 'vue'
+import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
 import { formatCurrency } from '@/utils/formatters'
 
@@ -147,6 +147,30 @@ const getAccountColor = (type) => {
       return 'text-text-secondary'
   }
 }
+
+// Function để đóng tất cả dropdown khi click ra ngoài
+const handleClickOutside = (event) => {
+  // Xử lý dropdown tài khoản nguồn
+  const fromDropdownEl = document.querySelector('.from-account-dropdown')
+  if (fromDropdownEl && !fromDropdownEl.contains(event.target) && isFromAccountDropdownOpen.value) {
+    isFromAccountDropdownOpen.value = false
+  }
+  
+  // Xử lý dropdown tài khoản đích
+  const toDropdownEl = document.querySelector('.to-account-dropdown')
+  if (toDropdownEl && !toDropdownEl.contains(event.target) && isToAccountDropdownOpen.value) {
+    isToAccountDropdownOpen.value = false
+  }
+}
+
+// Thêm và xóa event listener khi component được mount và unmount
+onMounted(() => {
+  document.addEventListener('mousedown', handleClickOutside)
+})
+
+onUnmounted(() => {
+  document.removeEventListener('mousedown', handleClickOutside)
+})
 </script>
 
 <template>
@@ -178,12 +202,15 @@ const getAccountColor = (type) => {
               <label class="block text-sm font-medium text-text-secondary mb-1">
                 Số tiền chuyển khoản <span class="text-danger">*</span>
               </label>
+              <!-- For Amount Input -->
               <input 
                 v-model="formattedTransferAmount"
                 type="text"
-                class="w-full px-3 py-2 border border-gray-100 rounded-lg focus:outline-none focus:ring-1 focus:ring-primary/20"
+                class="w-full px-3 py-2 border border-gray-100 rounded-lg focus:outline-none focus:ring-1 focus:ring-primary/20 transition-colors"
                 :class="[
-                  errors.amount ? 'border-danger/50 focus:border-danger focus:ring-danger/20' : 'border-gray-100 focus:border-primary/50'
+
+                  errors.amount ? 'border-danger/50 focus:border-danger focus:ring-danger/20' : 'border-gray-100 focus:border-primary/50',
+                  formattedTransferAmount ? 'bg-white' : 'bg-gray-50'
                 ]"
                 placeholder="0 ₫"
               />
@@ -197,10 +224,11 @@ const getAccountColor = (type) => {
               <label class="block text-sm font-medium text-text-secondary mb-1">
                 Tài khoản chuyển <span class="text-danger">*</span>
               </label>
-              <div class="relative">
+              <div class="relative from-account-dropdown">
                 <div 
                   class="w-full px-3 py-2 border border-gray-100 rounded-lg cursor-pointer hover:border-gray-200"
                   :class="[
+
                     {'ring-1 ring-primary/20 border-primary/50': isFromAccountDropdownOpen},
                     errors.fromAccount ? 'border-danger/50' : ''
                   ]"
@@ -234,6 +262,7 @@ const getAccountColor = (type) => {
                     :key="account.id"
                     class="flex items-center px-3 py-2 cursor-pointer hover:bg-gray-50"
                     :class="[
+
                       {'bg-primary/5': account.id === transferData.fromAccount?.id},
                       {'opacity-50 cursor-not-allowed': account.id === transferData.toAccount?.id}
                     ]"
@@ -263,10 +292,11 @@ const getAccountColor = (type) => {
               <label class="block text-sm font-medium text-text-secondary mb-1">
                 Tài khoản nhận <span class="text-danger">*</span>
               </label>
-              <div class="relative">
+              <div class="relative to-account-dropdown">
                 <div 
                   class="w-full px-3 py-2 border border-gray-100 rounded-lg cursor-pointer hover:border-gray-200"
                   :class="[
+
                     {'ring-1 ring-primary/20 border-primary/50': isToAccountDropdownOpen},
                     errors.toAccount ? 'border-danger/50' : ''
                   ]"
@@ -300,6 +330,7 @@ const getAccountColor = (type) => {
                     :key="account.id"
                     class="flex items-center px-3 py-2 cursor-pointer hover:bg-gray-50"
                     :class="[
+
                       {'bg-primary/5': account.id === transferData.toAccount?.id},
                       {'opacity-50 cursor-not-allowed': account.id === transferData.fromAccount?.id}
                     ]"
@@ -328,10 +359,12 @@ const getAccountColor = (type) => {
               <label class="block text-sm font-medium text-text-secondary mb-1">
                 Diễn giải
               </label>
+              <!-- For Description Input -->
               <input 
                 v-model="transferData.description"
                 type="text"
-                class="w-full px-3 py-2 border border-gray-100 rounded-lg focus:outline-none focus:ring-1 focus:ring-primary/20 focus:border-primary/50"
+                class="w-full px-3 py-2 border border-gray-100 rounded-lg focus:outline-none focus:ring-1 focus:ring-primary/20 focus:border-primary/50 transition-colors"
+                :class="transferData.description ? 'bg-white' : 'bg-gray-50'"
                 placeholder="Nhập diễn giải cho giao dịch"
               />
             </div>
@@ -357,4 +390,4 @@ const getAccountColor = (type) => {
       </div>
     </div>
   </Teleport>
-</template> 
+</template>
