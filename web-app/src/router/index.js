@@ -1,0 +1,84 @@
+import { createRouter, createWebHistory } from 'vue-router'
+
+const routes = [
+  {
+    path: '/',
+    redirect: '/login'
+  },
+  {
+    path: '/login',
+    name: 'Login',
+    component: () => import('../views/auth/Login.vue')
+  },
+  {
+    path: '/register',
+    name: 'Register',
+    component: () => import('../views/auth/Register.vue')
+  },
+  {
+    path: '/dashboard',
+    name: 'Dashboard',
+    component: () => import('../views/Dashboard.vue'),
+    // meta: { requiresAuth: true }
+  },
+  {
+    path: '/accounts',
+    name: 'Accounts',
+    component: () => import('../views/Accounts.vue'),
+    // meta: { requiresAuth: true }
+  },
+  {
+    path: '/income',
+    name: 'Income',
+    component: () => import('../views/Income.vue'),
+    // meta: { requiresAuth: true }
+  },
+  {
+    path: '/expense',
+    name: 'Expense',
+    component: () => import('../views/Expense.vue'),
+    // meta: { requiresAuth: true }
+  },
+  {
+    path: '/categories',
+    name: 'Categories',
+    component: () => import('../views/Categories.vue'),
+    // meta: { requiresAuth: true }
+  },
+  {
+    path: '/statistics',
+    name: 'Statistics',
+    component: () => import('../views/Statistics.vue'),
+    // meta: { requiresAuth: true }
+  },
+  {
+    path: '/history',
+    name: 'History',
+    component: () => import('../views/History.vue'),
+    // meta: { requiresAuth: true }
+  },
+  {
+    path: '/profile',
+    name: 'Profile',
+    component: () => import('../views/Profile.vue'),
+    // meta: { requiresAuth: true }
+  }
+]
+
+const router = createRouter({
+  history: createWebHistory(),
+  routes
+})
+
+// Navigation guard
+router.beforeEach((to, from, next) => {
+  const isAuthenticated = localStorage.getItem('token')
+  
+  if (to.meta.requiresAuth && !isAuthenticated) {
+    next('/login')
+  } else {
+    next()
+  }
+})
+
+export default router 

@@ -1,0 +1,7 @@
+{
+  "dependencies": {
+    "@fortawesome/free-regular-svg-icons": "^6.7.2",
+    "apexcharts": "^4.6.0",
+    "vue3-apexcharts": "^1.8.0"
+  }
+}
