@@ -1,5 +1,5 @@
 import axios from "axios";
-import { useBaseStore } from "@/store/index.js";
+import { useAuthStore } from "@/store/AuthStore.js";
 
 // Tạo một instance của axios với các default config
 const instance = axios.create({
@@ -40,7 +40,7 @@ instance.interceptors.response.use(
 
           const accessToken = rs.result.token;
 
-          const store = useBaseStore();
+          const store = useAuthStore();
 
           store.refreshToken(accessToken);
 

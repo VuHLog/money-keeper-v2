@@ -1,173 +1,296 @@
 <script setup>
-import { ref } from 'vue'
-import { useRouter } from 'vue-router'
-import Swal from 'sweetalert2'
+import { ref, getCurrentInstance, onMounted } from "vue";
+import { useAuthStore } from "@stores/AuthStore.js";
+import { useRouter, useRoute } from "vue-router";
+import swal from 'sweetalert2'
 
-const router = useRouter()
-const fullName = ref('')
-const email = ref('')
-const password = ref('')
-const confirmPassword = ref('')
-const agreeTerms = ref(false)
+const { proxy } = getCurrentInstance();
 
-const handleRegister = async () => {
-  if (password.value !== confirmPassword.value) {
-    Swal.fire({
-      icon: 'error',
-      title: 'Lỗi',
-      text: 'Mật khẩu xác nhận không khớp',
-      confirmButtonColor: '#007AFF'
-    })
-    return
+const store = useAuthStore();
+
+const router = useRouter();
+const route = useRoute();
+const previewImage = ref(store.avatarUserDefault);
+const errMsg = ref("");
+
+const showPassword = ref(false)
+const showPasswordConfirm = ref(false);
+
+const user = ref({
+  username: "",
+  password: "",
+  email: "",
+  fullName: "",
+  avatarUrl: "",
+  roles: [],
+});
+
+const redirect = route.query.redirect ? route.query.redirect : "/home";
+onMounted(() => {
+  if (store.username !== "") {
+    router.push(redirect);
   }
+});
 
-  try {
-    // TODO: Implement register logic with backend API
-    await Swal.fire({
-      icon: 'success',
-      title: 'Đăng ký thành công',
-      text: 'Vui lòng đăng nhập để tiếp tục',
-      confirmButtonColor: '#007AFF'
-    })
-    await router.push('/login')
-  } catch (error) {
-    Swal.fire({
-      icon: 'error',
-      title: 'Lỗi đăng ký',
-      text: 'Đã có lỗi xảy ra, vui lòng thử lại',
-      confirmButtonColor: '#007AFF'
-    })
+// xử lý ảnh
+const file = ref(null);
+async function handleFileUpload(event) {
+  file.value = event.target.files[0];
+  if (file.value) {
+    // Tạo URL tạm thời cho ảnh vừa chọn
+    previewImage.value = URL.createObjectURL(file.value);
   }
 }
 
-const handleGoogleRegister = async () => {
-  try {
-    // TODO: Implement Google register logic
-  } catch (error) {
-    Swal.fire({
-      icon: 'error',
-      title: 'Lỗi đăng ký',
-      text: 'Không thể đăng ký bằng Google',
-      confirmButtonColor: '#007AFF'
+async function submitFile() {
+  let formData = new FormData();
+
+  formData.append("image", file.value);
+  await proxy.$api
+    .postFile("/cloudinary/upload/image", formData)
+    .then((res) => {
+      user.value.avatarUrl = res.url;
+      console.log(res.url);
     })
+    .catch((error) => console.log(error));
+}
+
+function isValidUserInfo() {
+  errMsg.value = "";
+  if (!/^.{8,}$/.test(user.value.fullName.trim())) {
+    errMsg.value = "Họ tên phải có ít nhất 8 ký tự";
+    return false;
   }
+  if (
+    !/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(
+      user.value.email.trim()
+    )
+  ) {
+    errMsg.value = "Email không hợp lệ";
+    return false;
+  }
+  if (!/^.{4,}$/.test(user.value.username.trim())) {
+    errMsg.value = "Tên đăng nhập phải có ít nhất 4 ký tự";
+    return false;
+  }
+  if (
+    !/^(?=.*[A-Z])(?=.*[a-z])(?=.*[0-9]).{8,}$/.test(user.value.password.trim())
+  ) {
+    errMsg.value =
+      "Mật khẩu phải có ít nhất 8 ký tự chứa ít nhất một ký tự viết hoa, viết thường và chữ số";
+    return false;
+  }
+  if (passwordConfirm.value !== user.value.password) {
+    errMsg.value = "Mật khẩu không khớp";
+    return false;
+  }
+  return true;
+}
+
+const passwordConfirm = ref("");
+async function signUp() {
+  if (!isValidUserInfo()) {
+    return;
+  }
+  if (file.value !== null) {
+    await submitFile();
+  }
+
+  await proxy.$api
+    .post("/users/registration", user.value)
+    .then((res) => {
+      if (res.message) {
+        errMsg.value = res.message;
+      } else {
+        swal.fire({
+          title: "Đăng ký Thành Công!",
+          icon: "success",
+        });
+        router.push("/auth/sign-in");
+      }
+    })
+    .catch((error) => {
+      errMsg.value = error.response.data.message;
+      console.log(error);
+    });
 }
 </script>
 
 <template>
-  <div class="h-full flex">
-    <!-- Left side with image and text -->
-    <div class="hidden lg:flex lg:w-1/2 bg-primary items-center justify-center relative">
-      <div class="text-center text-white z-10 p-8">
-        <h1 class="text-3xl font-bold mb-3">MONEY KEEPER</h1>
-        <p class="text-lg opacity-80">Quản lý chi tiêu thông minh, tương lai tài chính vững vàng</p>
+  <!-- Container chính với nền gradient -->
+  <div
+    class="min-h-screen w-full flex items-center justify-center bg-gradient-to-br from-blue-400 via-blue-500 to-purple-600">
+    <!-- Form đăng ký -->
+    <div class="w-full max-w-2xl bg-white rounded-lg shadow-xl overflow-hidden">
+      <!-- Tiêu đề -->
+      <div class="p-6 pb-0">
+        <h1 class="text-3xl font-bold text-center text-gray-800">Đăng ký tài khoản</h1>
       </div>
-      <div class="absolute inset-0 bg-black opacity-40"></div>
-    </div>
 
-    <!-- Right side with form -->
-    <div class="w-full lg:w-1/2 flex items-center justify-center p-6">
-      <div class="w-full max-w-[400px]">
-        <div class="text-center mb-6">
-          <h2 class="text-2xl font-bold text-text mb-2">Đăng Ký</h2>
-          <p class="text-text-secondary">Tạo tài khoản mới</p>
-        </div>
+      <!-- Form nhập thông tin -->
+      <div class="p-6">
+        <form method="POST" @submit.prevent="signUp()">
+          <!-- Chia form thành 2 cột -->
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <!-- Cột trái -->
+            <div class="space-y-6">
+              <!-- Họ và tên field -->
+              <div>
+                <label class="block text-gray-600 text-sm mb-2">Họ và tên</label>
+                <div class="relative">
+                  <span class="absolute inset-y-0 left-0 flex items-center pl-3">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24"
+                      stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                    </svg>
+                  </span>
+                  <input v-model.trim="user.fullName"
+                    class="w-full border border-gray-300 rounded-md py-2 px-10 text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent"
+                    type="text" placeholder="Họ và tên" />
+                </div>
+              </div>
 
-        <form @submit.prevent="handleRegister" class="space-y-4">
-          <div>
-            <input
-              type="text"
-              v-model="fullName"
-              required
-              class="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:border-primary focus:ring-2 focus:ring-primary/20 transition-colors duration-200"
-              placeholder="Họ và tên"
-            />
+              <!-- Password field -->
+              <div>
+                <label class="block text-gray-600 text-sm mb-2">Mật khẩu</label>
+                <div class="relative">
+                  <span class="absolute inset-y-0 left-0 flex items-center pl-3">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24"
+                      stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                    </svg>
+                  </span>
+                  <input v-model.trim="user.password"
+                    class="w-full border border-gray-300 rounded-md py-2 px-10 text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent"
+                    :type="showPassword ? 'text' : 'password'" placeholder="Mật khẩu" />
+                  <span class="absolute inset-y-0 right-0 flex items-center pr-3 cursor-pointer"
+                    @click="showPassword = !showPassword">
+                    <font-awesome-icon v-if="!showPassword" :icon="['fas', 'eye']" class="h-5 w-5 text-gray-400" />
+                    <font-awesome-icon v-else :icon="['fas', 'eye-slash']" class="h-5 w-5 text-gray-400" />
+                  </span>
+                </div>
+              </div>
+
+              <!-- Email field -->
+              <div>
+                <label class="block text-gray-600 text-sm mb-2">Email</label>
+                <div class="relative">
+                  <span class="absolute inset-y-0 left-0 flex items-center pl-3">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24"
+                      stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                    </svg>
+                  </span>
+                  <input v-model.trim="user.email"
+                    class="w-full border border-gray-300 rounded-md py-2 px-10 text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent"
+                    type="text" placeholder="Email" />
+                </div>
+              </div>
+            </div>
+            
+            <!-- Cột phải -->
+            <div class="space-y-6">
+              
+              <!-- Username field -->
+              <div>
+                <label class="block text-gray-600 text-sm mb-2">Tên đăng nhập</label>
+                <div class="relative">
+                  <span class="absolute inset-y-0 left-0 flex items-center pl-3">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24"
+                      stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                    </svg>
+                  </span>
+                  <input v-model.trim="user.username"
+                    class="w-full border border-gray-300 rounded-md py-2 px-10 text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent"
+                    type="text" placeholder="Tên đăng nhập" />
+                </div>
+              </div>
+
+              <!-- Password Confirm field -->
+              <div>
+                <label class="block text-gray-600 text-sm mb-2">Xác nhận mật khẩu</label>
+                <div class="relative">
+                  <span class="absolute inset-y-0 left-0 flex items-center pl-3">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24"
+                      stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                    </svg>
+                  </span>
+                  <input v-model.trim="passwordConfirm"
+                    class="w-full border border-gray-300 rounded-md py-2 px-10 text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent"
+                    :type="showPasswordConfirm ? 'text' : 'password'" placeholder="Xác nhận mật khẩu" />
+                  <span class="absolute inset-y-0 right-0 flex items-center pr-3 cursor-pointer"
+                    @click="showPasswordConfirm = !showPasswordConfirm">
+                    <font-awesome-icon v-if="!showPasswordConfirm" :icon="['fas', 'eye']" class="h-5 w-5 text-gray-400" />
+                    <font-awesome-icon v-else :icon="['fas', 'eye-slash']" class="h-5 w-5 text-gray-400" />
+                  </span>
+                </div>
+              </div>
+
+              <!-- Ảnh đại diện -->
+              <div>
+                <label class="block text-gray-600 text-sm mb-2">Ảnh đại diện</label>
+                <div class="relative">
+                  <span class="absolute inset-y-0 left-0 flex items-center pl-3">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24"
+                      stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                    </svg>
+                  </span>
+                  <input type="file" accept="image/*" @change="handleFileUpload" 
+                    class="hidden" id="avatarInput" />
+                  <label for="avatarInput" 
+                    class="block w-full border border-gray-300 rounded-md py-2 pl-10 pr-3 text-gray-700 cursor-pointer bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent">
+                    {{ file ? file.name : "Chọn ảnh đại diện" }}
+                  </label>
+                  <div class="absolute right-2 top-1/2 transform -translate-y-1/2 h-8 w-8 rounded-full overflow-hidden bg-gray-200">
+                    <img :src="previewImage || user.avatarUrl" alt="Avatar preview" class="h-full w-full object-cover" />
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
 
-          <div>
-            <input
-              type="email"
-              v-model="email"
-              required
-              class="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:border-primary focus:ring-2 focus:ring-primary/20 transition-colors duration-200"
-              placeholder="Email"
-            />
+          <!-- Error message -->
+          <div v-if="errMsg" class="mt-6 text-red-600 text-sm">
+            {{ errMsg }}
           </div>
 
-          <div>
-            <input
-              type="password"
-              v-model="password"
-              required
-              class="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:border-primary focus:ring-2 focus:ring-primary/20 transition-colors duration-200"
-              placeholder="Mật khẩu"
-            />
-          </div>
-
-          <div>
-            <input
-              type="password"
-              v-model="confirmPassword"
-              required
-              class="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:border-primary focus:ring-2 focus:ring-primary/20 transition-colors duration-200"
-              placeholder="Xác nhận mật khẩu"
-            />
-          </div>
-
-          <div class="flex items-center">
-            <input
-              type="checkbox"
-              v-model="agreeTerms"
-              required
-              class="rounded border-gray-300 text-primary focus:ring-primary"
-            />
-            <span class="ml-2 text-sm text-text-secondary">
-              Tôi đồng ý với
-              <a href="#" class="text-primary hover:text-primary/80">Điều khoản sử dụng</a>
-              và
-              <a href="#" class="text-primary hover:text-primary/80">Chính sách bảo mật</a>
-            </span>
-          </div>
-
+          <!-- Register button -->
           <button
-            type="submit"
-            class="w-full bg-primary text-white py-2.5 rounded-lg font-medium hover:bg-primary/90 transition-colors duration-200"
-          >
+            class="w-full mt-6 py-3 rounded-md font-medium text-white bg-gradient-to-r from-cyan-400 to-purple-500 hover:opacity-90 transition-all focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-400"
+            type="submit">
             Đăng ký
           </button>
-
-          <div class="relative my-6">
-            <div class="absolute inset-0 flex items-center">
-              <div class="w-full border-t border-gray-300"></div>
-            </div>
-            <div class="relative flex justify-center text-sm">
-              <span class="px-2 bg-surface text-text-secondary">Hoặc đăng ký với</span>
-            </div>
-          </div>
-
-          <button
-            type="button"
-            @click="handleGoogleRegister"
-            class="w-full flex items-center justify-center space-x-2 border border-gray-300 bg-white text-text py-2.5 rounded-lg font-medium hover:bg-gray-50 transition-colors duration-200"
-          >
-            <img src="@/assets/google.svg" alt="Google" class="w-5 h-5" />
-            <span>Google</span>
-          </button>
-
-          <div class="text-center mt-6">
-            <p class="text-sm text-text-secondary">
-              Đã có tài khoản?
-              <router-link to="/login" class="text-primary hover:text-primary/80 font-medium">
-                Đăng nhập
-              </router-link>
-            </p>
-          </div>
         </form>
+
+        <!-- Login link -->
+        <div class="mt-8 text-center">
+          <p class="text-sm text-gray-500 mb-2">Đã có tài khoản?</p>
+          <router-link to="/auth/sign-in" class="font-medium text-blue-600 hover:text-blue-800">
+            Đăng nhập
+          </router-link>
+        </div>
       </div>
     </div>
   </div>
 </template>
 
 <style scoped>
-/* Component styles will be added here */
-</style> 
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.5s;
+}
+
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
+}
+</style>

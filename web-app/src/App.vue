@@ -51,7 +51,7 @@ onUnmounted(() => {
   <!-- Root container -->
   <div class="min-h-screen bg-background flex">
     <!-- Main layout container when not authenticated -->
-    <div v-if="!isAuthenticated" class="flex-1 flex flex-col w-full">
+    <div v-if="isAuthenticated" class="flex-1 flex flex-col w-full">
       <!-- Sidebar component with responsive behavior -->
       <Sidebar 
         :is-open="isSidebarOpen" 
