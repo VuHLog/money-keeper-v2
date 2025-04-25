@@ -344,7 +344,6 @@ onBeforeUnmount(() => {
 <template>
   <div class="p-4">
     <div class="flex justify-between items-center mb-6">
-      <h1 class="text-2xl font-semibold text-text">Hạng Mục</h1>
       <button 
         @click="openAddModal" 
         class="bg-primary hover:bg-primary/90 text-white px-4 py-2 rounded-lg flex items-center space-x-2 transition-colors"

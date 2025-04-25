@@ -54,12 +54,12 @@ const currentPageTitle = computed(() => {
       return 'Ghi Thu'
     case '/expense':
       return 'Ghi Chi'
+    case '/spending-limits':
+      return 'Hạn Mức Chi'
     case '/categories':
       return 'Danh Mục'
     case '/statistics':
       return 'Thống Kê'
-    case '/history':
-      return 'Lịch Sử'
     case '/profile':
       return 'Thông Tin Người Dùng'
     default:
@@ -191,11 +191,11 @@ onUnmounted(() => {
         <!-- Right side -->
         <div class="flex items-center space-x-2 sm:space-x-4">
           <div class="hidden sm:flex space-x-2">
-            <button class="bg-success text-white px-4 py-2 rounded-lg flex items-center space-x-2 hover:bg-success/90">
+            <button class="bg-success text-white px-4 py-2 rounded-lg flex items-center space-x-2 hover:bg-success/90" @click="router.push('/income')">
               <font-awesome-icon :icon="['fas', 'plus']" />
               <span>Ghi Thu</span>
             </button>
-            <button class="bg-danger text-white px-4 py-2 rounded-lg flex items-center space-x-2 hover:bg-danger/90">
+            <button class="bg-danger text-white px-4 py-2 rounded-lg flex items-center space-x-2 hover:bg-danger/90" @click="router.push('/expense')">
               <font-awesome-icon :icon="['fas', 'minus']" />
               <span>Ghi Chi</span>
             </button>

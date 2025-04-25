@@ -52,9 +52,9 @@ const routes = [
     // meta: { requiresAuth: true }
   },
   {
-    path: '/history',
-    name: 'History',
-    component: () => import('@pages/History.vue'),
+    path: '/spending-limits',
+    name: 'SpendingLimit',
+    component: () => import('@pages/SpendingLimit.vue'),
     // meta: { requiresAuth: true }
   },
   {
