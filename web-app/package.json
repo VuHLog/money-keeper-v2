@@ -9,22 +9,27 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "@fortawesome/fontawesome-svg-core": "^6.4.0",
-    "@fortawesome/free-solid-svg-icons": "^6.4.0",
-    "@fortawesome/vue-fontawesome": "^3.0.3",
-    "apexcharts": "^3.45.0",
+    "@fortawesome/fontawesome-svg-core": "^6.7.2",
+    "@fortawesome/free-regular-svg-icons": "^6.7.2",
+    "@fortawesome/free-solid-svg-icons": "^6.7.2",
+    "@fortawesome/vue-fontawesome": "^3.0.8",
+    "@stomp/stompjs": "^7.1.1",
+    "apexcharts": "^4.0.0",
     "axios": "^1.4.0",
     "element-plus": "^2.9.8",
+    "jwt-decode": "^4.0.0",
     "pinia": "^2.1.6",
     "sweetalert2": "^11.19.1",
     "vue": "^3.3.4",
     "vue-router": "^4.2.4",
-    "vue3-apexcharts": "^1.4.4"
+    "vue3-apexcharts": "^1.4.4",
+    "ws": "^8.18.1"
   },
   "devDependencies": {
     "@vitejs/plugin-vue": "^4.2.3",
     "autoprefixer": "^10.4.14",
     "postcss": "^8.4.24",
+    "sass": "^1.87.0",
     "tailwindcss": "^3.3.2",
     "vite": "^4.3.9"
   }

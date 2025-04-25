@@ -10,6 +10,9 @@ import { fas } from '@fortawesome/free-solid-svg-icons'
 import { far } from '@fortawesome/free-regular-svg-icons'
 import './style.css'
 
+//api
+import { base } from "./apis/ApiService.js";
+
 //Charts
 import VueApexCharts from "vue3-apexcharts";
 
@@ -24,5 +27,8 @@ app.use(VueApexCharts)
 app.use(ElementPlus)
 app.component('font-awesome-icon', FontAwesomeIcon)
 app.component("apexchart", VueApexCharts)
+
+const config = app.config;
+config.globalProperties.$api = base;
 
 app.mount('#app')

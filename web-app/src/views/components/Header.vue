@@ -1,9 +1,12 @@
 <script setup>
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
+import { jwtDecode } from "jwt-decode";
+import { useAuthStore } from '@stores/AuthStore.js'
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
 
 const router = useRouter()
+const store = useAuthStore();
 const route = useRoute()
 const isUserMenuOpen = ref(false)
 const userAvatar = ref("https://res.cloudinary.com/cloud1412/image/upload/v1739899158/hffbxsj6wbkbzkxjfetz.png")
@@ -82,10 +85,9 @@ const closeUserMenu = () => {
   isUserMenuOpen.value = false
 }
 
-const handleLogout = async () => {
-  // TODO: Implement logout logic
-  isUserMenuOpen.value = false
-  await router.push('/login')
+async function logOut() {
+  await store.logOut()
+  router.push("/auth/sign-in");
 }
 
 const toggleNotifications = (event) => {
@@ -301,10 +303,10 @@ onUnmounted(() => {
                 to="/profile" 
                 class="block px-4 py-2 text-sm text-text hover:bg-gray-100"
               >
-                Thông tin cá nhân
+                Thông tin người dùng
               </router-link>
               <button 
-                @click="handleLogout" 
+                @click="logOut" 
                 class="w-full text-left px-4 py-2 text-sm text-danger hover:bg-gray-100"
               >
                 Đăng xuất

@@ -11,7 +11,7 @@ const props = defineProps({
   },
   accountTypes: {
     type: Array,
-    required: true
+    required: false
   }
 })
 

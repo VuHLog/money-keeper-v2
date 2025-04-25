@@ -131,7 +131,7 @@ const isActive = (path) => {
           >
             <font-awesome-icon 
               :icon="item.icon" 
-              class="text-lg transition-colors duration-200" 
+              class="text-xl transition-colors duration-200" 
               :class="{ 
                 'mr-3': isOpen,
                 'text-primary': isActive(item.path)
@@ -139,7 +139,7 @@ const isActive = (path) => {
             />
             <span 
               v-if="isOpen" 
-              class="text-sm transition-colors duration-200"
+              class="text-base transition-colors duration-200"
               :class="{ 'font-medium': isActive(item.path) }"
             >{{ item.label }}</span>
             
@@ -173,4 +173,4 @@ aside {
   -ms-overflow-style: none;  /* IE and Edge */
   scrollbar-width: none;  /* Firefox */
 }
-</style> 
+</style>

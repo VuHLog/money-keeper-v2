@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
 import { library } from '@fortawesome/fontawesome-svg-core'
 import { 
@@ -21,6 +21,8 @@ import AddAccountModal from '@components/AddAccountModal.vue'
 import EditAccountModal from '@components/EditAccountModal.vue'
 import DeleteAccountModal from '@components/DeleteAccountModal.vue'
 import TransferModal from '@components/TransferModal.vue'
+import Avatar from '@/views/components/Avatar.vue'
+import { useDictionaryBucketPaymentStore } from '@stores/DictionaryBucketPaymentStore.js'
 
 library.add(
   faWallet,
@@ -37,67 +39,8 @@ library.add(
   faExclamationTriangle
 )
 
-// Mock data - sẽ được thay thế bằng dữ liệu từ API
-const accounts = ref([
-  {
-    id: 1,
-    name: 'Tiền mặt',
-    icon: 'money-bill-wave',
-    balance: 5000000,
-    type: 'cash',
-    description: 'Tiền mặt cá nhân'
-  },
-  {
-    id: 2,
-    name: 'Techcombank',
-    icon: 'university',
-    balance: 15000000,
-    type: 'bank',
-    description: 'Tài khoản ngân hàng chính'
-  },
-  {
-    id: 3,
-    name: 'Thẻ tín dụng BIDV',
-    icon: 'credit-card',
-    balance: -2000000,
-    type: 'credit',
-    description: 'Thẻ tín dụng cho chi tiêu'
-  }
-])
-
-const accountTypes = [
-  { 
-    value: 'cash', 
-    label: 'Tiền mặt',
-    icon: 'money-bill-wave',
-    color: 'text-success'
-  },
-  { 
-    value: 'bank', 
-    label: 'Tài khoản ngân hàng',
-    icon: 'university',
-    color: 'text-primary'
-  },
-  { 
-    value: 'credit', 
-    label: 'Thẻ tín dụng',
-    icon: 'credit-card',
-    color: 'text-warning'
-  },
-  { 
-    value: 'investment', 
-    label: 'Tài khoản đầu tư',
-    icon: 'chart-line',
-    color: 'text-info'
-  },
-  { 
-    value: 'other', 
-    label: 'Khác',
-    icon: 'wallet',
-    color: 'text-text-secondary'
-  }
-]
-
+const dictionaryBucketPaymentStore = useDictionaryBucketPaymentStore()
+const accounts = ref([]);
 const isAddModalOpen = ref(false)
 const isEditModalOpen = ref(false)
 const isDeleteModalOpen = ref(false)
@@ -106,19 +49,13 @@ const editingAccount = ref(null)
 const deletingAccount = ref(null)
 const selectedAccount = ref(null)
 
+onMounted(async () => {
+  accounts.value = await dictionaryBucketPaymentStore.getMyBucketPaymentsPagination();
+})
+
 const totalBalance = computed(() => {
   return accounts.value.reduce((sum, account) => sum + account.balance, 0)
 })
-
-const getAccountIcon = (type) => {
-  const accountType = accountTypes.find(t => t.value === type)
-  return accountType ? accountType.icon : 'wallet'
-}
-
-const getAccountColor = (type) => {
-  const accountType = accountTypes.find(t => t.value === type)
-  return accountType ? accountType.color : 'text-text-secondary'
-}
 
 const handleTransfer = (account) => {
   selectedAccount.value = account
@@ -136,14 +73,7 @@ const handleDelete = (account) => {
 }
 
 const handleAddAccount = (newAccount) => {
-  accounts.value.push({
-    id: accounts.value.length + 1,
-    name: newAccount.name,
-    type: newAccount.type,
-    balance: newAccount.balance,
-    icon: getAccountIcon(newAccount.type),
-    description: newAccount.description
-  })
+  accounts.value.push(newAccount);
 }
 
 const handleUpdateAccount = (updatedAccount) => {
@@ -212,14 +142,15 @@ const handleTransferConfirm = (data) => {
             <!-- Left section -->
             <div class="flex items-start space-x-4 sm:space-x-6">
               <div class="w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-gray-100 flex items-center justify-center flex-shrink-0">
-                <font-awesome-icon 
-                  :icon="['fas', getAccountIcon(account.type)]"
-                  :class="[getAccountColor(account.type), 'text-xl sm:text-2xl']"
+                <Avatar
+                  :src="account.iconUrl"
+                  :alt="account.accountName"
+                  size="sm"
                 />
               </div>
               <div class="flex flex-col">
-                <h3 class="text-lg text-start sm:text-xl font-medium text-text">{{ account.name }}</h3>
-                <p class="text-sm text-start text-text-secondary">{{ account.description }}</p>
+                <h3 class="text-lg text-start sm:text-xl font-medium text-text">{{ account.accountName }}</h3>
+                <p class="text-sm text-start text-text-secondary">{{ account.interpretation }}</p>
               </div>
             </div>
 
@@ -265,7 +196,6 @@ const handleTransferConfirm = (data) => {
     <!-- Keep existing modals -->
     <AddAccountModal
       :is-open="isAddModalOpen"
-      :account-types="accountTypes"
       @close="isAddModalOpen = false"
       @add="handleAddAccount"
     />
@@ -273,7 +203,6 @@ const handleTransferConfirm = (data) => {
     <EditAccountModal
       :is-open="isEditModalOpen"
       :account="editingAccount"
-      :account-types="accountTypes"
       @close="isEditModalOpen = false"
       @update="handleUpdateAccount"
     />
