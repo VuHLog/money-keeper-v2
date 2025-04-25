@@ -17,10 +17,10 @@ import {
   faExclamationTriangle
 } from '@fortawesome/free-solid-svg-icons'
 import { formatCurrency } from '@/utils/formatters'
-import AddAccountModal from './pages/components/AddAccountModal.vue'
-import EditAccountModal from './pages/components/EditAccountModal.vue'
-import DeleteAccountModal from './pages/components/DeleteAccountModal.vue'
-import TransferModal from './pages/components/TransferModal.vue'
+import AddAccountModal from '@components/AddAccountModal.vue'
+import EditAccountModal from '@components/EditAccountModal.vue'
+import DeleteAccountModal from '@components/DeleteAccountModal.vue'
+import TransferModal from '@components/TransferModal.vue'
 
 library.add(
   faWallet,
@@ -176,15 +176,21 @@ const handleTransferConfirm = (data) => {
 </script>
 
 <template>
-  <div class="w-full">
-    <!-- Account List Container -->
-    <div class="bg-surface w-full rounded-lg">
-      <!-- List Header -->
-      <div class="px-4 sm:px-6 py-5 border-b border-gray-100 flex flex-col sm:flex-row justify-between items-start sm:items-center space-y-4 sm:space-y-0">
-        <div class="flex items-center space-x-3">
+  <div class="w-full h-full p-4">
+    <div class="bg-surface w-full rounded-lg h-full">
+      <!-- Account Header -->
+      <div class="w-full px-4 sm:px-6 py-5 border-b border-gray-100 flex flex-col sm:flex-row justify-between items-start sm:items-center space-y-4 sm:space-y-0">
+        <!-- Total Balance - Stack on mobile -->
+        <div class="flex items-center space-x-3 w-full sm:w-auto">
           <font-awesome-icon :icon="['fas', 'wallet']" class="text-xl sm:text-2xl text-primary" />
-          <p class="text-base sm:text-lg text-text-secondary">Tổng số dư: <span class="font-semibold text-text">{{ formatCurrency(totalBalance) }}</span></p>
+          <p class="text-base sm:text-lg text-text-secondary">
+            Tổng số dư: 
+            <span class="font-semibold text-text block sm:inline mt-1 sm:mt-0">
+              {{ formatCurrency(totalBalance) }}
+            </span>
+          </p>
         </div>
+        <!-- Add Button - Full width on mobile -->
         <button 
           @click="isAddModalOpen = true"
           class="w-full sm:w-auto bg-primary text-white px-4 sm:px-8 py-3 rounded-lg flex items-center justify-center space-x-2 sm:space-x-3 hover:bg-primary/90"
@@ -195,15 +201,15 @@ const handleTransferConfirm = (data) => {
       </div>
 
       <!-- Account List -->
-      <div class="divide-y divide-gray-100">
+      <div class="w-full divide-y divide-gray-100">
         <div 
           v-for="account in accounts" 
           :key="account.id"
-          class="px-4 sm:px-6 py-4 sm:py-6 flex flex-col sm:flex-row items-start sm:items-center space-y-4 sm:space-y-0 justify-between hover:bg-gray-50/50"
+          class="w-full px-4 sm:px-6 py-4 sm:py-6 hover:bg-gray-50/50"
         >
-          <!-- Account Info -->
-          <div class="flex items-center justify-between w-full">
-            <!-- Left section with icon, name, description -->
+          <!-- Stack on mobile, row on desktop -->
+          <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between w-full space-y-4 sm:space-y-0">
+            <!-- Left section -->
             <div class="flex items-start space-x-4 sm:space-x-6">
               <div class="w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-gray-100 flex items-center justify-center flex-shrink-0">
                 <font-awesome-icon 
@@ -217,33 +223,34 @@ const handleTransferConfirm = (data) => {
               </div>
             </div>
 
-            <!-- Right section with balance and actions -->
-            <div class="flex items-center space-x-4 sm:space-x-8">
+            <!-- Right section - Stack below on mobile -->
+            <div class="flex items-center justify-between sm:justify-end w-full sm:w-auto space-x-4">
               <p :class="[
                 account.balance >= 0 ? 'text-success' : 'text-danger', 
-                'font-semibold text-lg sm:text-xl flex-shrink-0'
+                'font-semibold text-lg sm:text-xl'
               ]">
                 {{ formatCurrency(account.balance) }}
               </p>
 
+              <!-- Action buttons -->
               <div class="flex items-center space-x-2 sm:space-x-4">
                 <button 
                   @click="handleTransfer(account)"
-                  class="p-3 text-text-secondary hover:text-text hover:bg-gray-100 rounded-lg"
+                  class="p-2 sm:p-3 text-text-secondary hover:text-text hover:bg-gray-100 rounded-lg"
                   title="Chuyển khoản"
                 >
                   <font-awesome-icon :icon="['fas', 'exchange-alt']" class="text-lg sm:text-xl" />
                 </button>
                 <button 
                   @click="handleEdit(account)"
-                  class="p-3 text-text-secondary hover:text-text hover:bg-gray-100 rounded-lg"
+                  class="p-2 sm:p-3 text-text-secondary hover:text-text hover:bg-gray-100 rounded-lg"
                   title="Chỉnh sửa"
                 >
                   <font-awesome-icon :icon="['fas', 'pen']" class="text-lg sm:text-xl" />
                 </button>
                 <button 
                   @click="handleDelete(account)"
-                  class="p-3 text-text-secondary hover:text-danger hover:bg-gray-100 rounded-lg"
+                  class="p-2 sm:p-3 text-text-secondary hover:text-danger hover:bg-gray-100 rounded-lg"
                   title="Xóa"
                 >
                   <font-awesome-icon :icon="['fas', 'trash']" class="text-lg sm:text-xl" />
@@ -255,7 +262,7 @@ const handleTransferConfirm = (data) => {
       </div>
     </div>
 
-    <!-- Modals -->
+    <!-- Keep existing modals -->
     <AddAccountModal
       :is-open="isAddModalOpen"
       :account-types="accountTypes"
@@ -286,4 +293,4 @@ const handleTransferConfirm = (data) => {
       @transfer="handleTransferConfirm"
     />
   </div>
-</template> 
+</template>

@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
 import { formatCurrency } from '@/utils/formatters'
 
@@ -238,6 +238,30 @@ const handleAdd = () => {
 
   handleClose()
 }
+
+// Function để đóng tất cả dropdown khi click ra ngoài
+const handleClickOutside = (event) => {
+  // Xử lý dropdown loại tài khoản
+  const typeDropdownEl = document.querySelector('.type-dropdown-container')
+  if (typeDropdownEl && !typeDropdownEl.contains(event.target) && isTypeDropdownOpen.value) {
+    isTypeDropdownOpen.value = false
+  }
+  
+  // Xử lý dropdown ngân hàng
+  const bankDropdownEl = document.querySelector('.bank-dropdown-container')
+  if (bankDropdownEl && !bankDropdownEl.contains(event.target) && isBankDropdownOpen.value) {
+    isBankDropdownOpen.value = false
+  }
+}
+
+// Thêm và xóa event listener khi component được mount và unmount
+onMounted(() => {
+  document.addEventListener('mousedown', handleClickOutside)
+})
+
+onUnmounted(() => {
+  document.removeEventListener('mousedown', handleClickOutside)
+})
 </script>
 
 <template>
@@ -274,6 +298,7 @@ const handleAdd = () => {
                 type="text"
                 class="w-full px-3 py-2 border border-gray-100 rounded-lg focus:outline-none focus:ring-1 focus:ring-primary/20"
                 :class="[
+
                   errors.balance ? 'border-danger/50 focus:border-danger focus:ring-danger/20' : 'border-gray-100 focus:border-primary/50'
                 ]"
                 placeholder="0 ₫"
@@ -293,6 +318,7 @@ const handleAdd = () => {
                 type="text"
                 class="w-full px-3 py-2 border border-gray-100 rounded-lg focus:outline-none focus:ring-1 focus:ring-primary/20"
                 :class="[
+
                   errors.name ? 'border-danger/50 focus:border-danger focus:ring-danger/20' : 'border-gray-100 focus:border-primary/50'
                 ]"
                 placeholder="Nhập tên tài khoản"
@@ -306,7 +332,7 @@ const handleAdd = () => {
               <label class="block text-sm font-medium text-text-secondary mb-1">
                 Loại tài khoản <span class="text-danger">*</span>
               </label>
-              <div class="relative">
+              <div class="relative type-dropdown-container">
                 <div 
                   class="flex items-center w-full px-3 py-2 border border-gray-100 rounded-lg cursor-pointer hover:border-gray-200"
                   :class="{'ring-1 ring-primary/20 border-primary/50': isTypeDropdownOpen}"
@@ -353,7 +379,7 @@ const handleAdd = () => {
               <label class="block text-sm font-medium text-text-secondary mb-1">
                 Ngân hàng <span class="text-danger">*</span>
               </label>
-              <div class="relative">
+              <div class="relative bank-dropdown-container">
                 <div 
                   class="flex items-center w-full px-3 py-2 border border-gray-100 rounded-lg cursor-pointer hover:border-gray-200"
                   :class="{'ring-1 ring-primary/20 border-primary/50': isBankDropdownOpen}"
@@ -426,6 +452,7 @@ const handleAdd = () => {
                 type="text"
                 class="w-full px-3 py-2 border border-gray-100 rounded-lg focus:outline-none focus:ring-1 focus:ring-primary/20"
                 :class="[
+
                   errors.creditLimit ? 'border-danger/50 focus:border-danger focus:ring-danger/20' : 'border-gray-100 focus:border-primary/50'
                 ]"
                 placeholder="0 ₫"
@@ -468,4 +495,4 @@ const handleAdd = () => {
       </div>
     </div>
   </Teleport>
-</template> 
+</template>
