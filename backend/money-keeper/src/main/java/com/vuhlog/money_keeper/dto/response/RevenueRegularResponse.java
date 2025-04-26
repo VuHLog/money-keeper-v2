@@ -22,7 +22,7 @@ public class RevenueRegularResponse {
     private DictionaryBucketPaymentResponse dictionaryBucketPayment;
     private DictionaryBucketPaymentResponse senderAccount;
     private DictionaryRevenue dictionaryRevenue;
-    private TripEventResponse tripEvent;
-    private CollectMoneyWhoResponse collectMoneyWho;
+    private String tripEvent;
+    private String collectMoneyWho;
     private String expenseRegularId;
 }

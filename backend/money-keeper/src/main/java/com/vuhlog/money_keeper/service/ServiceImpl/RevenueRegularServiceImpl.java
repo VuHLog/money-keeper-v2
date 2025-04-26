@@ -36,8 +36,8 @@ public class RevenueRegularServiceImpl implements RevenueRegularService {
     private final ExpenseRegularRepository expenseRegularRepository;
     private final DictionaryBucketPaymentRepository dictionaryBucketPaymentRepository;
     private final DictionaryRevenueRepository dictionaryRevenueRepository;
-    private final TripEventRepository tripEventRepository;
-    private final CollectMoneyWhoRepository collectMoneyWhoRepository;
+//    private final TripEventRepository tripEventRepository;
+//    private final CollectMoneyWhoRepository collectMoneyWhoRepository;
     private final TransactionHistoryRepository transactionHistoryRepository;
     private final RevenueRegularMapper revenueRegularMapper;
 
@@ -62,16 +62,16 @@ public class RevenueRegularServiceImpl implements RevenueRegularService {
         revenueRegular.setDictionaryBucketPayment(dictionaryBucketPayment);
         DictionaryRevenue dictionaryRevenue = dictionaryRevenueRepository.findById(request.getDictionaryRevenueId()).orElse(null);
         revenueRegular.setDictionaryRevenue(dictionaryRevenue);
-        TripEvent tripEvent = null;
-        if(request.getTripEventId() != null && !request.getTripEventId().isEmpty()) {
-            tripEvent = tripEventRepository.findById(request.getTripEventId()).orElse(null);
-        }
-        revenueRegular.setTripEvent(tripEvent);
-        CollectMoneyWho collectMoneyWho = null;
-        if(request.getCollectMoneyWhoId() != null && !request.getCollectMoneyWhoId().isEmpty()) {
-            collectMoneyWho = collectMoneyWhoRepository.findById(request.getCollectMoneyWhoId()).orElse(null);
-        }
-        revenueRegular.setCollectMoneyWho(collectMoneyWho);
+//        TripEvent tripEvent = null;
+//        if(request.getTripEventId() != null && !request.getTripEventId().isEmpty()) {
+//            tripEvent = tripEventRepository.findById(request.getTripEventId()).orElse(null);
+//        }
+//        revenueRegular.setTripEvent(tripEvent);
+//        CollectMoneyWho collectMoneyWho = null;
+//        if(request.getCollectMoneyWhoId() != null && !request.getCollectMoneyWhoId().isEmpty()) {
+//            collectMoneyWho = collectMoneyWhoRepository.findById(request.getCollectMoneyWhoId()).orElse(null);
+//        }
+//        revenueRegular.setCollectMoneyWho(collectMoneyWho);
 
         //update balance
         updateBalance(dictionaryBucketPayment, request.getAmount(), revenueRegular.getRevenueDate(), null, true);
@@ -115,16 +115,16 @@ public class RevenueRegularServiceImpl implements RevenueRegularService {
             DictionaryRevenue dictionaryRevenue = dictionaryRevenueRepository.findById(request.getDictionaryRevenueId()).orElse(null);
             revenueRegular.setDictionaryRevenue(dictionaryRevenue);
         }
-        TripEvent tripEvent = null;
-        if(request.getTripEventId() != null && !request.getTripEventId().isEmpty()) {
-            tripEvent = tripEventRepository.findById(request.getTripEventId()).orElse(null);
-        }
-        revenueRegular.setTripEvent(tripEvent);
-        CollectMoneyWho collectMoneyWho = null;
-        if(request.getCollectMoneyWhoId() != null && !request.getCollectMoneyWhoId().isEmpty()) {
-            collectMoneyWho = collectMoneyWhoRepository.findById(request.getCollectMoneyWhoId()).orElse(null);
-        }
-        revenueRegular.setCollectMoneyWho(collectMoneyWho);
+//        TripEvent tripEvent = null;
+//        if(request.getTripEventId() != null && !request.getTripEventId().isEmpty()) {
+//            tripEvent = tripEventRepository.findById(request.getTripEventId()).orElse(null);
+//        }
+//        revenueRegular.setTripEvent(tripEvent);
+//        CollectMoneyWho collectMoneyWho = null;
+//        if(request.getCollectMoneyWhoId() != null && !request.getCollectMoneyWhoId().isEmpty()) {
+//            collectMoneyWho = collectMoneyWhoRepository.findById(request.getCollectMoneyWhoId()).orElse(null);
+//        }
+//        revenueRegular.setCollectMoneyWho(collectMoneyWho);
 
         //create transaction history
         TransactionHistory transactionHistory = TransactionHistory.builder()

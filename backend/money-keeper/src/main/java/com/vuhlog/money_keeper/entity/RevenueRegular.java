@@ -25,6 +25,9 @@ public class RevenueRegular {
     private String transferType;
     private long balance;
     private String expenseRegularId;
+    private String tripEvent;
+    private String collectMoneyWho;
+
 
     @ManyToOne(cascade = {CascadeType.PERSIST, CascadeType.MERGE, CascadeType.REFRESH})
     @JoinColumn(name = "sender_account_id")
@@ -39,13 +42,13 @@ public class RevenueRegular {
     @JoinColumn(name = "dictionary_revenue_id")
     private DictionaryRevenue dictionaryRevenue;
 
-    @ManyToOne
-    @JoinColumn(name = "trip_event_id")
-    private TripEvent tripEvent;
-
-    @ManyToOne
-    @JoinColumn(name = "collect_money_who_id")
-    private CollectMoneyWho collectMoneyWho;
+//    @ManyToOne
+//    @JoinColumn(name = "trip_event_id")
+//    private TripEvent tripEvent;
+//
+//    @ManyToOne
+//    @JoinColumn(name = "collect_money_who_id")
+//    private CollectMoneyWho collectMoneyWho;
 
     @PrePersist
     public void onCreate() {

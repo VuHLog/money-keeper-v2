@@ -19,8 +19,8 @@ public interface RevenueRegularMapper {
     @Mapping(target = "revenueDate", expression = "java(stringToTimestamp(request.getRevenueDate()))")
     @Mapping(target = "dictionaryBucketPayment", ignore = true)
     @Mapping(target = "dictionaryRevenue", ignore = true)
-    @Mapping(target = "tripEvent", ignore = true)
-    @Mapping(target = "collectMoneyWho", ignore = true)
+//    @Mapping(target = "tripEvent", ignore = true)
+//    @Mapping(target = "collectMoneyWho", ignore = true)
     RevenueRegular toRevenueRegular(RevenueRegularRequest request);
 
     @Named("timestampToString")
@@ -43,8 +43,8 @@ public interface RevenueRegularMapper {
     @Mapping(target = "revenueDate", expression = "java(stringToTimestamp(request.getRevenueDate()))")
     @Mapping(target = "dictionaryBucketPayment", ignore = true)
     @Mapping(target = "dictionaryRevenue", ignore = true)
-    @Mapping(target = "tripEvent", ignore = true)
-    @Mapping(target = "collectMoneyWho", ignore = true)
+//    @Mapping(target = "tripEvent", ignore = true)
+//    @Mapping(target = "collectMoneyWho", ignore = true)
     void updateRevenueRegularFromRequest(RevenueRegularRequest request, @MappingTarget RevenueRegular revenueRegular);
 
     default Timestamp stringToTimestamp(String dateString) {

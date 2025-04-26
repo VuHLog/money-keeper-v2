@@ -23,6 +23,6 @@ public class ExpenseRegularResponse {
     private DictionaryBucketPaymentResponse beneficiaryAccount;
     private DictionaryBucketPaymentResponse dictionaryBucketPayment;
     private DictionaryExpense dictionaryExpense;
-    private TripEventResponse tripEvent;
-    private BeneficiaryResponse beneficiary;
+    private String tripEvent;
+    private String beneficiary;
 }

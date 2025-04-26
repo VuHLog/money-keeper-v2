@@ -18,8 +18,8 @@ public interface ExpenseRegularMapper {
     @Mapping(target = "expenseDate", expression = "java(stringToTimestamp(request.getExpenseDate()))")
     @Mapping(target = "dictionaryBucketPayment", ignore = true)
     @Mapping(target = "dictionaryExpense", ignore = true)
-    @Mapping(target = "tripEvent", ignore = true)
-    @Mapping(target = "beneficiary", ignore = true)
+//    @Mapping(target = "tripEvent", ignore = true)
+//    @Mapping(target = "beneficiary", ignore = true)
     ExpenseRegular toExpenseRegular(ExpenseRegularRequest request);
 
     @Named("stringToTimestamp")
@@ -42,8 +42,8 @@ public interface ExpenseRegularMapper {
     @Mapping(target = "expenseDate", expression = "java(stringToTimestamp(request.getExpenseDate()))")
     @Mapping(target = "dictionaryBucketPayment", ignore = true)
     @Mapping(target = "dictionaryExpense", ignore = true)
-    @Mapping(target = "tripEvent", ignore = true)
-    @Mapping(target = "beneficiary", ignore = true)
+//    @Mapping(target = "tripEvent", ignore = true)
+//    @Mapping(target = "beneficiary", ignore = true)
     void updateExpenseRegularFromRequest(ExpenseRegularRequest request, @MappingTarget ExpenseRegular expenseRegular);
 
     default Timestamp stringToTimestamp(String dateString) {
