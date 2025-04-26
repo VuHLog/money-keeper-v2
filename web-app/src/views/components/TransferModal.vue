@@ -251,7 +251,7 @@ onUnmounted(() => {
                   <div class="flex items-center justify-between">
                     <div class="flex items-center space-x-2">
                       <div v-if="transferData.fromAccount" class="flex items-center space-x-2">
-                        <Avatar :src="transferData.fromAccount.iconUrl" :name="transferData.fromAccount.accountName" size="m" />
+                        <Avatar :src="transferData.fromAccount.iconUrl" :alt="transferData.fromAccount.accountName" size="m" />
                         <span>{{ transferData.fromAccount.accountName }} ({{ formatCurrency(transferData.fromAccount.balance) }})</span>
                       </div>
                       <span v-else class="text-text-secondary">Chọn tài khoản chuyển</span>
@@ -284,7 +284,7 @@ onUnmounted(() => {
                       }
                     }"
                   >
-                    <Avatar :src="account.iconUrl" :name="account.accountName" size="m" />
+                    <Avatar :src="account.iconUrl" :alt="account.accountName" size="m" />
                     <span>{{ account.accountName }} ({{ formatCurrency(account.balance) }})</span>
                   </div>
                 </div>
@@ -312,7 +312,7 @@ onUnmounted(() => {
                   <div class="flex items-center justify-between">
                     <div class="flex items-center space-x-2">
                       <div v-if="transferData.toAccount" class="flex items-center space-x-2">
-                        <Avatar :src="transferData.toAccount.iconUrl" :name="transferData.toAccount.accountName" size="m" />
+                        <Avatar :src="transferData.toAccount.iconUrl" :alt="transferData.toAccount.accountName" size="m" />
                         <span>{{ transferData.toAccount.accountName }} ({{ formatCurrency(transferData.toAccount.balance) }})</span>
                       </div>
                       <span v-else class="text-text-secondary">Chọn tài khoản nhận</span>
@@ -345,7 +345,7 @@ onUnmounted(() => {
                       }
                     }"
                   >
-                    <Avatar :src="account.iconUrl" :name="account.accountName" size="m" />
+                    <Avatar :src="account.iconUrl" :alt="account.accountName" size="m" />
                     <span>{{ account.accountName }} ({{ formatCurrency(account.balance) }})</span>
                   </div>
                 </div>

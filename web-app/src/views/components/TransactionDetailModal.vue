@@ -83,9 +83,9 @@ const isExpense = computed(() => {
               <div>
                 <p class="text-sm text-text-secondary">Danh mục</p>
                 <p class="font-medium flex text-text">
-                  <Avatar v-if="props.transactionType === 'revenue'" :src="transaction.dictionaryRevenue.iconUrl" :name="transaction.dictionaryRevenue.name"
+                  <Avatar v-if="props.transactionType === 'revenue'" :src="transaction.dictionaryRevenue.iconUrl" :alt="transaction.dictionaryRevenue.name"
                     size="m" class="mr-2" />
-                  <Avatar v-else-if="props.transactionType === 'expense'" :src="transaction.dictionaryExpense.iconUrl" :name="transaction.dictionaryExpense.name"
+                  <Avatar v-else-if="props.transactionType === 'expense'" :src="transaction.dictionaryExpense.iconUrl" :alt="transaction.dictionaryExpense.name"
                     size="m" class="mr-2" />
                   {{ props.transactionType === 'revenue' ? transaction.dictionaryRevenue.name : transaction.dictionaryExpense.name }}
                 </p>

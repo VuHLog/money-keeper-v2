@@ -9,7 +9,7 @@ const router = useRouter()
 const store = useAuthStore();
 const route = useRoute()
 const isUserMenuOpen = ref(false)
-const userAvatar = ref("https://res.cloudinary.com/cloud1412/image/upload/v1739899158/hffbxsj6wbkbzkxjfetz.png")
+const userAvatar = computed(() => store.avatarUrl || store.avatarUrlDefault)
 const isNotificationsOpen = ref(false)
 const selectedNotification = ref(null)
 const isDetailModalOpen = ref(false)
@@ -167,7 +167,10 @@ const formatDateTime = (date) => {
   }).format(date)
 }
 
-onMounted(() => {
+onMounted(async () => {
+  let user = await store.getMyInfo();
+  store.avatarUrl = user.avatarUrl
+  store.fullName = user.fullName
   document.addEventListener('click', closeUserMenu)
   document.addEventListener('click', closeNotifications)
 })
