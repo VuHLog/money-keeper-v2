@@ -26,6 +26,8 @@ public class ExpenseRegular {
     private Timestamp modifiedDate;
     private String transferType;
     private long balance;
+    private String tripEvent;
+    private String beneficiary;
 
     @ManyToOne(cascade = {CascadeType.PERSIST, CascadeType.MERGE, CascadeType.DETACH, CascadeType.REFRESH})
     @JoinColumn(name = "beneficiary_account_id")
@@ -39,13 +41,13 @@ public class ExpenseRegular {
     @JoinColumn(name = "dictionary_expense_id")
     private DictionaryExpense dictionaryExpense;
 
-    @ManyToOne
-    @JoinColumn(name = "trip_event_id")
-    private TripEvent tripEvent;
-
-    @ManyToOne
-    @JoinColumn(name = "beneficiary_id")
-    private Beneficiary beneficiary;
+//    @ManyToOne
+//    @JoinColumn(name = "trip_event_id")
+//    private TripEvent tripEvent;
+//
+//    @ManyToOne
+//    @JoinColumn(name = "beneficiary_id")
+//    private Beneficiary beneficiary;
 
     @PrePersist
     public void onCreate() {

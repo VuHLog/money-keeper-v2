@@ -52,17 +52,17 @@ public class Users {
     @JsonIgnore
     private Set<DictionaryBucketPayment> dictionaryBucketPayment;
 
-    @OneToMany(mappedBy = "user")
-    @JsonIgnore
-    private Set<Beneficiary> beneficiaries;
-
-    @OneToMany(mappedBy = "user")
-    @JsonIgnore
-    private Set<TripEvent> tripEvents;
-
-    @OneToMany(mappedBy = "user")
-    @JsonIgnore
-    private Set<CollectMoneyWho> collectMoneyWho;
+//    @OneToMany(mappedBy = "user")
+//    @JsonIgnore
+//    private Set<Beneficiary> beneficiaries;
+//
+//    @OneToMany(mappedBy = "user")
+//    @JsonIgnore
+//    private Set<TripEvent> tripEvents;
+//
+//    @OneToMany(mappedBy = "user")
+//    @JsonIgnore
+//    private Set<CollectMoneyWho> collectMoneyWho;
 
     @OneToMany(mappedBy = "user")
     @JsonIgnore

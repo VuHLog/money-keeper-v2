@@ -16,6 +16,6 @@ public class RevenueRegularRequest {
     private String revenueDate;
     private String dictionaryBucketPaymentId;
     private String dictionaryRevenueId;
-    private String tripEventId;
-    private String collectMoneyWhoId;
+    private String tripEvent;
+    private String collectMoneyWho;
 }

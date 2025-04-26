@@ -45,8 +45,8 @@ public class ExpenseRegularServiceImpl implements ExpenseRegularService {
     private final DictionaryBucketPaymentRepository dictionaryBucketPaymentRepository;
     private final DictionaryExpenseRepository dictionaryExpenseRepository;
     private final DictionaryRevenueRepository dictionaryRevenueRepository;
-    private final TripEventRepository tripEventRepository;
-    private final BeneficiaryRepository beneficiaryRepository;
+//    private final TripEventRepository tripEventRepository;
+//    private final BeneficiaryRepository beneficiaryRepository;
     private final TransactionHistoryRepository transactionHistoryRepository;
     private final ExpenseRegularMapper expenseRegularMapper;
     private final RevenueRegularRepository revenueRegularRepository;
@@ -90,16 +90,16 @@ public class ExpenseRegularServiceImpl implements ExpenseRegularService {
         expenseRegular.setDictionaryBucketPayment(dictionaryBucketPayment);
         DictionaryExpense dictionaryExpense = dictionaryExpenseRepository.findById(request.getDictionaryExpenseId()).orElseThrow(() -> new AppException(ErrorCode.BUCKET_PAYMENT_NOT_EXISTED));
         expenseRegular.setDictionaryExpense(dictionaryExpense);
-        TripEvent tripEvent = null;
-        if(request.getTripEventId() != null && !request.getTripEventId().isEmpty()) {
-            tripEvent = tripEventRepository.findById(request.getTripEventId()).orElse(null);
-        }
-        expenseRegular.setTripEvent(tripEvent);
-        Beneficiary beneficiary = null;
-        if(request.getBeneficiaryId() != null && !request.getBeneficiaryId().isEmpty()) {
-            beneficiary = beneficiaryRepository.findById(request.getBeneficiaryId()).orElse(null);
-        }
-        expenseRegular.setBeneficiary(beneficiary);
+//        TripEvent tripEvent = null;
+//        if(request.getTripEventId() != null && !request.getTripEventId().isEmpty()) {
+//            tripEvent = tripEventRepository.findById(request.getTripEventId()).orElse(null);
+//        }
+//        expenseRegular.setTripEvent(tripEvent);
+//        Beneficiary beneficiary = null;
+//        if(request.getBeneficiaryId() != null && !request.getBeneficiaryId().isEmpty()) {
+//            beneficiary = beneficiaryRepository.findById(request.getBeneficiaryId()).orElse(null);
+//        }
+//        expenseRegular.setBeneficiary(beneficiary);
 
         //update balance
         updateBalance(dictionaryBucketPayment, request.getAmount(), expenseRegular.getExpenseDate(), null, true);
@@ -267,16 +267,16 @@ public class ExpenseRegularServiceImpl implements ExpenseRegularService {
             DictionaryExpense dictionaryExpense = dictionaryExpenseRepository.findById(request.getDictionaryExpenseId()).orElse(null);
             expenseRegular.setDictionaryExpense(dictionaryExpense);
         }
-        TripEvent tripEvent = null;
-        if(request.getTripEventId() != null && !request.getTripEventId().isEmpty()) {
-            tripEvent = tripEventRepository.findById(request.getTripEventId()).orElse(null);
-        }
-        expenseRegular.setTripEvent(tripEvent);
-        Beneficiary beneficiary = null;
-        if(request.getBeneficiaryId() != null && !request.getBeneficiaryId().isEmpty()) {
-            beneficiary = beneficiaryRepository.findById(request.getBeneficiaryId()).orElse(null);
-        }
-        expenseRegular.setBeneficiary(beneficiary);
+//        TripEvent tripEvent = null;
+//        if(request.getTripEventId() != null && !request.getTripEventId().isEmpty()) {
+//            tripEvent = tripEventRepository.findById(request.getTripEventId()).orElse(null);
+//        }
+//        expenseRegular.setTripEvent(tripEvent);
+//        Beneficiary beneficiary = null;
+//        if(request.getBeneficiaryId() != null && !request.getBeneficiaryId().isEmpty()) {
+//            beneficiary = beneficiaryRepository.findById(request.getBeneficiaryId()).orElse(null);
+//        }
+//        expenseRegular.setBeneficiary(beneficiary);
 
         //create transaction history
         TransactionHistory transactionHistory = TransactionHistory.builder()

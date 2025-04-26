@@ -25,15 +25,15 @@ public interface ExpenseRegularRepository extends JpaRepository<ExpenseRegular, 
     @Query("UPDATE ExpenseRegular e SET e.dictionaryBucketPayment = NULL WHERE e.dictionaryBucketPayment.id = :dictionaryBucketPaymentId")
     void unsetDictionaryBucketPaymentInExpenseRegular(@Param("dictionaryBucketPaymentId") String dictionaryBucketPaymentId);
 
-    @Modifying
-    @Transactional
-    @Query("UPDATE ExpenseRegular e SET e.tripEvent = NULL WHERE e.tripEvent.id = :tripEventId")
-    void unsetTripEventInExpenseRegular(@Param("tripEventId") String tripEventId);
-
-    @Modifying
-    @Transactional
-    @Query("UPDATE ExpenseRegular e SET e.beneficiary = NULL WHERE e.beneficiary.id = :beneficiaryId")
-    void unsetBeneficiaryInExpenseRegular(@Param("beneficiaryId") String beneficiaryId);
+//    @Modifying
+//    @Transactional
+//    @Query("UPDATE ExpenseRegular e SET e.tripEvent = NULL WHERE e.tripEvent.id = :tripEventId")
+//    void unsetTripEventInExpenseRegular(@Param("tripEventId") String tripEventId);
+//
+//    @Modifying
+//    @Transactional
+//    @Query("UPDATE ExpenseRegular e SET e.beneficiary = NULL WHERE e.beneficiary.id = :beneficiaryId")
+//    void unsetBeneficiaryInExpenseRegular(@Param("beneficiaryId") String beneficiaryId);
 
     @Modifying
     @Transactional
