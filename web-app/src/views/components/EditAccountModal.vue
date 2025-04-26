@@ -1,7 +1,12 @@
 <script setup>
-import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
+import { ref, computed, watch, onMounted, onUnmounted, nextTick } from 'vue'
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
 import { formatCurrency } from '@/utils/formatters'
+import { AccountType } from "@constants/AccountType.js"
+import { useDictionaryBucketPaymentStore } from '@stores/DictionaryBucketPaymentStore.js'
+import { useBankStore } from "@stores/BankStore.js"
+import Avatar from '@/views/components/Avatar.vue'
+
 
 const props = defineProps({
   isOpen: Boolean,
@@ -9,58 +14,15 @@ const props = defineProps({
     type: Object,
     default: null
   },
-  accountTypes: {
-    type: Array,
-    required: false
-  }
 })
 
-const emit = defineEmits(['close', 'update'])
+const dictionaryBucketPaymentStore = useDictionaryBucketPaymentStore();
+const bankStore = useBankStore()
 
-const bankList = [
-  { 
-    id: 'vcb', 
-    name: 'Vietcombank',
-    icon: 'building-columns',
-    color: 'text-[#1e4d2b]'
-  },
-  { 
-    id: 'tcb', 
-    name: 'Techcombank',
-    icon: 'building-columns',
-    color: 'text-[#f53b47]'
-  },
-  { 
-    id: 'mb', 
-    name: 'MB Bank',
-    icon: 'building-columns',
-    color: 'text-[#1414b3]'
-  },
-  { 
-    id: 'acb', 
-    name: 'ACB',
-    icon: 'building-columns',
-    color: 'text-[#0066b3]'
-  },
-  { 
-    id: 'bidv', 
-    name: 'BIDV',
-    icon: 'building-columns',
-    color: 'text-[#1e589d]'
-  },
-  { 
-    id: 'vtb', 
-    name: 'VietinBank',
-    icon: 'building-columns',
-    color: 'text-[#00529c]'
-  },
-  { 
-    id: 'other', 
-    name: 'Ngân hàng khác',
-    icon: 'building',
-    color: 'text-gray-400'
-  }
-]
+const emit = defineEmits(['close', 'update'])
+const accountTypes = ref(AccountType)
+
+const bankList = ref([])
 
 const editingAccount = ref(null)
 const newAccount = ref({
@@ -84,31 +46,103 @@ const isTypeDropdownOpen = ref(false)
 const isBankDropdownOpen = ref(false)
 const bankSearchQuery = ref('')
 
+const typeDropdownPosition = ref({ top: 0, left: 0, width: 0 })
+const bankDropdownPosition = ref({ top: 0, left: 0, width: 0 })
+
+const updateTypeDropdownPosition = () => {
+  const trigger = document.querySelector('.edit-type-dropdown-container')
+  if (trigger) {
+    const rect = trigger.getBoundingClientRect()
+    typeDropdownPosition.value = {
+      top: rect.bottom + window.scrollY,
+      left: rect.left + window.scrollX,
+      width: rect.width
+    }
+  }
+}
+
+const updateBankDropdownPosition = () => {
+  const trigger = document.querySelector('.edit-bank-dropdown-container')
+  if (trigger) {
+    const rect = trigger.getBoundingClientRect()
+    bankDropdownPosition.value = {
+      top: rect.bottom + window.scrollY,
+      left: rect.left + window.scrollX,
+      width: rect.width
+    }
+  }
+}
+
+watch(isTypeDropdownOpen, (newVal) => {
+  if (newVal) {
+    nextTick(() => {
+      updateTypeDropdownPosition()
+    })
+  }
+})
+
+watch(isBankDropdownOpen, (newVal) => {
+  if (newVal) {
+    nextTick(() => {
+      updateBankDropdownPosition()
+    })
+  }
+})
+
+// Add window resize handler
+onMounted(() => {
+  window.addEventListener('resize', () => {
+    if (isTypeDropdownOpen.value) {
+      updateTypeDropdownPosition()
+    }
+    if (isBankDropdownOpen.value) {
+      updateBankDropdownPosition()
+    }
+  })
+})
+
+onUnmounted(() => {
+  window.removeEventListener('resize', () => {
+    if (isTypeDropdownOpen.value) {
+      updateTypeDropdownPosition()
+    }
+    if (isBankDropdownOpen.value) {
+      updateBankDropdownPosition()
+    }
+  })
+})
+
+onMounted(async () => {
+  bankList.value = await bankStore.getBanks()
+  accountTypes.value = AccountType
+})
+
 // Watch for account changes to update form
 watch(() => props.account, (newVal) => {
   if (newVal) {
     editingAccount.value = newVal
     newAccount.value = {
-      name: newVal.name,
-      type: newVal.type,
+      accountName: newVal.accountName,
+      accountType: newVal.accountType,
       balance: newVal.balance,
-      description: newVal.description || '',
-      bankId: newVal.bankId || '',
-      creditLimit: newVal.creditLimit || ''
+      interpretation: newVal.interpretation || '',
+      bankId: newVal.bank?.id || '',
+      creditLimit: newVal.creditLimit || '',
+      iconUrl: newVal.iconUrl || ''
     }
   }
 }, { immediate: true })
 
 const selectedBank = computed(() => {
-  return bankList.find(bank => bank.id === newAccount.value.bankId) || { id: '', name: 'Chọn ngân hàng' }
+  return bankList.value.find(bank => bank.id === newAccount.value.bankId)
 })
 
 const showBankField = computed(() => {
-  return ['bank', 'credit'].includes(newAccount.value.type)
+  return ['Tài khoản ngân hàng', 'Thẻ tín dụng'].includes(newAccount.value.accountType)
 })
 
 const showCreditLimitField = computed(() => {
-  return newAccount.value.type === 'credit'
+  return newAccount.value.accountType === 'Thẻ tín dụng'
 })
 
 const formattedCreditLimit = computed({
@@ -135,17 +169,18 @@ const formattedBalance = computed({
 })
 
 const selectedAccountType = computed(() => {
-  return props.accountTypes.find(t => t.value === newAccount.value.type)
+  return accountTypes.value.find(t => t.name === newAccount.value.accountType)
 })
 
 const hasChanges = computed(() => {
   if (!editingAccount.value) return false
   
   const basicFieldsChanged = 
-    editingAccount.value.name !== newAccount.value.name.trim() ||
-    editingAccount.value.type !== newAccount.value.type ||
+    editingAccount.value.accountName !== newAccount.value.accountName.trim() ||
+    editingAccount.value.accountType !== newAccount.value.accountType ||
     editingAccount.value.balance !== Number(newAccount.value.balance) ||
-    editingAccount.value.description !== newAccount.value.description.trim()
+    editingAccount.value.interpretation !== newAccount.value.interpretation.trim() ||
+    editingAccount.value.iconUrl !== newAccount.value.iconUrl
 
   const bankFieldChanged = 
     (editingAccount.value.bankId || '') !== (newAccount.value.bankId || '')
@@ -159,17 +194,20 @@ const hasChanges = computed(() => {
 const validateForm = () => {
   let isValid = true
   errors.value = {
-    name: '',
+    accountName: '',
+    accountType: '',
     balance: '',
+    interpretation: '',
+    iconUrl: '',
     bankId: '',
     creditLimit: ''
   }
 
   // Validate name
-  if (!newAccount.value.name.trim()) {
-    errors.value.name = 'Vui lòng nhập tên tài khoản'
+  if (!newAccount.value.accountName.trim()) {
+    errors.value.accountName = 'Vui lòng nhập tên tài khoản'
     isValid = false
-  } else if (newAccount.value.name.trim().length < 3) {
+  } else if (newAccount.value.accountName.trim().length < 3) {
     errors.value.name = 'Tên tài khoản phải có ít nhất 3 ký tự'
     isValid = false
   }
@@ -211,15 +249,16 @@ const handleClose = () => {
 const resetAndClose = () => {
   editingAccount.value = null
   newAccount.value = {
-    name: '',
-    type: 'cash',
+    accountName: '',
+    accountType: 'cash',
     balance: '',
-    description: '',
+    interpretation: '',
     bankId: '',
-    creditLimit: ''
+    creditLimit: '',
+    iconUrl: ''
   }
   errors.value = {
-    name: '',
+    accountName: '',
     balance: '',
     bankId: '',
     creditLimit: ''
@@ -230,7 +269,7 @@ const resetAndClose = () => {
   emit('close')
 }
 
-const handleUpdate = () => {
+const handleUpdate = async () => {
   if (!validateForm()) {
     return
   }
@@ -239,16 +278,31 @@ const handleUpdate = () => {
     resetAndClose()
     return
   }
-
-  emit('update', {
-    ...editingAccount.value,
-    name: newAccount.value.name.trim(),
-    type: newAccount.value.type,
-    balance: Number(newAccount.value.balance),
-    description: newAccount.value.description.trim(),
-    bankId: showBankField.value ? newAccount.value.bankId : undefined,
-    creditLimit: showCreditLimitField.value ? Number(newAccount.value.creditLimit) : undefined
-  })
+  try {
+    let data = {
+      ...editingAccount.value,
+      accountName: newAccount.value.accountName.trim(),
+      accountType: newAccount.value.accountType,
+      balance: Number(newAccount.value.balance),
+      interpretation: newAccount.value.interpretation.trim(),
+      iconUrl: newAccount.value.iconUrl,
+      bankId: showBankField.value ? newAccount.value.bankId : undefined,
+      creditLimit: showCreditLimitField.value ? Number(newAccount.value.creditLimit) : undefined
+    };
+    await dictionaryBucketPaymentStore.update(data.id, data);
+    emit('update', {
+      ...editingAccount.value,
+      accountName: newAccount.value.accountName.trim(),
+      accountType: newAccount.value.accountType,
+      balance: Number(newAccount.value.balance),
+      interpretation: newAccount.value.interpretation.trim(),
+      iconUrl: newAccount.value.iconUrl,
+      bankId: showBankField.value ? newAccount.value.bankId : undefined,
+      creditLimit: showCreditLimitField.value ? Number(newAccount.value.creditLimit) : undefined
+    })
+  } catch (err) {
+    console.log(err)
+  }
 
   resetAndClose()
 }
@@ -258,9 +312,9 @@ const continueEditing = () => {
 }
 
 const filteredBanks = computed(() => {
-  if (!bankSearchQuery.value) return bankList
+  if (!bankSearchQuery.value) return bankList.value
   const query = bankSearchQuery.value.toLowerCase()
-  return bankList.filter(bank => bank.name.toLowerCase().includes(query))
+  return bankList.value.filter(bank => bank.shortName.toLowerCase().includes(query) || bank.name.toLowerCase().includes(query))
 })
 
 // Function để đóng tất cả dropdown khi click ra ngoài
@@ -377,24 +431,24 @@ onUnmounted(() => {
                 Tên tài khoản <span class="text-danger">*</span>
               </label>
               <input 
-                v-model="newAccount.name"
+                v-model="newAccount.accountName"
                 type="text"
                 class="w-full px-3 py-2 border border-gray-100 rounded-lg focus:outline-none focus:ring-1 focus:ring-primary/20 transition-colors"
                 :class="[
 
-                  errors.name ? 'border-danger/50 focus:border-danger focus:ring-danger/20' : 'border-gray-100 focus:border-primary/50',
-                  newAccount.name ? 'bg-white' : 'bg-gray-50'
+                  errors.accountName ? 'border-danger/50 focus:border-danger focus:ring-danger/20' : 'border-gray-100 focus:border-primary/50',
+                  newAccount.accountName ? 'bg-white' : 'bg-gray-50'
                 ]"
                 placeholder="Nhập tên tài khoản"
               />
-              <p v-if="errors.name" class="mt-1 text-sm text-danger">
-                {{ errors.name }}
+              <p v-if="errors.accountName" class="mt-1 text-sm text-danger">
+                {{ errors.accountName }}
               </p>
             </div>
 
-            <div>
-              <label class="block text-sm font-medium text-text-secondary mb-1">
-                Loại tài khoản <span class="text-danger">*</span>
+            <div class="mb-4">
+              <label class="block text-sm font-medium text-gray-700 mb-1">
+                Loại tài khoản
               </label>
               <div class="relative edit-type-dropdown-container">
                 <!-- Selected Value Display -->
@@ -408,12 +462,8 @@ onUnmounted(() => {
                   @click="isTypeDropdownOpen = !isTypeDropdownOpen"
                 >
                   <div class="flex items-center flex-1">
-                    <font-awesome-icon 
-                      :icon="['fas', selectedAccountType.icon]" 
-                      :class="selectedAccountType.color"
-                      class="mr-2"
-                    />
-                    <span>{{ selectedAccountType.label }}</span>
+                    <Avatar :src="selectedAccountType?.icon" :alt="selectedAccountType?.name" size="sm" class="mr-2" />
+                    <span>{{ selectedAccountType?.name }}</span>
                   </div>
                   <font-awesome-icon 
                     :icon="['fas', 'chevron-down']" 
@@ -423,34 +473,40 @@ onUnmounted(() => {
                 </div>
 
                 <!-- Dropdown Options -->
-                <div 
+                <div
                   v-if="isTypeDropdownOpen"
-                  class="absolute z-10 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg py-1 max-h-48 overflow-y-auto"
+                  :style="{
+                    position: 'fixed',
+                    top: `${typeDropdownPosition.top}px`,
+                    left: `${typeDropdownPosition.left}px`,
+                    width: `${typeDropdownPosition.width}px`,
+                    maxHeight: '200px',
+                    overflowY: 'auto',
+                    zIndex: 50
+                  }"
+                  class="bg-white border border-gray-300 rounded-md shadow-lg"
                 >
                   <div 
                     v-for="type in accountTypes" 
-                    :key="type.value"
+                    :key="type.id"
                     class="flex items-center px-3 py-2 cursor-pointer hover:bg-gray-50"
-                    :class="{'bg-primary/5': type.value === newAccount.type}"
+                    :class="{'bg-primary/5': type.name === newAccount.accountType}"
                     @click="() => {
-                      newAccount.type = type.value;
+                      newAccount.accountType = type.name;
+                      newAccount.iconUrl = type.icon;
                       isTypeDropdownOpen = false;
                     }"
                   >
-                    <font-awesome-icon 
-                      :icon="['fas', type.icon]" 
-                      :class="type.color"
-                      class="mr-2"
-                    />
-                    <span>{{ type.label }}</span>
+                    <Avatar :src="type.icon" :alt="type.name" size="m" class="mr-2" />
+                    <span>{{ type.name }}</span>
                   </div>
                 </div>
               </div>
             </div>
 
             <div v-if="showBankField">
-              <label class="block text-sm font-medium text-text-secondary mb-1">
-                Ngân hàng <span class="text-danger">*</span>
+              <label class="block text-sm font-medium text-gray-700 mb-1">
+                Ngân hàng
               </label>
               <div class="relative edit-bank-dropdown-container">
                 <div 
@@ -462,13 +518,14 @@ onUnmounted(() => {
                   @click="isBankDropdownOpen = !isBankDropdownOpen"
                 >
                   <div class="flex items-center flex-1">
-                    <font-awesome-icon 
-                      v-if="selectedBank.icon"
-                      :icon="['fas', selectedBank.icon]" 
-                      :class="selectedBank.color"
-                      class="mr-2"
-                    />
-                    <span>{{ selectedBank.name }}</span>
+                    <template v-if="selectedBank">
+                      <Avatar :src="selectedBank.logo" :alt="selectedBank.shortName" size="sm" class="mr-2" />
+                      <span>{{ selectedBank.name }}</span>
+                    </template>
+                    <template v-else>
+                      <font-awesome-icon :icon="['fas', 'building']" class="mr-2 text-lg text-gray-400" />
+                      <span>Chọn ngân hàng</span>
+                    </template>
                   </div>
                   <font-awesome-icon 
                     :icon="['fas', 'chevron-down']" 
@@ -477,9 +534,18 @@ onUnmounted(() => {
                   />
                 </div>
 
-                <div 
+                <div
                   v-if="isBankDropdownOpen"
-                  class="absolute z-10 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg divide-y divide-gray-100"
+                  :style="{
+                    position: 'fixed',
+                    top: `${bankDropdownPosition.top}px`,
+                    left: `${bankDropdownPosition.left}px`,
+                    width: `${bankDropdownPosition.width}px`,
+                    maxHeight: '200px',
+                    overflowY: 'auto',
+                    zIndex: 50
+                  }"
+                  class="bg-white border border-gray-300 rounded-md shadow-lg"
                 >
                   <div class="p-2">
                     <!-- Bank search input -->
@@ -504,12 +570,8 @@ onUnmounted(() => {
                         bankSearchQuery = '';
                       }"
                     >
-                      <font-awesome-icon 
-                        :icon="['fas', bank.icon]" 
-                        :class="bank.color"
-                        class="mr-2"
-                      />
-                      <span>{{ bank.name }}</span>
+                    <Avatar :src="bank.logo" :alt="bank.shortName" size="m" class="mr-2" />
+                    <span>{{ bank.name }}</span>
                     </div>
                     <div 
                       v-if="filteredBanks.length === 0" 
@@ -550,10 +612,10 @@ onUnmounted(() => {
                 Diễn giải
               </label>
               <input 
-                v-model="newAccount.description"
+                v-model="newAccount.interpretation"
                 type="text"
                 class="w-full px-3 py-2 border border-gray-100 rounded-lg focus:outline-none focus:ring-1 focus:ring-primary/20 focus:border-primary/50 transition-colors"
-                :class="newAccount.description ? 'bg-white' : 'bg-gray-50'"
+                :class="newAccount.interpretation ? 'bg-white' : 'bg-gray-50'"
                 placeholder="Nhập diễn giải cho tài khoản"
               />
             </div>

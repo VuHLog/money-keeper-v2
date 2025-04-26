@@ -79,7 +79,8 @@ public class DictionaryBucketPaymentServiceImpl implements DictionaryBucketPayme
 
     @Override
     public void deleteDictionaryBucketPayment(String id) {
-
+        DictionaryBucketPayment dictionaryBucketPayment = dictionaryBucketPaymentRepository.findById(id).orElseThrow(() -> new AppException(ErrorCode.BUCKET_PAYMENT_NOT_EXISTED));
+        dictionaryBucketPaymentRepository.deleteById(id);
     }
 
     @Override

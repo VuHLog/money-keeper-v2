@@ -29,6 +29,19 @@ export const getWeekday = (dateString) => {
   return weekdays[date.getDay()];
 };
 
+//format date String yyyy/mm/dd hh:mm:ss -> dd/mm/yyyy hh:mm:ss
+export const formatDateToVietnam = (date) => {
+  const dateObject = new Date(date);
+  const day = dateObject.getDate().toString().padStart(2, '0');
+  const month = (dateObject.getMonth() + 1).toString().padStart(2, '0');
+  const year = dateObject.getFullYear();
+  const hours = dateObject.getHours().toString().padStart(2, '0');
+  const minutes = dateObject.getMinutes().toString().padStart(2, '0');
+  const seconds = dateObject.getSeconds().toString().padStart(2, '0');
+  
+  return `${day}/${month}/${year} ${hours}:${minutes}:${seconds}`;
+}
+
 //Time zone -> yyyy/mm/dd hh:mm:ss
 export const formatDate = (date) => {
   return date instanceof Date
@@ -53,3 +66,9 @@ export const formatDateStringToDate = (dateString, showYear = true) => {
   const dayMonth = `${date.getDate().toString().padStart(2, '0')}/${(date.getMonth() + 1).toString().padStart(2, '0')}`;
   return showYear ? `${dayMonth}/${date.getFullYear()}` : dayMonth;
 };
+
+export const getVietnamDateTime = () => {
+  const now = new Date()
+  const vietnamTime = new Date(now.getTime() + (7 * 60 * 60 * 1000))
+  return vietnamTime.toISOString().slice(0, 19).replace('T', ' ')
+}

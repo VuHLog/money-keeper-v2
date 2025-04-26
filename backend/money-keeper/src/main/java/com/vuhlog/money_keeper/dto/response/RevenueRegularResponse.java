@@ -17,6 +17,7 @@ public class RevenueRegularResponse {
     private String location;
     private String interpretation;
     private String revenueDate;
+    private String transferType;
     private String createdDate;
     private String modifiedDate;
     private DictionaryBucketPaymentResponse dictionaryBucketPayment;

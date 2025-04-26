@@ -2,6 +2,12 @@
 import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
 import { formatCurrency } from '@/utils/formatters'
+import { ElDatePicker } from 'element-plus'
+import 'element-plus/theme-chalk/el-date-picker.css'
+import Avatar from '@/views/components/Avatar.vue'
+import { getVietnamDateTime } from '@/utils/DateUtil'
+import { useExpenseRegularStore } from '@/store/ExpenseRegularStore'
+import Swal from 'sweetalert2'
 
 const props = defineProps({
   isOpen: Boolean,
@@ -15,19 +21,23 @@ const props = defineProps({
   }
 })
 
+const expenseRegularStore = useExpenseRegularStore()
+
 const emit = defineEmits(['close', 'transfer'])
 
 const transferData = ref({
   amount: '',
   fromAccount: null,
   toAccount: null,
-  description: ''
+  interpretation: '',
+  transferDate: getVietnamDateTime()
 })
 
 const errors = ref({
   amount: '',
   fromAccount: '',
-  toAccount: ''
+  toAccount: '',
+  transferDate: ''
 })
 
 const isFromAccountDropdownOpen = ref(false)
@@ -57,7 +67,8 @@ const validateForm = () => {
   errors.value = {
     amount: '',
     fromAccount: '',
-    toAccount: ''
+    toAccount: '',
+    transferDate: ''
   }
 
   // Validate amount
@@ -89,6 +100,12 @@ const validateForm = () => {
     isValid = false
   }
 
+  // Validate transfer date
+  if (!transferData.value.transferDate) {
+    errors.value.transferDate = 'Vui lòng chọn ngày và giờ chuyển khoản'
+    isValid = false
+  }
+
   return isValid
 }
 
@@ -97,55 +114,52 @@ const handleClose = () => {
     amount: '',
     fromAccount: null,
     toAccount: null,
-    description: ''
+    interpretation: '',
+    transferDate: getVietnamDateTime()
   }
   errors.value = {
     amount: '',
     fromAccount: '',
-    toAccount: ''
+    toAccount: '',
+    transferDate: ''
   }
   emit('close')
 }
 
-const handleTransfer = () => {
+const handleTransfer = async () => {
   if (!validateForm()) {
     return
   }
 
-  emit('transfer', {
-    amount: Number(transferData.value.amount),
-    fromAccount: transferData.value.fromAccount,
-    toAccount: transferData.value.toAccount,
-    description: transferData.value.description.trim()
-  })
-
-  handleClose()
-}
-
-const getAccountIcon = (type) => {
-  switch (type) {
-    case 'cash':
-      return 'money-bill-wave'
-    case 'bank':
-      return 'university'
-    case 'credit':
-      return 'credit-card'
-    default:
-      return 'wallet'
+  try{
+    let data = {
+      amount: Number(transferData.value.amount),
+      dictionaryBucketPaymentId: transferData.value.fromAccount.id,
+      beneficiaryAccountId: transferData.value.toAccount.id,
+      interpretation: transferData.value.interpretation.trim(),
+      expenseDate: transferData.value.transferDate
+    }
+    await expenseRegularStore.createTransfer(data)
+    emit('transfer', {
+      ...data,
+      fromAccount: transferData.value.fromAccount,
+      toAccount: transferData.value.toAccount
+    })
+    Swal.fire({
+        title: "Thành công",
+        text: "Bạn đã thêm chuyển khoản thành công!",
+        icon: "success",
+      });
+    handleClose()
+  } catch (error) {
+    console.error('Error transferring funds:', error)
+    Swal.fire({
+      title: "Lỗi",
+      text: "Lỗi khi chuyển khoản!",
+      icon: "error",
+    });
   }
-}
 
-const getAccountColor = (type) => {
-  switch (type) {
-    case 'cash':
-      return 'text-success'
-    case 'bank':
-      return 'text-primary'
-    case 'credit':
-      return 'text-warning'
-    default:
-      return 'text-text-secondary'
-  }
 }
 
 // Function để đóng tất cả dropdown khi click ra ngoài
@@ -224,7 +238,7 @@ onUnmounted(() => {
               <label class="block text-sm font-medium text-text-secondary mb-1">
                 Tài khoản chuyển <span class="text-danger">*</span>
               </label>
-              <div class="relative from-account-dropdown">
+              <div class="relative from-account-dropdown select-none">
                 <div 
                   class="w-full px-3 py-2 border border-gray-100 rounded-lg cursor-pointer hover:border-gray-200"
                   :class="[
@@ -237,11 +251,8 @@ onUnmounted(() => {
                   <div class="flex items-center justify-between">
                     <div class="flex items-center space-x-2">
                       <div v-if="transferData.fromAccount" class="flex items-center space-x-2">
-                        <font-awesome-icon 
-                          :icon="['fas', getAccountIcon(transferData.fromAccount.type)]"
-                          :class="[getAccountColor(transferData.fromAccount.type)]"
-                        />
-                        <span>{{ transferData.fromAccount.name }} ({{ formatCurrency(transferData.fromAccount.balance) }})</span>
+                        <Avatar :src="transferData.fromAccount.iconUrl" :name="transferData.fromAccount.accountName" size="m" />
+                        <span>{{ transferData.fromAccount.accountName }} ({{ formatCurrency(transferData.fromAccount.balance) }})</span>
                       </div>
                       <span v-else class="text-text-secondary">Chọn tài khoản chuyển</span>
                     </div>
@@ -273,12 +284,8 @@ onUnmounted(() => {
                       }
                     }"
                   >
-                    <font-awesome-icon 
-                      :icon="['fas', getAccountIcon(account.type)]"
-                      :class="[getAccountColor(account.type)]"
-                      class="mr-2"
-                    />
-                    <span>{{ account.name }} ({{ formatCurrency(account.balance) }})</span>
+                    <Avatar :src="account.iconUrl" :name="account.accountName" size="m" />
+                    <span>{{ account.accountName }} ({{ formatCurrency(account.balance) }})</span>
                   </div>
                 </div>
               </div>
@@ -292,7 +299,7 @@ onUnmounted(() => {
               <label class="block text-sm font-medium text-text-secondary mb-1">
                 Tài khoản nhận <span class="text-danger">*</span>
               </label>
-              <div class="relative to-account-dropdown">
+              <div class="relative to-account-dropdown select-none">
                 <div 
                   class="w-full px-3 py-2 border border-gray-100 rounded-lg cursor-pointer hover:border-gray-200"
                   :class="[
@@ -305,11 +312,8 @@ onUnmounted(() => {
                   <div class="flex items-center justify-between">
                     <div class="flex items-center space-x-2">
                       <div v-if="transferData.toAccount" class="flex items-center space-x-2">
-                        <font-awesome-icon 
-                          :icon="['fas', getAccountIcon(transferData.toAccount.type)]"
-                          :class="[getAccountColor(transferData.toAccount.type)]"
-                        />
-                        <span>{{ transferData.toAccount.name }} ({{ formatCurrency(transferData.toAccount.balance) }})</span>
+                        <Avatar :src="transferData.toAccount.iconUrl" :name="transferData.toAccount.accountName" size="m" />
+                        <span>{{ transferData.toAccount.accountName }} ({{ formatCurrency(transferData.toAccount.balance) }})</span>
                       </div>
                       <span v-else class="text-text-secondary">Chọn tài khoản nhận</span>
                     </div>
@@ -341,12 +345,8 @@ onUnmounted(() => {
                       }
                     }"
                   >
-                    <font-awesome-icon 
-                      :icon="['fas', getAccountIcon(account.type)]"
-                      :class="[getAccountColor(account.type)]"
-                      class="mr-2"
-                    />
-                    <span>{{ account.name }} ({{ formatCurrency(account.balance) }})</span>
+                    <Avatar :src="account.iconUrl" :name="account.accountName" size="m" />
+                    <span>{{ account.accountName }} ({{ formatCurrency(account.balance) }})</span>
                   </div>
                 </div>
               </div>
@@ -357,14 +357,38 @@ onUnmounted(() => {
 
             <div>
               <label class="block text-sm font-medium text-text-secondary mb-1">
+                Ngày chuyển khoản <span class="text-danger">*</span>
+              </label>
+              <div class="date-picker-container">
+                <el-date-picker
+                  v-model="transferData.transferDate"
+                  type="datetime"
+                  format="DD/MM/YYYY HH:mm:ss"
+                  value-format="YYYY-MM-DD HH:mm:ss"
+                  :placeholder="'Chọn ngày và giờ chuyển khoản'"
+                  :clearable="false"
+                  class="w-full"
+                  :class="[
+                    errors.transferDate ? 'border-danger/50' : 'border-gray-100',
+                    transferData.transferDate ? 'bg-white' : 'bg-gray-50'
+                  ]"
+                />
+              </div>
+              <p v-if="errors.transferDate" class="mt-1 text-sm text-danger">
+                {{ errors.transferDate }}
+              </p>
+            </div>
+
+            <div>
+              <label class="block text-sm font-medium text-text-secondary mb-1">
                 Diễn giải
               </label>
               <!-- For Description Input -->
               <input 
-                v-model="transferData.description"
+                v-model="transferData.interpretation"
                 type="text"
                 class="w-full px-3 py-2 border border-gray-100 rounded-lg focus:outline-none focus:ring-1 focus:ring-primary/20 focus:border-primary/50 transition-colors"
-                :class="transferData.description ? 'bg-white' : 'bg-gray-50'"
+                :class="transferData.interpretation ? 'bg-white' : 'bg-gray-50'"
                 placeholder="Nhập diễn giải cho giao dịch"
               />
             </div>
@@ -391,3 +415,31 @@ onUnmounted(() => {
     </div>
   </Teleport>
 </template>
+
+<style scoped>
+:deep(.el-input__wrapper) {
+  background-color: transparent;
+  box-shadow: none !important;
+  padding: 0;
+}
+
+:deep(.el-input__inner) {
+  height: 38px;
+  color: var(--el-text-color-primary);
+  font-size: 14px;
+}
+
+:deep(.el-input) {
+  --el-input-border-color: var(--el-border-color);
+  --el-input-hover-border-color: var(--el-border-color-hover);
+  --el-input-focus-border-color: var(--el-color-primary);
+}
+
+.date-picker-container {
+  @apply w-full;
+}
+
+.date-picker-container :deep(.el-date-editor) {
+  @apply w-full;
+}
+</style>

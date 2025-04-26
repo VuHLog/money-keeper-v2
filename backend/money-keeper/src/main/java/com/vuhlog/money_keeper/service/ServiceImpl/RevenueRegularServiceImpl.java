@@ -17,6 +17,10 @@ import com.vuhlog.money_keeper.model.PeriodOfTime;
 import com.vuhlog.money_keeper.service.RevenueRegularService;
 import com.vuhlog.money_keeper.util.TimestampUtil;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -47,6 +51,22 @@ public class RevenueRegularServiceImpl implements RevenueRegularService {
         specs = specs.and(RevenueRegularSpecification.hasDictionaryBucketPaymentId(dictionaryBucketPaymentId));
 
         return revenueRegularRepository.findAll(specs).stream().map(revenueRegularMapper::toRevenueRegularResponse).toList();
+    }
+
+    @Override
+    public Page<RevenueRegularResponse> getAllMyRevenueRegularPagination(String field, Integer pageNumber, Integer pageSize, String sort, String search) {
+        Specification<RevenueRegular> specs = Specification.where(null);
+        String userId = userCommon.getMyUserInfo().getId();
+        specs = specs.and(RevenueRegularSpecification.filterByUserId(userId));
+
+        if(search != null && !search.isEmpty()) {
+
+        }
+
+        Sort sortable = sort.equals("asc") ? Sort.by(field).ascending() : Sort.by(field).descending();
+        Pageable pageable = PageRequest.of(pageNumber, pageSize, sortable);
+
+        return revenueRegularRepository.findAll(specs, pageable).map(revenueRegularMapper::toRevenueRegularResponse);
     }
 
     @Override
