@@ -1,6 +1,7 @@
 package com.vuhlog.money_keeper.dao.specification;
 
 import com.vuhlog.money_keeper.entity.ExpenseRegular;
+import com.vuhlog.money_keeper.entity.RevenueRegular;
 import org.springframework.data.jpa.domain.Specification;
 
 public class ExpenseRegularSpecification {
@@ -18,5 +19,9 @@ public class ExpenseRegularSpecification {
 
     public static Specification<ExpenseRegular> hasBeneficiaryId(String beneficiaryId) {
         return (root, query, criteriaBuilder) -> criteriaBuilder.equal(root.get("beneficiary"), beneficiaryId);
+    }
+
+    public static Specification<ExpenseRegular> filterByUserId(String userId) {
+        return (root, query, criteriaBuilder) -> criteriaBuilder.equal(root.get("dictionaryBucketPayment").get("user").get("id"), userId);
     }
 }

@@ -4,9 +4,11 @@ import com.vuhlog.money_keeper.dto.request.ExpenseRegularRequest;
 import com.vuhlog.money_keeper.dto.request.TransferRequest;
 import com.vuhlog.money_keeper.dto.response.ApiResponse;
 import com.vuhlog.money_keeper.dto.response.ExpenseRegularResponse;
+import com.vuhlog.money_keeper.dto.response.RevenueRegularResponse;
 import com.vuhlog.money_keeper.dto.response.TotalExpenseByDateResponse;
 import com.vuhlog.money_keeper.service.ExpenseRegularService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -20,6 +22,17 @@ public class ExpenseRegularController {
     @GetMapping("")
     public ApiResponse<List<ExpenseRegularResponse>> getAllMyExpenseRegular(@RequestParam(name = "dictionaryBucketPaymentId", required = true) String dictionaryBucketPaymentId) {
         return ApiResponse.<List<ExpenseRegularResponse>>builder().result(expenseRegularService.getAllMyExpenseRegular(dictionaryBucketPaymentId)).build();
+    }
+
+    @GetMapping("/pagination")
+    public ApiResponse<Page<ExpenseRegularResponse>> getAllMyExpenseRegularPagination(
+            @RequestParam(name = "field", required = false, defaultValue = "modifiedDate") String field,
+            @RequestParam(name = "pageNumber", required = false, defaultValue = "0") Integer pageNumber,
+            @RequestParam(name = "pageSize", required = false, defaultValue = "5") Integer pageSize,
+            @RequestParam(name = "sort", required = false, defaultValue = "desc") String sort,
+            @RequestParam(name = "search", required = false, defaultValue = "") String search
+    ) {
+        return ApiResponse.<Page<ExpenseRegularResponse>>builder().result(expenseRegularService.getAllMyExpenseRegularPagination(field, pageNumber, pageSize, sort, search)).build();
     }
 
     @GetMapping("/{id}")

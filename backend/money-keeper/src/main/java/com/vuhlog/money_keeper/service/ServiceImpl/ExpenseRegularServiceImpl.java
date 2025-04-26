@@ -6,6 +6,7 @@ import com.vuhlog.money_keeper.constants.TransactionType;
 import com.vuhlog.money_keeper.constants.TransferType;
 import com.vuhlog.money_keeper.dao.*;
 import com.vuhlog.money_keeper.dao.specification.ExpenseRegularSpecification;
+import com.vuhlog.money_keeper.dao.specification.RevenueRegularSpecification;
 import com.vuhlog.money_keeper.dto.request.ExpenseRegularRequest;
 import com.vuhlog.money_keeper.dto.request.ReportCategoryResponse;
 import com.vuhlog.money_keeper.dto.request.TransferRequest;
@@ -23,6 +24,10 @@ import com.vuhlog.money_keeper.service.ExpenseRegularService;
 import com.vuhlog.money_keeper.service.NotificationService;
 import com.vuhlog.money_keeper.util.TimestampUtil;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -58,6 +63,22 @@ public class ExpenseRegularServiceImpl implements ExpenseRegularService {
         specs = specs.and(ExpenseRegularSpecification.hasDictionaryBucketPaymentId(dictionaryBucketPaymentId));
 
         return expenseRegularRepository.findAll(specs).stream().map(expenseRegularMapper::toExpenseRegularResponse).toList();
+    }
+
+    @Override
+    public Page<ExpenseRegularResponse> getAllMyExpenseRegularPagination(String field, Integer pageNumber, Integer pageSize, String sort, String search) {
+        Specification<ExpenseRegular> specs = Specification.where(null);
+        String userId = userCommon.getMyUserInfo().getId();
+        specs = specs.and(ExpenseRegularSpecification.filterByUserId(userId));
+
+        if(search != null && !search.isEmpty()) {
+
+        }
+
+        Sort sortable = sort.equals("asc") ? Sort.by(field).ascending() : Sort.by(field).descending();
+        Pageable pageable = PageRequest.of(pageNumber, pageSize, sortable);
+
+        return expenseRegularRepository.findAll(specs, pageable).map(expenseRegularMapper::toExpenseRegularResponse);
     }
 
     @Override

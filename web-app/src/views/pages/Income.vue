@@ -224,8 +224,16 @@ const handleEditTransaction = (transaction) => {
   editingTransactionId.value = transaction.id
 
   // find category and account id from list based on id
-  const categoryId = categories.value.find(cat => cat.id === transaction.dictionaryRevenue.id)?.id
-  const accountId = accounts.value.find(acc => acc.id === transaction.dictionaryBucketPayment.id)?.id
+  let accountId, categoryId;
+  if(transaction.dictionaryBucketPaymentId){
+    accountId = transaction.dictionaryBucketPaymentId
+  }else accountId = accounts.value.find(acc => acc.id === transaction.dictionaryBucketPayment.id)?.id
+
+  if(transaction.dictionaryRevenueId){
+    categoryId = transaction.dictionaryRevenueId
+  } else {
+    categoryId = categories.value.find(cat => cat.id === transaction.dictionaryRevenue.id)?.id
+  }
 
   // update form data with transaction information
   formData.value = {
@@ -404,10 +412,8 @@ const handleConfirmDelete = async () => {
 <template>
   <div class="p-4">
     <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
-      <!-- Form bên trái -->
       <div class="lg:col-span-7">
         <div class="bg-surface rounded-2xl shadow-sm">
-          <!-- Tiêu đề form -->
           <div class="px-6 pt-6 pb-2 border-b border-gray-100">
             <h2 class="text-lg font-semibold text-text">
               {{ isEditMode ? 'Chỉnh sửa giao dịch thu' : 'Thêm giao dịch thu mới' }}
