@@ -64,7 +64,7 @@ const handleConfirm = () => {
             <div class="flex-shrink-0">
               <Avatar 
                 :src="transactionType === 'revenue' ? transaction.dictionaryRevenue?.iconUrl : transaction.dictionaryExpense?.iconUrl"
-                :name="transactionType === 'revenue' ? transaction.dictionaryRevenue?.name : transaction.dictionaryExpense?.name"
+                :alt="transactionType === 'revenue' ? transaction.dictionaryRevenue?.name : transaction.dictionaryExpense?.name"
                 size="m"
               />
             </div>

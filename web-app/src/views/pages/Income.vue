@@ -452,7 +452,7 @@ const handleConfirmDelete = async () => {
                   ]" @click="isCategoryDropdownOpen = !isCategoryDropdownOpen">
                   <div class="flex items-center flex-1">
                     <Avatar v-if="selectedCategory.iconUrl" :src="selectedCategory.iconUrl"
-                      :name="selectedCategory.name" size="m" class="mr-2" />
+                      :alt="selectedCategory.name" size="m" class="mr-2" />
                     <span>{{ selectedCategory.name }}</span>
                   </div>
                   <font-awesome-icon :icon="['fas', 'chevron-down']" class="text-gray-400 ml-2 transition-transform"
@@ -475,7 +475,7 @@ const handleConfirmDelete = async () => {
                       class="flex items-center px-3 py-2 cursor-pointer hover:bg-gray-50"
                       :class="{ 'bg-primary/5': category.id === formData.categoryId }"
                       @click="formData.categoryId = category.id; isCategoryDropdownOpen = false">
-                      <Avatar :src="category.iconUrl" :name="category.name" size="m" />
+                      <Avatar :src="category.iconUrl" :alt="category.name" size="m" />
                       <span>{{ category.name }}</span>
                     </div>
                     <div v-if="filteredCategories.length === 0" class="px-3 py-2 text-text-secondary text-sm">
@@ -504,7 +504,7 @@ const handleConfirmDelete = async () => {
                   ]" @click="isAccountDropdownOpen = !isAccountDropdownOpen">
                   <div class="flex items-center flex-1">
                     <template v-if="selectedAccount">
-                      <Avatar :src="selectedAccount.iconUrl" :name="selectedAccount.accountName" size="m" />
+                      <Avatar :src="selectedAccount.iconUrl" :alt="selectedAccount.accountName" size="m" />
                       <span>{{ selectedAccount.accountName }}</span>
                     </template>
                     <template v-else>
@@ -522,7 +522,7 @@ const handleConfirmDelete = async () => {
                     class="flex items-center px-3 py-2 cursor-pointer hover:bg-gray-50"
                     :class="{ 'bg-primary/5': account.id === formData.accountId }"
                     @click="formData.accountId = account.id; isAccountDropdownOpen = false">
-                    <Avatar :src="account.iconUrl" :name="account.accountName" size="m" />
+                    <Avatar :src="account.iconUrl" :alt="account.accountName" size="m" />
                     <span>{{ account.accountName }}</span>
                   </div>
                 </div>
@@ -621,7 +621,7 @@ const handleConfirmDelete = async () => {
                     </div>
                     <div>
                       <p class="font-medium flex text-text">
-                        <Avatar :src="transaction.dictionaryRevenue.iconUrl" :name="transaction.dictionaryRevenue.name"
+                        <Avatar :src="transaction.dictionaryRevenue.iconUrl" :alt="transaction.dictionaryRevenue.name"
                           size="m" class="mr-2" />
                         {{ transaction.dictionaryRevenue.name }}
                       </p>

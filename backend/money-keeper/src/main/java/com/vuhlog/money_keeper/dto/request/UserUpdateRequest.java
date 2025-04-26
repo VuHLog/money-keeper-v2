@@ -18,6 +18,4 @@ public class UserUpdateRequest {
     private String email;
 
     private String avatarUrl;
-
-    private Set<Role> roles;
 }

@@ -121,17 +121,6 @@ public class UserServiceImpl implements UserService {
         Users user = usersRepository.findById(userId).get();
         userMapper.updateUser(user, request);
 
-        // xoá user id trong user_role
-        userRoleRepository.deleteByUser(user);
-
-        Set<UserRole> user_roles = new HashSet<>();
-        List<Role> rolesRequest = request.getRoles().stream().toList();
-        for(int i=0; i<rolesRequest.size();i++){
-            user_roles.add(new UserRole(user,rolesRequest.get(i)));
-        }
-
-        user.setUser_roles(user_roles);
-
         return userMapper.toUserResponse(usersRepository.saveAndFlush(user));
     }
 
