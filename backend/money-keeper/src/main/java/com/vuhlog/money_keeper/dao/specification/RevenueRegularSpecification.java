@@ -19,4 +19,8 @@ public class RevenueRegularSpecification {
     public static Specification<RevenueRegular> hasCollectMoneyWhoId(String collectMoneyWhoId) {
         return (root, query, criteriaBuilder) -> criteriaBuilder.equal(root.get("collectMoneyWho"), collectMoneyWhoId);
     }
+
+    public static Specification<RevenueRegular> filterByUserId(String userId) {
+        return (root, query, criteriaBuilder) -> criteriaBuilder.equal(root.get("dictionaryBucketPayment").get("user").get("id"), userId);
+    }
 }

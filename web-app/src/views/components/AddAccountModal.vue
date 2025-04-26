@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted, nextTick, watch } from 'vue'
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
 import { formatCurrency } from '@/utils/formatters'
 import { useDictionaryBucketPaymentStore } from '@stores/DictionaryBucketPaymentStore.js'
@@ -36,6 +36,52 @@ const errors = ref({
   creditLimit: ''
 })
 
+const isTypeDropdownOpen = ref(false)
+const isBankDropdownOpen = ref(false)
+
+const typeDropdownPosition = ref({ top: 0, left: 0, width: 0 })
+const bankDropdownPosition = ref({ top: 0, left: 0, width: 0 })
+
+const updateTypeDropdownPosition = () => {
+  const trigger = document.querySelector('.type-dropdown-container')
+  if (trigger) {
+    const rect = trigger.getBoundingClientRect()
+    typeDropdownPosition.value = {
+      top: rect.bottom + window.scrollY,
+      left: rect.left + window.scrollX,
+      width: rect.width
+    }
+  }
+}
+
+const updateBankDropdownPosition = () => {
+  const trigger = document.querySelector('.bank-dropdown-container')
+  if (trigger) {
+    const rect = trigger.getBoundingClientRect()
+    bankDropdownPosition.value = {
+      top: rect.bottom + window.scrollY,
+      left: rect.left + window.scrollX,
+      width: rect.width
+    }
+  }
+}
+
+watch(isTypeDropdownOpen, (newVal) => {
+  if (newVal) {
+    nextTick(() => {
+      updateTypeDropdownPosition()
+    })
+  }
+})
+
+watch(isBankDropdownOpen, (newVal) => {
+  if (newVal) {
+    nextTick(() => {
+      updateBankDropdownPosition() 
+    })
+  }
+})
+
 // Thêm và xóa event listener khi component được mount và unmount
 onMounted(async () => {
   let accountTypeInit = accountTypes.value.find(t => t.name === "Tiền mặt");
@@ -44,10 +90,27 @@ onMounted(async () => {
   bankList.value = await bankStore.getBanks()
   document.addEventListener('mousedown', handleClickOutside)
 
+  // Add window resize handler
+  window.addEventListener('resize', () => {
+    if (isTypeDropdownOpen.value) {
+      updateTypeDropdownPosition()
+    }
+    if (isBankDropdownOpen.value) {
+      updateBankDropdownPosition()
+    }
+  })
 })
 
 onUnmounted(() => {
   document.removeEventListener('mousedown', handleClickOutside)
+  window.removeEventListener('resize', () => {
+    if (isTypeDropdownOpen.value) {
+      updateTypeDropdownPosition()
+    }
+    if (isBankDropdownOpen.value) {
+      updateBankDropdownPosition()
+    }
+  })
 })
 
 const formattedBalance = computed({
@@ -61,9 +124,6 @@ const formattedBalance = computed({
     newAccount.value.balance = numericValue ? Number(numericValue) : ''
   }
 })
-
-const isTypeDropdownOpen = ref(false)
-const isBankDropdownOpen = ref(false)
 
 const selectedAccountType = computed(() => {
   return accountTypes.value.find(t => t.name === newAccount.value.accountType)
@@ -321,10 +381,16 @@ const handleClickOutside = (event) => {
                 </div>
 
                 <div v-if="isTypeDropdownOpen"
-                  class="absolute z-10 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg py-1">
+                  class="fixed z-[60] w-[calc(100%-2rem)] max-w-md mt-1 bg-white border border-gray-200 rounded-lg shadow-lg py-1 max-h-64 overflow-y-auto"
+                  :style="{
+                    top: typeDropdownPosition.top + 'px',
+                    left: typeDropdownPosition.left + 'px',
+                    width: typeDropdownPosition.width + 'px'
+                  }"
+                >
                   <div v-for="type in accountTypes" :key="type.id"
                     class="flex items-center px-3 py-2 cursor-pointer hover:bg-gray-50"
-                    :class="{ 'bg-primary/5': type.name === newAccount.value?.accountType }"
+                    :class="{ 'bg-primary/5': type.name === newAccount?.accountType }"
                     @click="handleTypeSelect(type)">
                     <Avatar :src="type.icon" :alt="type.name" size="m" class="mr-2" />
                     <span>{{ type.name }}</span>
@@ -357,7 +423,13 @@ const handleClickOutside = (event) => {
                 </div>
 
                 <div v-if="isBankDropdownOpen"
-                  class="absolute z-10 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg divide-y divide-gray-100">
+                  class="fixed z-[60] w-[calc(100%-2rem)] max-w-md mt-1 bg-white border border-gray-200 rounded-lg shadow-lg divide-y divide-gray-100"
+                  :style="{
+                    top: bankDropdownPosition.top + 'px',
+                    left: bankDropdownPosition.left + 'px',
+                    width: bankDropdownPosition.width + 'px'
+                  }"
+                >
                   <div class="p-2">
                     <input v-model="bankSearchQuery" type="text"
                       class="w-full px-3 py-2 border border-gray-100 rounded-lg focus:outline-none focus:ring-1 focus:ring-primary/20 focus:border-primary/50"

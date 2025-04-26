@@ -77,13 +77,15 @@ const handleAddAccount = (newAccount) => {
 }
 
 const handleUpdateAccount = (updatedAccount) => {
+  debugger
   const index = accounts.value.findIndex(acc => acc.id === updatedAccount.id)
   if (index !== -1) {
     accounts.value[index] = updatedAccount
   }
 }
 
-const handleConfirmDelete = () => {
+const handleConfirmDelete = async () => {
+  await dictionaryBucketPaymentStore.deleteById(deletingAccount.value.id);
   const index = accounts.value.findIndex(acc => acc.id === deletingAccount.value.id)
   if (index !== -1) {
     accounts.value.splice(index, 1)

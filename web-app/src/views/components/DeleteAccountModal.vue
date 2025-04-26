@@ -2,6 +2,7 @@
 import { computed } from 'vue'
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
 import { formatCurrency } from '@/utils/formatters'
+import Avatar from '@components/Avatar.vue'
 
 const props = defineProps({
   isOpen: Boolean,
@@ -60,14 +61,11 @@ const getAccountColor = (type) => {
         <div class="px-6 py-4">
           <div class="flex items-center space-x-4 mb-4">
             <div class="w-12 h-12 rounded-full bg-gray-100 flex items-center justify-center">
-              <font-awesome-icon 
-                :icon="['fas', getAccountIcon(account?.type)]"
-                :class="[getAccountColor(account?.type), 'text-xl']"
-              />
+              <Avatar :src="account?.iconUrl" :alt="account?.accountName" size="m"/>
             </div>
             <div>
-              <h4 class="font-medium text-text">{{ account?.name }}</h4>
-              <p class="text-sm text-text-secondary">{{ account?.description }}</p>
+              <h4 class="font-medium text-text">{{ account?.accountName }}</h4>
+              <p class="text-sm text-text-secondary">{{ account?.interpretation }}</p>
             </div>
           </div>
           

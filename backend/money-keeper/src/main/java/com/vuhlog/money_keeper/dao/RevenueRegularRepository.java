@@ -1,6 +1,7 @@
 package com.vuhlog.money_keeper.dao;
 
 import com.vuhlog.money_keeper.entity.RevenueRegular;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Modifying;

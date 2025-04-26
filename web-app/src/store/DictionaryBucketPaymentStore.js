@@ -24,6 +24,30 @@ export const useDictionaryBucketPaymentStore = defineStore("dictionaryBucketPaym
         });
       return response;
     },
+    async update(id, data) {
+      let response = null;
+      await base
+        .put("/dictionary-bucket-payment/" + id, data)
+        .then((res) => {
+          response = res.result;
+        })
+        .catch((err) => {
+          console.log(err);
+        });
+      return response;
+    },
+    async deleteById(id) {
+      let response = null;
+      await base
+        .delete("/dictionary-bucket-payment/" + id)
+        .then((res) => {
+          response = res.result;
+        })
+        .catch((err) => {
+          console.log(err);
+        });
+      return response;
+    },
     async getMyBucketPayments() {
       let response = null;
       await base

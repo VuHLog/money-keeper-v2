@@ -1,131 +1,3 @@
-<!-- SelectDropdown.vue -->
-<template>
-  <div>
-    <label v-if="label" class="block text-sm font-medium text-text-secondary mb-1">
-      {{ label }} <span v-if="required" class="text-danger">*</span>
-    </label>
-    <div class="relative select-none dropdown-container">
-      <div 
-        class="flex items-center w-full px-3 py-2 border border-gray-200 rounded-lg cursor-pointer hover:border-gray-300"
-        :class="[
-          isDropdownOpen ? 'ring-1 ring-primary/20 border-primary/50' : '',
-          error ? 'border-danger/50' : ''
-        ]"
-        @click="isDropdownOpen = !isDropdownOpen"
-      >
-        <div class="flex items-center flex-1">
-          <template v-if="isMultiple">
-            <div v-if="selectedValues.length === 0" class="flex items-center">
-              <font-awesome-icon 
-                :icon="['fas', defaultIcon]"
-                class="text-gray-400 mr-2"
-              />
-              <span>{{ placeholder }}</span>
-            </div>
-            <div v-else-if="isAllSelected" class="flex items-center">
-              <font-awesome-icon 
-                :icon="['fas', defaultIcon]"
-                class="text-gray-400 mr-2"
-              />
-              <span>Tất cả {{ label?.toLowerCase() }}</span>
-            </div>
-            <div v-else class="flex items-center flex-wrap gap-1">
-              <div v-for="value in selectedValues" :key="value" class="flex items-center">
-                <font-awesome-icon 
-                  :icon="['fas', options.find(opt => opt.id === value)?.icon || defaultIcon]"
-                  :class="options.find(opt => opt.id === value)?.color || 'text-gray-400'"
-                  class="mr-1"
-                />
-                <span class="mr-2">{{ options.find(opt => opt.id === value)?.name }}</span>
-              </div>
-            </div>
-          </template>
-          <template v-else>
-            <font-awesome-icon 
-              :icon="['fas', selectedOption ? (options.find(opt => opt.id === selectedOption)?.icon || defaultIcon) : defaultIcon]"
-              :class="selectedOption ? (options.find(opt => opt.id === selectedOption)?.color || 'text-gray-400') : 'text-gray-400'"
-              class="mr-2"
-            />
-            <span>{{ selectedOption ? (options.find(opt => opt.id === selectedOption)?.name || placeholder) : placeholder }}</span>
-          </template>
-        </div>
-        <font-awesome-icon 
-          :icon="['fas', 'chevron-down']" 
-          class="text-gray-400 ml-2 transition-transform"
-          :class="{'rotate-180': isDropdownOpen}"
-        />
-      </div>
-
-      <div 
-        v-if="isDropdownOpen"
-        class="absolute z-[100] w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg py-1"
-      >
-        <!-- Search input -->
-        <div v-if="showSearch" class="px-3 py-2 border-b border-gray-100">
-          <div class="relative">
-            <input
-              v-model="searchQuery"
-              type="text"
-              :placeholder="searchPlaceholder"
-              class="w-full pl-8 pr-3 py-1 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-primary/20 focus:border-primary/50"
-            />
-            <font-awesome-icon 
-              :icon="['fas', 'search']" 
-              class="absolute left-2 top-1/2 -translate-y-1/2 text-gray-400"
-            />
-          </div>
-        </div>
-
-        <!-- Options list -->
-        <div class="max-h-60 overflow-y-auto">
-          <!-- All option for multiple select -->
-          <div 
-            v-if="isMultiple"
-            class="flex items-center px-3 py-2 cursor-pointer hover:bg-gray-50"
-            :class="{'bg-primary/5': isAllSelected}"
-            @click="handleSelectAll"
-          >
-            <font-awesome-icon 
-              :icon="['fas', defaultIcon]"
-              class="text-gray-400 mr-2"
-            />
-            <span>Tất cả {{ label?.toLowerCase() }}</span>
-            <font-awesome-icon 
-              v-if="isAllSelected"
-              :icon="['fas', 'check']"
-              class="text-primary ml-auto"
-            />
-          </div>
-
-          <!-- Options -->
-          <div 
-            v-for="option in filteredOptions" 
-            :key="option.id"
-            class="flex items-center px-3 py-2 cursor-pointer hover:bg-gray-50"
-            :class="{'bg-primary/5': isSelected(option.id)}"
-            @click="handleSelect(option)"
-          >
-            <font-awesome-icon 
-              :icon="['fas', option.icon]" 
-              :class="option.color"
-              class="mr-2"
-            />
-            <span>{{ option.name }}</span>
-            <font-awesome-icon 
-              v-if="isMultiple && isSelected(option.id)"
-              :icon="['fas', 'check']"
-              class="text-primary ml-auto"
-            />
-          </div>
-        </div>
-      </div>
-      <p v-if="error" class="mt-1 text-sm text-danger">
-        {{ error }}
-      </p>
-    </div>
-  </div>
-</template>
-
 <script setup>
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
@@ -308,6 +180,135 @@ onUnmounted(() => {
   document.removeEventListener('mousedown', handleClickOutside)
 })
 </script>
+
+<!-- SelectDropdown.vue -->
+<template>
+  <div>
+    <label v-if="label" class="block text-sm font-medium text-text-secondary mb-1">
+      {{ label }} <span v-if="required" class="text-danger">*</span>
+    </label>
+    <div class="relative select-none dropdown-container">
+      <div 
+        class="flex items-center w-full px-3 py-2 border border-gray-200 rounded-lg cursor-pointer hover:border-gray-300"
+        :class="[
+          isDropdownOpen ? 'ring-1 ring-primary/20 border-primary/50' : '',
+          error ? 'border-danger/50' : ''
+        ]"
+        @click="isDropdownOpen = !isDropdownOpen"
+      >
+        <div class="flex items-center flex-1">
+          <template v-if="isMultiple">
+            <div v-if="selectedValues.length === 0" class="flex items-center">
+              <font-awesome-icon 
+                :icon="['fas', defaultIcon]"
+                class="text-gray-400 mr-2"
+              />
+              <span>{{ placeholder }}</span>
+            </div>
+            <div v-else-if="isAllSelected" class="flex items-center">
+              <font-awesome-icon 
+                :icon="['fas', defaultIcon]"
+                class="text-gray-400 mr-2"
+              />
+              <span>Tất cả {{ label?.toLowerCase() }}</span>
+            </div>
+            <div v-else class="flex items-center flex-wrap gap-1">
+              <div v-for="value in selectedValues" :key="value" class="flex items-center">
+                <font-awesome-icon 
+                  :icon="['fas', options.find(opt => opt.id === value)?.icon || defaultIcon]"
+                  :class="options.find(opt => opt.id === value)?.color || 'text-gray-400'"
+                  class="mr-1"
+                />
+                <span class="mr-2">{{ options.find(opt => opt.id === value)?.name }}</span>
+              </div>
+            </div>
+          </template>
+          <template v-else>
+            <font-awesome-icon 
+              :icon="['fas', selectedOption ? (options.find(opt => opt.id === selectedOption)?.icon || defaultIcon) : defaultIcon]"
+              :class="selectedOption ? (options.find(opt => opt.id === selectedOption)?.color || 'text-gray-400') : 'text-gray-400'"
+              class="mr-2"
+            />
+            <span>{{ selectedOption ? (options.find(opt => opt.id === selectedOption)?.name || placeholder) : placeholder }}</span>
+          </template>
+        </div>
+        <font-awesome-icon 
+          :icon="['fas', 'chevron-down']" 
+          class="text-gray-400 ml-2 transition-transform"
+          :class="{'rotate-180': isDropdownOpen}"
+        />
+      </div>
+
+      <div 
+        v-if="isDropdownOpen"
+        class="absolute z-[100] w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg py-1"
+      >
+        <!-- Search input -->
+        <div v-if="showSearch" class="px-3 py-2 border-b border-gray-100">
+          <div class="relative">
+            <input
+              v-model="searchQuery"
+              type="text"
+              :placeholder="searchPlaceholder"
+              class="w-full pl-8 pr-3 py-1 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-primary/20 focus:border-primary/50"
+            />
+            <font-awesome-icon 
+              :icon="['fas', 'search']" 
+              class="absolute left-2 top-1/2 -translate-y-1/2 text-gray-400"
+            />
+          </div>
+        </div>
+
+        <!-- Options list -->
+        <div class="max-h-60 overflow-y-auto">
+          <!-- All option for multiple select -->
+          <div 
+            v-if="isMultiple"
+            class="flex items-center px-3 py-2 cursor-pointer hover:bg-gray-50"
+            :class="{'bg-primary/5': isAllSelected}"
+            @click="handleSelectAll"
+          >
+            <font-awesome-icon 
+              :icon="['fas', defaultIcon]"
+              class="text-gray-400 mr-2"
+            />
+            <span>Tất cả {{ label?.toLowerCase() }}</span>
+            <font-awesome-icon 
+              v-if="isAllSelected"
+              :icon="['fas', 'check']"
+              class="text-primary ml-auto"
+            />
+          </div>
+
+          <!-- Options -->
+          <div 
+            v-for="option in filteredOptions" 
+            :key="option.id"
+            class="flex items-center px-3 py-2 cursor-pointer hover:bg-gray-50"
+            :class="{'bg-primary/5': isSelected(option.id)}"
+            @click="handleSelect(option)"
+          >
+            <font-awesome-icon 
+              :icon="['fas', option.icon]" 
+              :class="option.color"
+              class="mr-2"
+            />
+            <span>{{ option.name }}</span>
+            <font-awesome-icon 
+              v-if="isMultiple && isSelected(option.id)"
+              :icon="['fas', 'check']"
+              class="text-primary ml-auto"
+            />
+          </div>
+        </div>
+      </div>
+      <p v-if="error" class="mt-1 text-sm text-danger">
+        {{ error }}
+      </p>
+    </div>
+  </div>
+</template>
+
 
 <style scoped>
 /* Custom scrollbar for options list */
