@@ -1,5 +1,4 @@
 <script setup>
-import { computed } from 'vue'
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
 import { formatCurrency } from '@/utils/formatters'
 
@@ -12,21 +11,6 @@ const props = defineProps({
 })
 
 const emit = defineEmits(['close', 'confirm'])
-
-const formatDate = (date) => {
-  return new Date(date).toLocaleDateString('vi-VN')
-}
-
-const getRepeatLabel = (repeatTime) => {
-  const options = {
-    '': 'Không lặp lại',
-    'daily': 'Hàng ngày',
-    'weekly': 'Hàng tuần',
-    'monthly': 'Hàng tháng',
-    'yearly': 'Hàng năm'
-  }
-  return options[repeatTime] || 'Không lặp lại'
-}
 </script>
 
 <template>
@@ -58,8 +42,8 @@ const getRepeatLabel = (repeatTime) => {
               <h4 class="font-medium text-text">{{ limit?.name }}</h4>
               <div class="text-sm text-text-secondary space-y-1 mt-1">
                 <p>Số tiền: {{ formatCurrency(limit?.amount) }}</p>
-                <p>Thời gian: {{ formatDate(limit?.start_date) }} - {{ formatDate(limit?.end_date) }}</p>
-                <p>Lặp lại: {{ getRepeatLabel(limit?.repeat_time) }}</p>
+                <p>Thời gian: {{ limit?.startDateLimit }} -> {{ limit?.endDateLimit }}</p>
+                <p>Lặp lại: {{ limit?.repeatTime }}</p>
               </div>
             </div>
           </div>

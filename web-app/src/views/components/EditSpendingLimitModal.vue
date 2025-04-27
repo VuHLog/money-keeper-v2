@@ -1,50 +1,20 @@
 <script setup>
 import { ref, computed, reactive, watch, onMounted, onUnmounted } from 'vue'
+import { useExpenseLimitStore } from '@stores/ExpenseLimitStore.js'
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
 import { library } from '@fortawesome/fontawesome-svg-core'
 import { formatCurrency } from '@/utils/formatters'
-import { 
-  faTimes,
-  faChevronDown,
-  faCalendar,
-  faList,
-  faUtensils,
-  faShoppingBag,
-  faHome,
-  faTaxi,
-  faTshirt,
-  faHeartbeat,
-  faGraduationCap,
-  faRepeat,
-  faClock,
-  faCalendarDay,
-  faCalendarWeek,
-  faCalendarAlt
-} from '@fortawesome/free-solid-svg-icons'
+import { faTimes, faChevronDown, faCalendar, faList, faUtensils, faShoppingBag, faHome, faTaxi, faTshirt, faHeartbeat, faGraduationCap, faRepeat, faClock, faCalendarDay, faCalendarWeek, faCalendarAlt } from '@fortawesome/free-solid-svg-icons'
 import { ElDatePicker } from 'element-plus'
 import 'element-plus/theme-chalk/el-date-picker.css'
 import Swal from 'sweetalert2'
 import SelectDropdown from '@components/SelectDropdown.vue'
+import { formatDate } from '@utils/DateUtil'
 
-library.add(
-  faTimes,
-  faChevronDown,
-  faCalendar,
-  faList,
-  faUtensils,
-  faShoppingBag,
-  faHome,
-  faTaxi,
-  faTshirt,
-  faHeartbeat,
-  faGraduationCap,
-  faRepeat,
-  faClock,
-  faCalendarDay,
-  faCalendarWeek,
-  faCalendarAlt
-)
 
+library.add(faTimes, faChevronDown, faCalendar, faList, faUtensils, faShoppingBag, faHome, faTaxi, faTshirt, faHeartbeat, faGraduationCap, faRepeat, faClock, faCalendarDay, faCalendarWeek, faCalendarAlt)
+
+const expenseLimitStore = useExpenseLimitStore()
 const props = defineProps({
   show: {
     type: Boolean,
@@ -85,6 +55,40 @@ const errors = ref({
   end_date: ''
 })
 
+// Add helper function to format date consistently
+const formatDateForForm = (dateValue) => {
+  if (!dateValue) return '';
+  
+  // Nếu đã là chuỗi, xử lý chuỗi
+  if (typeof dateValue === 'string') {
+    // Nếu đã có định dạng đầy đủ với thời gian, trả về luôn
+    if (dateValue.includes(' ')) return dateValue;
+    // Nếu chỉ có ngày, thêm thời gian
+    return `${dateValue} 00:00:00`;
+  }
+  
+  // Nếu là đối tượng Date, chuyển sang chuỗi định dạng yyyy-mm-dd hh:mm:ss
+  if (dateValue instanceof Date) {
+    const year = dateValue.getFullYear();
+    // Tháng bắt đầu từ 0, nên cần +1 và đảm bảo luôn có 2 chữ số
+    const month = String(dateValue.getMonth() + 1).padStart(2, '0');
+    const day = String(dateValue.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day} 00:00:00`;
+  }
+  
+  // Trả về rỗng nếu không xử lý được
+  return '';
+}
+
+// Xử lý sự kiện khi người dùng chọn ngày
+const handleStartDateChange = (date) => {
+  formData.start_date = formatDateForForm(date);
+}
+
+const handleEndDateChange = (date) => {
+  formData.end_date = formatDateForForm(date);
+}
+
 // Format amount with currency
 const formattedAmount = computed({
   get: () => {
@@ -100,17 +104,17 @@ const formattedAmount = computed({
 // Update watch for limit prop
 watch(() => props.limit, (newLimit) => {
   if (newLimit) {
-    formData.name = newLimit.name || ''
+    formData.name = newLimit.name || '';
     formData.category_ids = Array.isArray(newLimit.categories) 
       ? newLimit.categories.map(cat => cat.id)
-      : newLimit.category ? [newLimit.category.id] : []
-    formData.account_ids = Array.isArray(newLimit.accounts)
-      ? newLimit.accounts.map(acc => acc.id)
-      : newLimit.account ? [newLimit.account.id] : []
-    formData.amount = newLimit.amount || ''
-    formData.start_date = newLimit.start_date || ''
-    formData.end_date = newLimit.end_date || ''
-    formData.repeat_time = newLimit.repeat_time || ''
+      : [];
+    formData.account_ids = Array.isArray(newLimit.bucketPayments)
+      ? newLimit.bucketPayments.map(acc => acc.id)
+      : [];
+    formData.amount = newLimit.amount || '';
+    formData.start_date = formatDateForForm(newLimit.startDate);
+    formData.end_date = formatDateForForm(newLimit.endDate);
+    formData.repeat_time = newLimit.repeatTime || '';
   }
 }, { immediate: true, deep: true })
 
@@ -118,15 +122,15 @@ watch(() => props.limit, (newLimit) => {
 const isRepeatDropdownOpen = ref(false)
 
 const repeatOptions = [
-  { value: '', label: 'Không lặp lại', icon: 'repeat', color: 'text-gray-400' },
-  { value: 'daily', label: 'Hàng ngày', icon: 'clock', color: 'text-blue-500' },
-  { value: 'weekly', label: 'Hàng tuần', icon: 'calendar-day', color: 'text-green-500' },
-  { value: 'monthly', label: 'Hàng tháng', icon: 'calendar-week', color: 'text-purple-500' },
-  { value: 'yearly', label: 'Hàng năm', icon: 'calendar-alt', color: 'text-red-500' }
+  { value: 'Không lặp lại', label: 'Không lặp lại', icon: 'repeat', color: 'text-gray-400' },
+  { value: 'Hàng ngày', label: 'Hàng ngày', icon: 'clock', color: 'text-blue-500' },
+  { value: 'Hàng tuần', label: 'Hàng tuần', icon: 'calendar-day', color: 'text-green-500' },
+  { value: 'Hàng tháng', label: 'Hàng tháng', icon: 'calendar-week', color: 'text-purple-500' },
+  { value: 'Hàng năm', label: 'Hàng năm', icon: 'calendar-alt', color: 'text-red-500' }
 ]
 
 const selectedRepeatOption = computed(() => {
-  return repeatOptions.find(opt => opt.value === formData.repeat_time) || repeatOptions[0]
+  return repeatOptions.find(opt => opt.value === formData.repeat_time) || repeatOptions[3]
 })
 
 const handleRepeatSelect = (option) => {
@@ -134,24 +138,39 @@ const handleRepeatSelect = (option) => {
   isRepeatDropdownOpen.value = false
 }
 
+const toggleRepeatDropdown = (event) => {
+  event.stopPropagation()
+  isRepeatDropdownOpen.value = !isRepeatDropdownOpen.value
+}
+
 // Add isConfirmingClose ref
 const isConfirmingClose = ref(false)
 
 // Update close modal
 const handleClose = () => {
+  // Normalize values for comparison
+  const formStartDate = normalizeDateForComparison(formData.start_date);
+  const formEndDate = normalizeDateForComparison(formData.end_date);
+  const propsStartDate = normalizeDateForComparison(props.limit.startDate);
+  const propsEndDate = normalizeDateForComparison(props.limit.endDate);
+  
+  // Convert amount to string for comparison to avoid type issues
+  const formAmount = String(formData.amount);
+  const propsAmount = String(props.limit.amount);
+  
   // Kiểm tra xem form có thay đổi không
   const hasChanges = 
     formData.name !== props.limit.name ||
     !isArrayEqual(formData.category_ids, Array.isArray(props.limit.categories) 
       ? props.limit.categories.map(cat => cat.id)
-      : [props.limit.category.id]) ||
-    !isArrayEqual(formData.account_ids, Array.isArray(props.limit.accounts)
-      ? props.limit.accounts.map(acc => acc.id)
-      : [props.limit.account.id]) ||
-    formData.amount !== props.limit.amount ||
-    formData.start_date !== props.limit.start_date ||
-    formData.end_date !== props.limit.end_date ||
-    formData.repeat_time !== props.limit.repeat_time
+      : []) ||
+    !isArrayEqual(formData.account_ids, Array.isArray(props.limit.bucketPayments)
+      ? props.limit.bucketPayments.map(acc => acc.id)
+      : []) ||
+    formAmount !== propsAmount ||
+    formStartDate !== propsStartDate ||
+    formEndDate !== propsEndDate ||
+    formData.repeat_time !== props.limit.repeatTime
 
   if (hasChanges && !isConfirmingClose.value) {
     isConfirmingClose.value = true
@@ -182,17 +201,17 @@ const isArrayEqual = (arr1, arr2) => {
 const resetForm = () => {
   if (!props.limit) return
 
-  formData.name = props.limit.name || ''
+  formData.name = props.limit.name || '';
   formData.category_ids = Array.isArray(props.limit.categories)
     ? props.limit.categories.map(cat => cat.id)
-    : props.limit.category ? [props.limit.category.id] : []
-  formData.account_ids = Array.isArray(props.limit.accounts)
-    ? props.limit.accounts.map(acc => acc.id)
-    : props.limit.account ? [props.limit.account.id] : []
-  formData.amount = props.limit.amount || ''
-  formData.start_date = props.limit.start_date || ''
-  formData.end_date = props.limit.end_date || ''
-  formData.repeat_time = props.limit.repeat_time || ''
+    : [];
+  formData.account_ids = Array.isArray(props.limit.bucketPayments)
+    ? props.limit.bucketPayments.map(acc => acc.id)
+    : [];
+  formData.amount = props.limit.amount || '';
+  formData.start_date = formatDateForForm(props.limit.startDate);
+  formData.end_date = formatDateForForm(props.limit.endDate);
+  formData.repeat_time = props.limit.repeatTime || '';
   
   errors.value = {
     name: '',
@@ -201,13 +220,6 @@ const resetForm = () => {
     amount: '',
     start_date: '',
     end_date: ''
-  }
-}
-
-const toggleRepeatDropdown = (event) => {
-  event.stopPropagation()
-  if (!isRepeatDropdownOpen.value) {
-    isRepeatDropdownOpen.value = !isRepeatDropdownOpen.value
   }
 }
 
@@ -237,23 +249,36 @@ onUnmounted(() => {
   document.removeEventListener('mousedown', handleClickOutside)
 })
 
-const handleSubmit = () => {
+const handleSubmit = async () => {
   if (!validateForm()) return
   
-  // Tạo object data để emit
+  // Tạo object data để submit
   const submitData = {
     id: props.limit.id,
-    name: formData.name,
-    category_ids: formData.category_ids, // Gửi tất cả category ids
-    account_ids: formData.account_ids, // Gửi tất cả account ids
     amount: Number(formData.amount),
-    start_date: formData.start_date,
-    end_date: formData.end_date,
-    repeat_time: formData.repeat_time
+    name: formData.name,
+    categoriesId: formData.category_ids.join(','),
+    bucketPaymentIds: formData.account_ids.join(','),
+    startDate: formatDate(formData.start_date),
+    endDate: formatDate(formData.end_date),
+    repeatTime: formData.repeat_time,
   }
 
-  // Emit submit event với data đã format
-  emit('submit', submitData)
+  submitData.startDateLimit = (expenseLimitStore.getCurrentStartDate(submitData));
+  submitData.endDateLimit = (expenseLimitStore.getEndDate(submitData.startDateLimit, submitData.repeatTime, submitData.endDate || null));
+
+  try{
+    // Gọi API cập nhật
+    let response = await expenseLimitStore.updateExpenseLimit(submitData);
+    await emit('submit', response)
+    resetAndClose()
+  } catch (error) {
+    if(error.response?.data?.code === 9002){
+      errors.value.end_date = "Ngày kết thúc phải lớn hơn " + error.response.data.message;
+    } else {
+      console.log(error);
+    }
+  }
 }
 
 // Update validation
@@ -302,7 +327,25 @@ const validateForm = () => {
     }
   }
 
+  if (formData.repeat_time === 'Không lặp lại' && !formData.end_date) {
+        errors.value.end_date = 'Vui lòng chọn ngày kết thúc'
+        isValid = false
+    }
+
   return isValid
+}
+
+// Add helper to normalize dates for comparison
+const normalizeDateForComparison = (dateStr) => {
+  if (!dateStr) return '';
+  
+  // If the date string contains time part (space followed by digits), extract only the date part
+  if (dateStr.includes(' ')) {
+    return dateStr.split(' ')[0].trim();
+  }
+  
+  // Handle date strings in format YYYY-MM-DD or DD/MM/YYYY
+  return dateStr.trim();
 }
 </script>
 
@@ -310,11 +353,11 @@ const validateForm = () => {
     <Teleport to="body">
       <div 
         v-if="show"
-        class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
-        @click="handleClose"
+        class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+        @click.self="handleClose"
       >
         <div 
-          class="bg-white rounded-lg shadow-xl w-full max-w-md relative modal-content"
+          class="bg-white rounded-lg shadow-xl w-full max-w-md mx-4 relative modal-content"
           @click.stop
         >
           <!-- Confirmation Dialog for Unsaved Changes -->
@@ -369,7 +412,7 @@ const validateForm = () => {
           </div>
   
           <!-- Modal Content -->
-          <div class="px-6 py-4 max-h-[calc(100vh-16rem)] overflow-y-auto">
+          <div class="px-6 py-4">
             <form @submit.prevent="handleSubmit" class="space-y-4">
               <!-- Số tiền -->
               <div>
@@ -436,49 +479,7 @@ const validateForm = () => {
                 :is-multiple="true"
                 default-icon="wallet"
               />
-  
-              <!-- Thời gian -->
-              <div class="grid grid-cols-2 gap-4">
-                <div>
-                  <label class="block text-sm font-medium text-text-secondary mb-1">
-                    Ngày bắt đầu <span class="text-danger">*</span>
-                  </label>
-                  <div class="w-full">
-                    <el-date-picker
-                      v-model="formData.start_date"
-                      type="date"
-                      :format="'DD/MM/YYYY'"
-                      :placeholder="'Chọn ngày'"
-                      class="date-picker-custom w-full"
-                      :class="{'error-date-picker': errors.start_date}"
-                      style="width: 100%;"
-                    />
-                  </div>
-                  <p v-if="errors.start_date" class="mt-1 text-sm text-danger">
-                    {{ errors.start_date }}
-                  </p>
-                </div>
-                <div>
-                  <label class="block text-sm font-medium text-text-secondary mb-1">
-                    Ngày kết thúc
-                  </label>
-                  <div class="w-full">
-                    <el-date-picker
-                      v-model="formData.end_date"
-                      type="date"
-                      :format="'DD/MM/YYYY'"
-                      :placeholder="'Chọn ngày'"
-                      class="date-picker-custom w-full"
-                      :class="{'error-date-picker': errors.end_date}"
-                      style="width: 100%;"
-                    />
-                  </div>
-                  <p v-if="errors.end_date" class="mt-1 text-sm text-danger">
-                    {{ errors.end_date }}
-                  </p>
-                </div>
-              </div>
-  
+              
               <!-- Lặp lại -->
               <div>
                 <label class="block text-sm font-medium text-text-secondary mb-1">
@@ -509,7 +510,7 @@ const validateForm = () => {
   
                   <div 
                     v-if="isRepeatDropdownOpen"
-                    class="absolute z-10 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg py-1"
+                    class="absolute z-[101] w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg py-1 max-h-40 overflow-y-auto"
                     @click.stop
                   >
                     <div 
@@ -527,6 +528,50 @@ const validateForm = () => {
                       <span>{{ option.label }}</span>
                     </div>
                   </div>
+                </div>
+              </div>
+
+              <!-- Thời gian -->
+              <div class="grid grid-cols-2 gap-4">
+                <div>
+                  <label class="block text-sm font-medium text-text-secondary mb-1">
+                    Ngày bắt đầu <span class="text-danger">*</span>
+                  </label>
+                  <div class="w-full">
+                    <el-date-picker
+                      v-model="formData.start_date"
+                      type="date"
+                      :format="'DD/MM/YYYY'"
+                      :placeholder="'Chọn ngày'"
+                      class="date-picker-custom w-full"
+                      :class="{'error-date-picker': errors.start_date}"
+                      style="width: 100%;"
+                      @change="handleStartDateChange"
+                    />
+                  </div>
+                  <p v-if="errors.start_date" class="mt-1 text-sm text-danger">
+                    {{ errors.start_date }}
+                  </p>
+                </div>
+                <div>
+                  <label class="block text-sm font-medium text-text-secondary mb-1">
+                    Ngày kết thúc
+                  </label>
+                  <div class="w-full">
+                    <el-date-picker
+                      v-model="formData.end_date"
+                      type="date"
+                      :format="'DD/MM/YYYY'"
+                      :placeholder="'Chọn ngày'"
+                      class="date-picker-custom w-full"
+                      :class="{'error-date-picker': errors.end_date}"
+                      style="width: 100%;"
+                      @change="handleEndDateChange"
+                    />
+                  </div>
+                  <p v-if="errors.end_date" class="mt-1 text-sm text-danger">
+                    {{ errors.end_date }}
+                  </p>
                 </div>
               </div>
             </form>

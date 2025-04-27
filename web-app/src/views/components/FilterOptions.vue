@@ -4,40 +4,14 @@ import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
 import { library } from '@fortawesome/fontawesome-svg-core'
 import { ElDatePicker } from 'element-plus'
 import 'element-plus/theme-chalk/el-date-picker.css'
-import { 
-  faWallet, 
-  faBuildingColumns,
-  faList,
-  faChevronDown,
-  faCalendar,
-  faArrowUp,
-  faArrowDown,
-  faUtensils,
-  faCar,
-  faHome,
-  faGamepad,
-  faSearch,
-  faCheck,
-  faRotateLeft
-} from '@fortawesome/free-solid-svg-icons'
+import { faWallet, faBuildingColumns,faList,faChevronDown,faCalendar,faArrowUp,faArrowDown,faUtensils,faCar,faHome,faGamepad,faSearch,faCheck,faRotateLeft} from '@fortawesome/free-solid-svg-icons'
 import SelectDropdown from '@/views/components/SelectDropdown.vue'
+import { useDictionaryBucketPaymentStore } from '@stores/DictionaryBucketPaymentStore.js'
+import { useDictionaryExpenseStore } from '@stores/DictionaryExpenseStore.js'
+import { useDictionaryRevenueStore } from '@stores/DictionaryRevenueStore.js'
 
-library.add(
-  faWallet, 
-  faBuildingColumns,
-  faList,
-  faChevronDown,
-  faCalendar,
-  faArrowUp,
-  faArrowDown,
-  faUtensils,
-  faCar,
-  faHome,
-  faGamepad,
-  faSearch,
-  faCheck,
-  faRotateLeft
-)
+
+library.add(faWallet, faBuildingColumns,faList,faChevronDown,faCalendar,faArrowUp,faArrowDown,faUtensils,faCar,faHome,faGamepad,faSearch,faCheck,faRotateLeft)
 
 const props = defineProps({
   showTimeRange: {
@@ -53,6 +27,14 @@ const props = defineProps({
     default: true
   },
   showCategory: {
+    type: Boolean,
+    default: false
+  },
+  showExpenseCategory: {
+    type: Boolean,
+    default: true
+  },
+  showRevenueCategory: {
     type: Boolean,
     default: true
   },
@@ -79,22 +61,31 @@ const transactionTypes = [
   { id: 'expense', name: 'Chi tiêu', icon: 'arrow-down', color: 'text-red-500' }
 ]
 
-// Account options (sample data)
-const accounts = [
-  { id: 'all', name: 'Tất cả', icon: 'list', color: 'text-gray-400' },
-  { id: 'cash', name: 'Ví tiền mặt', icon: 'wallet', color: 'text-yellow-500' },
-  { id: 'vcb', name: 'Vietcombank', icon: 'building-columns', color: 'text-blue-500' },
-  { id: 'tcb', name: 'Techcombank', icon: 'building-columns', color: 'text-blue-500' }
+// Loại danh mục thu nhập/chi tiêu
+const categoryTypes = [
+  { id: 'expense', name: 'Danh mục chi tiêu', icon: 'arrow-down', color: 'text-red-500' },
+  { id: 'revenue', name: 'Danh mục thu nhập', icon: 'arrow-up', color: 'text-success' }
 ]
 
-// Category options (sample data)
-const categories = [
-  { id: 'all', name: 'Tất cả', icon: 'list', color: 'text-gray-400' },
-  { id: 'food', name: 'Ăn uống', icon: 'utensils', color: 'text-orange-500' },
-  { id: 'transport', name: 'Di chuyển', icon: 'car', color: 'text-blue-500' },
-  { id: 'house', name: 'Nhà cửa', icon: 'home', color: 'text-green-500' },
-  { id: 'entertainment', name: 'Giải trí', icon: 'gamepad', color: 'text-purple-500' }
-]
+const accounts = ref([]);
+const expenseCategories = ref([]);
+const revenueCategories = ref([]);
+const categoryType = ref('expense'); // Mặc định chọn danh mục chi tiêu
+
+// Computed để lấy danh mục theo loại đã chọn
+const categories = computed(() => {
+  // Thêm option "all" vào đầu danh sách
+  const allOption = { id: 'all', name: 'Tất cả danh mục', icon: 'list', color: 'text-gray-400' };
+  
+  if (categoryType.value === 'expense' || selectedTransactionType.value.includes('expense')) {
+    return [allOption, ...expenseCategories.value];
+  } else if (categoryType.value === 'revenue' || selectedTransactionType.value.includes('income')) {
+    return [allOption, ...revenueCategories.value];
+  }
+  
+  // Mặc định trả về danh sách rỗng với option "all"
+  return [allOption];
+});
 
 // Selected values - change to arrays for multiple select
 const selectedTimeRange = ref('month')
@@ -118,6 +109,7 @@ const originalValues = {
   transactionType: ['all'],
   account: ['all'],
   category: ['all'],
+  categoryType: 'expense',
   date: selectedDate.value,
   customDateRange: [null, null]
 }
@@ -129,36 +121,28 @@ const isTimeRangeDropdownOpen = ref(false)
 const isTransactionTypeDropdownOpen = ref(false)
 const isAccountDropdownOpen = ref(false)
 const isCategoryDropdownOpen = ref(false)
+const isCategoryTypeDropdownOpen = ref(false)
+
+const dictionaryBucketPaymentStore = useDictionaryBucketPaymentStore()
+const dictionaryExpenseStore = useDictionaryExpenseStore()
+const dictionaryRevenueStore = useDictionaryRevenueStore()
+onMounted(async() => {
+  expenseCategories.value = await dictionaryExpenseStore.getMyExpenseCategories();
+  revenueCategories.value = await dictionaryRevenueStore.getMyRevenueCategories();
+  accounts.value = await dictionaryBucketPaymentStore.getMyBucketPayments();
+  
+  document.addEventListener('mousedown', handleClickOutside)
+})
+
+onUnmounted(() => {
+  document.removeEventListener('mousedown', handleClickOutside)
+})
 
 // Computed properties
 const showCustomDateRange = computed(() => selectedTimeRange.value === 'custom')
 const showDatePicker = computed(() => selectedTimeRange.value !== 'custom')
 const selectedTimeRangeObj = computed(() => {
   return timeRanges.find(range => range.id === selectedTimeRange.value)
-})
-const selectedTransactionTypeObj = computed(() => {
-  return transactionTypes.find(type => type.id === selectedTransactionType.value[0])
-})
-const selectedAccountObj = computed(() => {
-  if (!selectedAccount.value.length) {
-    return { name: 'Chọn tài khoản', icon: 'list', color: 'text-gray-400' }
-  }
-  return accounts.find(acc => acc.id === selectedAccount.value[0])
-})
-const selectedCategoryObj = computed(() => {
-  if (!selectedCategory.value.length) {
-    return { name: 'Chọn danh mục', icon: 'list', color: 'text-gray-400' }
-  }
-  return categories.find(cat => cat.id === selectedCategory.value[0])
-})
-
-// Filtered categories based on search
-const filteredCategories = computed(() => {
-  if (!categorySearch.value) return categories
-  const searchTerm = categorySearch.value.toLowerCase()
-  return categories.filter(cat => 
-    cat.name.toLowerCase().includes(searchTerm)
-  )
 })
 
 // Methods
@@ -213,16 +197,13 @@ const handleClickOutside = (event) => {
   if (categoryDropdownEl && !categoryDropdownEl.contains(event.target) && isCategoryDropdownOpen.value) {
     isCategoryDropdownOpen.value = false
   }
+
+  // Xử lý dropdown loại danh mục
+  const categoryTypeDropdownEl = document.querySelector('.category-type-dropdown-container')
+  if (categoryTypeDropdownEl && !categoryTypeDropdownEl.contains(event.target) && isCategoryTypeDropdownOpen.value) {
+    isCategoryTypeDropdownOpen.value = false
+  }
 }
-
-// Thêm và xóa event listener khi component được mount và unmount
-onMounted(() => {
-  document.addEventListener('mousedown', handleClickOutside)
-})
-
-onUnmounted(() => {
-  document.removeEventListener('mousedown', handleClickOutside)
-})
 
 // Date picker format
 const dateFormat = {
@@ -254,6 +235,25 @@ const updateSelectedDate = () => {
 watch(selectedTimeRange, () => {
   updateSelectedDate()
   handleFilterChange()
+})
+
+// Watch for transaction type changes to update category type
+watch(selectedTransactionType, (newVal) => {
+  if (newVal.includes('income') && !newVal.includes('expense') && !newVal.includes('all')) {
+    categoryType.value = 'revenue';
+  } else if (newVal.includes('expense') && !newVal.includes('income') && !newVal.includes('all')) {
+    categoryType.value = 'expense';
+  }
+  // Reset danh mục đã chọn khi thay đổi loại giao dịch
+  selectedCategory.value = ['all'];
+  handleFilterChange();
+})
+
+// Watch for category type changes
+watch(categoryType, () => {
+  // Reset danh mục đã chọn khi thay đổi loại danh mục
+  selectedCategory.value = ['all'];
+  handleFilterChange();
 })
 </script>
 
@@ -365,11 +365,19 @@ watch(selectedTimeRange, () => {
       </div>
 
       <!-- Category Filter -->
-      <div v-if="showCategory">
+      <div v-if="showExpenseCategory || showRevenueCategory">
+        <!-- Tự động xác định loại danh mục -->
+        <div class="hidden">
+          {{ showExpenseCategory && !showRevenueCategory ? categoryType = 'expense' : 
+             !showExpenseCategory && showRevenueCategory ? categoryType = 'revenue' : 
+             categoryType = categoryType }}
+        </div>
+
+        <!-- Category Filter -->
         <SelectDropdown
           v-model="selectedCategory"
           :options="categories"
-          label="Danh mục"
+          :label="'Danh mục' + (showExpenseCategory ? ' chi' : showRevenueCategory ? ' thu' : '')"
           placeholder="Chọn danh mục"
           :show-search="true"
           :is-multiple="true"
@@ -461,7 +469,7 @@ watch(selectedTimeRange, () => {
 }
 
 :deep(.el-date-editor .el-input__prefix-inner .el-icon svg path),
-:deep(.el-date-editor .el-input__suffix-inner .el-icon svg path) {
+:deep(.el-date-editor .el-input__suffix-inner .el-input__prefix-inner .el-icon svg path) {
   @apply !fill-gray-500;
 }
 
@@ -484,4 +492,4 @@ watch(selectedTimeRange, () => {
   background-color: #cbd5e1;
   border-radius: 3px;
 }
-</style> 
+</style>

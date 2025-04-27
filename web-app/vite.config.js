@@ -15,10 +15,9 @@ export default defineConfig({
       '@layouts': fileURLToPath(new URL('./src/views/layouts', import.meta.url)),
       '@stores': fileURLToPath(new URL('./src/store', import.meta.url)),
       '@components': fileURLToPath(new URL('./src/views/components', import.meta.url)),
-      '@constants': fileURLToPath(new URL('./src/views/constants', import.meta.url)),
+      '@constants': fileURLToPath(new URL('./src/constants', import.meta.url)),
       '@pages': fileURLToPath(new URL('./src/views/pages', import.meta.url)),
       '@utils': fileURLToPath(new URL('./src/utils', import.meta.url)),
-      '@constants': fileURLToPath(new URL('./src/constants', import.meta.url)),
     },
   },
   css: {

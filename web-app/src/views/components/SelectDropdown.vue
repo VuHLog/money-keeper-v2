@@ -2,31 +2,10 @@
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
 import { library } from '@fortawesome/fontawesome-svg-core'
-import { 
-  faChevronDown,
-  faSearch,
-  faList,
-  faWallet,
-  faBuildingColumns,
-  faUtensils,
-  faCar,
-  faHome,
-  faGamepad,
-  faCheck
-} from '@fortawesome/free-solid-svg-icons'
+import { faChevronDown, faSearch, faList, faWallet, faBuildingColumns, faUtensils, faCar, faHome, faGamepad, faCheck } from '@fortawesome/free-solid-svg-icons'
+import Avatar from "@components/Avatar.vue"
 
-library.add(
-  faChevronDown,
-  faSearch,
-  faList,
-  faWallet,
-  faBuildingColumns,
-  faUtensils,
-  faCar,
-  faHome,
-  faGamepad,
-  faCheck
-)
+library.add(faChevronDown, faSearch, faList, faWallet, faBuildingColumns, faUtensils, faCar, faHome, faGamepad, faCheck)
 
 const props = defineProps({
   modelValue: {
@@ -76,6 +55,18 @@ const emit = defineEmits(['update:modelValue', 'change'])
 const isDropdownOpen = ref(false)
 const searchQuery = ref('')
 
+onMounted(() => {
+  if(props.isMultiple && (props.modelValue.length === 0 || props.modelValue[0] === 'all')) {
+    isAllSelected.value = true
+    handleSelectAll()
+  }
+  document.addEventListener('mousedown', handleClickOutside)
+})
+
+onUnmounted(() => {
+  document.removeEventListener('mousedown', handleClickOutside)
+})
+
 // For single select
 const selectedOption = computed({
   get: () => props.modelValue,
@@ -90,9 +81,19 @@ const selectedValues = computed({
 
 const isAllSelected = computed(() => {
   if (!props.isMultiple) return false
-  const filteredOptionsIds = filteredOptions.value.map(opt => opt.id)
-  return selectedValues.value.length === filteredOptionsIds.length &&
-         filteredOptionsIds.every(id => selectedValues.value.includes(id))
+  
+  // Kiểm tra xem tất cả các tùy chọn (trừ 'all') có được chọn không
+  const optionIds = props.options
+    .filter(opt => opt.id !== 'all')
+    .map(opt => opt.id)
+  
+  // Nếu không có tùy chọn nào, luôn trả về false
+  if (optionIds.length === 0) return false
+  
+  // Trả về true nếu tất cả các tùy chọn đều được chọn
+  return optionIds.length > 0 && 
+    optionIds.every(id => selectedValues.value.includes(id)) &&
+    selectedValues.value.length === optionIds.length
 })
 
 // Filtered options based on search
@@ -116,33 +117,18 @@ const handleSelect = (option) => {
     const newValues = [...selectedValues.value]
     const index = newValues.indexOf(option.id)
     
-    if (option.id === 'all') {
-      // Nếu chọn "Tất cả", xóa hết các giá trị khác
-      selectedValues.value = ['all']
+    // Nếu tùy chọn không có trong danh sách đã chọn
+    if (index === -1) {
+      newValues.push(option.id)
     } else {
-      // Nếu chọn giá trị khác
-      // 1. Xóa giá trị "all" nếu có
-      const allIndex = newValues.indexOf('all')
-      if (allIndex !== -1) {
-        newValues.splice(allIndex, 1)
-      }
-
-      // 2. Toggle giá trị được chọn
-      if (index === -1) {
-        newValues.push(option.id)
-      } else {
-        newValues.splice(index, 1)
-      }
-
-      // 3. Nếu không còn giá trị nào, thêm lại "all"
-      if (newValues.length === 0) {
-        newValues.push('all')
-      }
-
-      selectedValues.value = newValues
+      // Nếu tùy chọn đã được chọn, xóa nó khỏi danh sách
+      newValues.splice(index, 1)
     }
+    
+    selectedValues.value = newValues
     emit('change', selectedValues.value)
   } else {
+    // Xử lý cho single select
     selectedOption.value = option.id
     isDropdownOpen.value = false
     searchQuery.value = ''
@@ -153,13 +139,19 @@ const handleSelect = (option) => {
 const handleSelectAll = () => {
   if (!props.isMultiple) return
   
-  if (isAllSelected.value || selectedValues.value.includes('all')) {
-    // Nếu đang chọn tất cả, bỏ chọn tất cả và chọn "all"
-    selectedValues.value = ['all']
+  // Lấy tất cả các ID tùy chọn (trừ 'all')
+  const allOptionIds = props.options
+    .filter(opt => opt.id !== 'all')
+    .map(opt => opt.id)
+  
+  if (isAllSelected.value) {
+    // Nếu đã chọn tất cả, bỏ chọn tất cả (mảng rỗng)
+    selectedValues.value = []
   } else {
-    // Nếu chưa chọn tất cả, chọn tất cả các giá trị (trừ "all")
-    selectedValues.value = filteredOptions.value.map(opt => opt.id)
+    // Nếu chưa chọn tất cả, chọn tất cả các tùy chọn
+    selectedValues.value = [...allOptionIds]
   }
+  
   emit('change', selectedValues.value)
 }
 
@@ -171,14 +163,6 @@ const handleClickOutside = (event) => {
     searchQuery.value = ''
   }
 }
-
-onMounted(() => {
-  document.addEventListener('mousedown', handleClickOutside)
-})
-
-onUnmounted(() => {
-  document.removeEventListener('mousedown', handleClickOutside)
-})
 </script>
 
 <!-- SelectDropdown.vue -->
@@ -189,7 +173,7 @@ onUnmounted(() => {
     </label>
     <div class="relative select-none dropdown-container">
       <div 
-        class="flex items-center w-full px-3 py-2 border border-gray-200 rounded-lg cursor-pointer hover:border-gray-300"
+        class="flex items-center w-full px-3 py-2 border border-gray-200 rounded-lg cursor-pointer hover:border-gray-300 h-[42px]"
         :class="[
           isDropdownOpen ? 'ring-1 ring-primary/20 border-primary/50' : '',
           error ? 'border-danger/50' : ''
@@ -212,24 +196,29 @@ onUnmounted(() => {
               />
               <span>Tất cả {{ label?.toLowerCase() }}</span>
             </div>
+            <!-- Phần hiển thị các mục đã chọn trong trường hợp multiple select -->
             <div v-else class="flex items-center flex-wrap gap-1">
               <div v-for="value in selectedValues" :key="value" class="flex items-center">
-                <font-awesome-icon 
-                  :icon="['fas', options.find(opt => opt.id === value)?.icon || defaultIcon]"
-                  :class="options.find(opt => opt.id === value)?.color || 'text-gray-400'"
-                  class="mr-1"
+                <Avatar 
+                  v-if="options.find(opt => opt.id === value)?.iconUrl"
+                  :src="options.find(opt => opt.id === value)?.iconUrl"
+                  :alt="options.find(opt => opt.id === value)?.name || options.find(opt => opt.id === value)?.accountName"
+                  size="m"
+                  class="mr-2"
                 />
-                <span class="mr-2">{{ options.find(opt => opt.id === value)?.name }}</span>
+                <span class="mr-2">{{ options.find(opt => opt.id === value)?.name || options.find(opt => opt.id === value)?.accountName }}</span>
               </div>
             </div>
           </template>
           <template v-else>
-            <font-awesome-icon 
-              :icon="['fas', selectedOption ? (options.find(opt => opt.id === selectedOption)?.icon || defaultIcon) : defaultIcon]"
-              :class="selectedOption ? (options.find(opt => opt.id === selectedOption)?.color || 'text-gray-400') : 'text-gray-400'"
+            <Avatar 
+              v-if="selectedOption && options.find(opt => opt.id === selectedOption)?.iconUrl"
+              :src="options.find(opt => opt.id === selectedOption)?.iconUrl"
+              :alt="options.find(opt => opt.id === selectedOption)?.name || options.find(opt => opt.id === selectedOption)?.accountName"
+              size="m"
               class="mr-2"
             />
-            <span>{{ selectedOption ? (options.find(opt => opt.id === selectedOption)?.name || placeholder) : placeholder }}</span>
+            <span>{{ selectedOption ? (options.find(opt => opt.id === selectedOption)?.name || options.find(opt => opt.id === selectedOption)?.accountName || placeholder) : placeholder }}</span>
           </template>
         </div>
         <font-awesome-icon 
@@ -241,7 +230,8 @@ onUnmounted(() => {
 
       <div 
         v-if="isDropdownOpen"
-        class="absolute z-[100] w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg py-1"
+        class="absolute z-[100] w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg py-1 dropdown-list"
+        :style="{ maxHeight: 'auto', overflowY: 'visible' }"
       >
         <!-- Search input -->
         <div v-if="showSearch" class="px-3 py-2 border-b border-gray-100">
@@ -251,6 +241,7 @@ onUnmounted(() => {
               type="text"
               :placeholder="searchPlaceholder"
               class="w-full pl-8 pr-3 py-1 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-primary/20 focus:border-primary/50"
+              @click.stop
             />
             <font-awesome-icon 
               :icon="['fas', 'search']" 
@@ -260,7 +251,7 @@ onUnmounted(() => {
         </div>
 
         <!-- Options list -->
-        <div class="max-h-60 overflow-y-auto">
+        <div class="max-h-60 overflow-y-auto options-container">
           <!-- All option for multiple select -->
           <div 
             v-if="isMultiple"
@@ -288,12 +279,14 @@ onUnmounted(() => {
             :class="{'bg-primary/5': isSelected(option.id)}"
             @click="handleSelect(option)"
           >
-            <font-awesome-icon 
-              :icon="['fas', option.icon]" 
-              :class="option.color"
+            <Avatar 
+              v-if="option.iconUrl"
+              :src="option.iconUrl"
+              :alt="option.name || option.accountName"
+              size="m"
               class="mr-2"
             />
-            <span>{{ option.name }}</span>
+            <span>{{ option.name || option.accountName }}</span>
             <font-awesome-icon 
               v-if="isMultiple && isSelected(option.id)"
               :icon="['fas', 'check']"
@@ -313,8 +306,8 @@ onUnmounted(() => {
 <style scoped>
 /* Custom scrollbar for options list */
 .max-h-60 {
-  scrollbar-width: thin;
   scrollbar-color: #cbd5e1 #f1f5f9;
+  scrollbar-width: thin;
 }
 
 .max-h-60::-webkit-scrollbar {
@@ -330,4 +323,10 @@ onUnmounted(() => {
   background-color: #cbd5e1;
   border-radius: 3px;
 }
-</style> 
+
+/* Ensure consistent height for all dropdowns */
+.dropdown-container .flex-wrap {
+  max-height: 24px;
+  overflow: hidden;
+}
+</style>

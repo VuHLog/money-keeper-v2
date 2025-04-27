@@ -1,49 +1,18 @@
 <script setup>
 import { ref, computed, reactive, onMounted, onUnmounted } from 'vue'
+import { useExpenseLimitStore } from '@stores/ExpenseLimitStore.js'
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
 import { library } from '@fortawesome/fontawesome-svg-core'
 import { formatCurrency } from '@/utils/formatters'
-import {
-    faTimes,
-    faChevronDown,
-    faCalendar,
-    faList,
-    faUtensils,
-    faShoppingBag,
-    faHome,
-    faTaxi,
-    faTshirt,
-    faHeartbeat,
-    faGraduationCap,
-    faRepeat,
-    faClock,
-    faCalendarDay,
-    faCalendarWeek,
-    faCalendarAlt
-} from '@fortawesome/free-solid-svg-icons'
+import { faTimes, faChevronDown, faCalendar, faList, faUtensils, faShoppingBag, faHome, faTaxi, faTshirt, faHeartbeat, faGraduationCap, faRepeat, faClock, faCalendarDay, faCalendarWeek, faCalendarAlt } from '@fortawesome/free-solid-svg-icons'
 import { ElDatePicker } from 'element-plus'
 import 'element-plus/theme-chalk/el-date-picker.css'
 import SelectDropdown from '@/views/components/SelectDropdown.vue'
+import { formatDate } from '@utils/DateUtil'
 
-library.add(
-    faTimes,
-    faChevronDown,
-    faCalendar,
-    faList,
-    faUtensils,
-    faShoppingBag,
-    faHome,
-    faTaxi,
-    faTshirt,
-    faHeartbeat,
-    faGraduationCap,
-    faRepeat,
-    faClock,
-    faCalendarDay,
-    faCalendarWeek,
-    faCalendarAlt
-)
+library.add(faTimes, faChevronDown, faCalendar, faList, faUtensils, faShoppingBag, faHome, faTaxi, faTshirt, faHeartbeat, faGraduationCap, faRepeat, faClock, faCalendarDay, faCalendarWeek, faCalendarAlt)
 
+const expenseLimitStore = useExpenseLimitStore()
 const props = defineProps({
     show: {
         type: Boolean,
@@ -68,7 +37,7 @@ const formData = reactive({
     amount: '',
     start_date: '',
     end_date: '',
-    repeat_time: ''
+    repeat_time: "Hàng tháng"
 })
 
 const errors = ref({
@@ -96,15 +65,15 @@ const formattedAmount = computed({
 const isRepeatDropdownOpen = ref(false)
 
 const repeatOptions = [
-    { value: '', label: 'Không lặp lại', icon: 'repeat', color: 'text-gray-400' },
-    { value: 'daily', label: 'Hàng ngày', icon: 'clock', color: 'text-blue-500' },
-    { value: 'weekly', label: 'Hàng tuần', icon: 'calendar-day', color: 'text-green-500' },
-    { value: 'monthly', label: 'Hàng tháng', icon: 'calendar-week', color: 'text-purple-500' },
-    { value: 'yearly', label: 'Hàng năm', icon: 'calendar-alt', color: 'text-red-500' }
+    { value: 'Không lặp lại', label: 'Không lặp lại', icon: 'repeat', color: 'text-gray-400' },
+    { value: 'Hàng ngày', label: 'Hàng ngày', icon: 'clock', color: 'text-blue-500' },
+    { value: 'Hàng tuần', label: 'Hàng tuần', icon: 'calendar-day', color: 'text-green-500' },
+    { value: 'Hàng tháng', label: 'Hàng tháng', icon: 'calendar-week', color: 'text-purple-500' },
+    { value: 'Hàng năm', label: 'Hàng năm', icon: 'calendar-alt', color: 'text-red-500' }
 ]
 
 const selectedRepeatOption = computed(() => {
-    return repeatOptions.find(opt => opt.value === formData.repeat_time) || repeatOptions[0]
+    return repeatOptions.find(opt => opt.value === formData.repeat_time) || repeatOptions[3]
 })
 
 const handleRepeatSelect = (option) => {
@@ -158,6 +127,11 @@ const validateForm = () => {
         }
     }
 
+    if (formData.repeat_time === 'Không lặp lại' && !formData.end_date) {
+        errors.value.end_date = 'Vui lòng chọn ngày kết thúc'
+        isValid = false
+    }
+
     return isValid
 }
 
@@ -168,7 +142,7 @@ const closeModal = () => {
     formData.amount = ''
     formData.start_date = ''
     formData.end_date = ''
-    formData.repeat_time = ''
+    formData.repeat_time = 'Hàng tháng'
 
     errors.value = {
         name: '',
@@ -188,28 +162,36 @@ const handleSubmit = async () => {
 
     // Tạo object data để emit
     const submitData = {
-        name: formData.name,
-        category_ids: formData.category_ids, // Gửi tất cả category ids
-        account_ids: formData.account_ids, // Gửi tất cả account ids
         amount: Number(formData.amount),
-        start_date: formData.start_date,
-        end_date: formData.end_date,
-        repeat_time: formData.repeat_time
+        name: formData.name,
+        categoriesId: formData.category_ids.join(','),
+        bucketPaymentIds: formData.account_ids.join(','),
+        startDate: formatDate(formData.start_date),
+        endDate: formatDate(formData.end_date),
+        repeatTime: formData.repeat_time,
     }
 
-    // Emit submit event với data đã format
-    await emit('submit', submitData)
-    
-    // Reset form và đóng modal
-    closeModal()
+    submitData.startDateLimit = (expenseLimitStore.getCurrentStartDate(submitData));
+    submitData.endDateLimit = (expenseLimitStore.getEndDate(submitData.startDateLimit, submitData.repeatTime, submitData.endDate || null));
+
+    try{
+        // submitData
+        let response = await expenseLimitStore.createExpenseLimit(submitData);
+        await emit('submit', response)
+        closeModal()
+    } catch (error) {
+        if(error.response.data.code === 9002){
+            errors.value.end_date = "Ngày kết thúc phải lớn hơn " + error.response.data.message;
+        } else {
+            console.log(error);
+        }
+    }
 }
 
 // Add new functions to handle dropdown toggles
 const toggleRepeatDropdown = (event) => {
     event.stopPropagation()
-    if (!isRepeatDropdownOpen.value) {
-        isRepeatDropdownOpen.value = !isRepeatDropdownOpen.value
-    }
+    isRepeatDropdownOpen.value = !isRepeatDropdownOpen.value
 }
 
 // Update click outside handler
@@ -240,15 +222,9 @@ onUnmounted(() => {
 
 <template>
     <Teleport to="body">
-        <div 
-            v-if="show" 
-            class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
-            @click.self="closeModal"
-        >
-            <div 
-                class="bg-white rounded-lg shadow-xl w-full max-w-md mx-4 modal-content" 
-                @click.stop
-            >
+        <div v-if="show" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+            @click.self="closeModal">
+            <div class="bg-white rounded-lg shadow-xl w-full max-w-md mx-4 modal-content" @click.stop>
                 <!-- Modal Header -->
                 <div class="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
                     <h3 class="text-lg font-semibold text-text">Thêm hạn mức mới</h3>
@@ -303,6 +279,41 @@ onUnmounted(() => {
                             placeholder="Chọn tài khoản" :required="true" :error="errors.account_ids"
                             :is-multiple="true" default-icon="wallet" />
 
+                        <!-- Lặp lại -->
+                        <div>
+                            <label class="block text-sm font-medium text-text-secondary mb-1">
+                                Lặp lại
+                            </label>
+                            <div class="relative select-none repeat-dropdown-container">
+                                <div class="flex items-center w-full px-3 py-2 border border-gray-100 rounded-lg cursor-pointer hover:border-gray-200"
+                                    :class="[
+                                        isRepeatDropdownOpen ? 'ring-1 ring-primary/20 border-primary/50' : ''
+                                    ]" @click="toggleRepeatDropdown($event)">
+                                    <div class="flex items-center flex-1">
+                                        <font-awesome-icon :icon="['fas', selectedRepeatOption.icon]"
+                                            :class="selectedRepeatOption.color" class="mr-2" />
+                                        <span>{{ selectedRepeatOption.label }}</span>
+                                    </div>
+                                    <font-awesome-icon :icon="['fas', 'chevron-down']"
+                                        class="text-gray-400 ml-2 transition-transform"
+                                        :class="{ 'rotate-180': isRepeatDropdownOpen }" />
+                                </div>
+
+                                <div v-if="isRepeatDropdownOpen"
+                                    class="absolute z-[101] w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg py-1 max-h-40 overflow-y-auto"
+                                    @click.stop>
+                                    <div v-for="option in repeatOptions" :key="option.value"
+                                        class="flex items-center px-3 py-2 cursor-pointer hover:bg-gray-50"
+                                        :class="{ 'bg-primary/5': option.value === formData.repeat_time }"
+                                        @click="handleRepeatSelect(option)">
+                                        <font-awesome-icon :icon="['fas', option.icon]" :class="option.color"
+                                            class="mr-2" />
+                                        <span>{{ option.label }}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
                         <!-- Thời gian -->
                         <div class="grid grid-cols-2 gap-4">
                             <div>
@@ -333,40 +344,6 @@ onUnmounted(() => {
                             </div>
                         </div>
 
-                        <!-- Lặp lại -->
-                        <div>
-                            <label class="block text-sm font-medium text-text-secondary mb-1">
-                                Lặp lại
-                            </label>
-                            <div class="relative select-none repeat-dropdown-container">
-                                <div class="flex items-center w-full px-3 py-2 border border-gray-100 rounded-lg cursor-pointer hover:border-gray-200"
-                                    :class="[
-                                        isRepeatDropdownOpen ? 'ring-1 ring-primary/20 border-primary/50' : ''
-                                    ]" @click="toggleRepeatDropdown($event)">
-                                    <div class="flex items-center flex-1">
-                                        <font-awesome-icon :icon="['fas', selectedRepeatOption.icon]"
-                                            :class="selectedRepeatOption.color" class="mr-2" />
-                                        <span>{{ selectedRepeatOption.label }}</span>
-                                    </div>
-                                    <font-awesome-icon :icon="['fas', 'chevron-down']"
-                                        class="text-gray-400 ml-2 transition-transform"
-                                        :class="{ 'rotate-180': isRepeatDropdownOpen }" />
-                                </div>
-
-                                <div v-if="isRepeatDropdownOpen"
-                                    class="absolute z-10 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg py-1"
-                                    @click.stop>
-                                    <div v-for="option in repeatOptions" :key="option.value"
-                                        class="flex items-center px-3 py-2 cursor-pointer hover:bg-gray-50"
-                                        :class="{ 'bg-primary/5': option.value === formData.repeat_time }"
-                                        @click="handleRepeatSelect(option)">
-                                        <font-awesome-icon :icon="['fas', option.icon]" :class="option.color"
-                                            class="mr-2" />
-                                        <span>{{ option.label }}</span>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
                     </form>
                 </div>
 
@@ -433,7 +410,8 @@ onUnmounted(() => {
     box-sizing: border-box !important;
     border: 1px solid rgb(243 244 246) !important;
     border-radius: 0.5rem !important;
-    height: 42px !important; /* Match height of other inputs */
+    height: 42px !important;
+    /* Match height of other inputs */
 }
 
 .date-picker-custom :deep(.el-input__wrapper:hover) {
