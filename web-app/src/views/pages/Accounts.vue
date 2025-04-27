@@ -77,7 +77,6 @@ const handleAddAccount = (newAccount) => {
 }
 
 const handleUpdateAccount = (updatedAccount) => {
-  debugger
   const index = accounts.value.findIndex(acc => acc.id === updatedAccount.id)
   if (index !== -1) {
     accounts.value[index] = updatedAccount
@@ -203,6 +202,7 @@ const handleTransferConfirm = (data) => {
     />
 
     <EditAccountModal
+      v-if="isEditModalOpen"
       :is-open="isEditModalOpen"
       :account="editingAccount"
       @close="isEditModalOpen = false"
