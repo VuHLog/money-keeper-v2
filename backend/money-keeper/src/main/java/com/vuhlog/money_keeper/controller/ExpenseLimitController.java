@@ -1,11 +1,13 @@
 package com.vuhlog.money_keeper.controller;
 
 import com.vuhlog.money_keeper.dto.request.ExpenseLimitRequest;
+import com.vuhlog.money_keeper.dto.request.ExpenseLimitSearchRequest;
 import com.vuhlog.money_keeper.dto.response.ApiResponse;
 import com.vuhlog.money_keeper.dto.response.responseinterface.ExpenseLimitDetailResponse;
 import com.vuhlog.money_keeper.dto.response.ExpenseLimitResponse;
 import com.vuhlog.money_keeper.service.ExpenseLimitService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -20,6 +22,14 @@ public class ExpenseLimitController {
     public ApiResponse<List<ExpenseLimitResponse>> getAllExpenseLimit() {
         return ApiResponse.<List<ExpenseLimitResponse>>builder()
                 .result(expenseLimitService.getAllExpenseLimit())
+                .build();
+    }
+
+    @PostMapping("/pagination")
+    public ApiResponse<Page<ExpenseLimitResponse>> getAllExpenseLimitPagination(@RequestBody ExpenseLimitSearchRequest req
+                                                                                ) {
+        return ApiResponse.<Page<ExpenseLimitResponse>>builder()
+                .result(expenseLimitService.getAllExpenseLimitPagination(req))
                 .build();
     }
 

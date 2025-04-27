@@ -7,6 +7,7 @@ import com.vuhlog.money_keeper.dao.DictionaryExpenseRepository;
 import com.vuhlog.money_keeper.dao.ExpenseLimitRepository;
 import com.vuhlog.money_keeper.dao.specification.ExpenseLimitSpecification;
 import com.vuhlog.money_keeper.dto.request.ExpenseLimitRequest;
+import com.vuhlog.money_keeper.dto.request.ExpenseLimitSearchRequest;
 import com.vuhlog.money_keeper.dto.response.responseinterface.ExpenseLimitDetailResponse;
 import com.vuhlog.money_keeper.dto.response.ExpenseLimitResponse;
 import com.vuhlog.money_keeper.entity.DictionaryBucketPayment;
@@ -20,12 +21,17 @@ import com.vuhlog.money_keeper.mapper.ExpenseLimitMapper;
 import com.vuhlog.money_keeper.service.ExpenseLimitService;
 import com.vuhlog.money_keeper.util.TimestampUtil;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
 import java.sql.Timestamp;
 import java.time.LocalDate;
 import java.time.ZoneId;
+import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -68,7 +74,34 @@ public class ExpenseLimitServiceImpl implements ExpenseLimitService {
         return expenseLimits.stream().map(expenseLimit -> {
             ExpenseLimitResponse expenseLimitResponse = expenseLimitMapper.toExpenseLimitResponse(expenseLimit);
             return convertToResponse(expenseLimitResponse, expenseLimit.getBucketPaymentIds(), expenseLimit.getCategoriesId(), expenseLimit.getEndDate());
-        }).collect(Collectors.toList());
+        }).sorted(Comparator.comparing(ExpenseLimitResponse::getStartDateLimit).reversed()).collect(Collectors.toList());
+    }
+
+    @Override
+    public Page<ExpenseLimitResponse> getAllExpenseLimitPagination(ExpenseLimitSearchRequest req) {
+        Specification<ExpenseLimit> specs = Specification.where(null);
+
+        Users user = userCommon.getMyUserInfo();
+        String userId = user.getId();
+        specs = specs.and(ExpenseLimitSpecification.filterByUserId(userId));
+
+        if(req.getBucketPaymentIds() != null && !req.getBucketPaymentIds().isEmpty()) {
+            specs = specs.and(ExpenseLimitSpecification.filterByBucketPaymentIds(req.getBucketPaymentIds()));
+        }
+
+        if(req.getCategoriesId() != null && !req.getCategoriesId().isEmpty()) {
+            specs = specs.and(ExpenseLimitSpecification.filterByCategoriesId(req.getCategoriesId()));
+        }
+
+        if(req.getSearch() != null && !req.getSearch().isEmpty()) {
+            specs = specs.and(ExpenseLimitSpecification.filterByName(req.getSearch()));
+        }
+        Sort sortable = req.getSort().equals("asc") ? Sort.by(req.getField()).ascending() : Sort.by(req.getField()).descending();
+        Pageable pageable = PageRequest.of(req.getPageNumber(), req.getPageSize(), sortable);
+        return expenseLimitRepository.findAll(specs, pageable).map(expenseLimit -> {;
+            ExpenseLimitResponse expenseLimitResponse = expenseLimitMapper.toExpenseLimitResponse(expenseLimit);
+            return convertToResponse(expenseLimitResponse, expenseLimit.getBucketPaymentIds(), expenseLimit.getCategoriesId(), expenseLimit.getEndDate());
+        });
     }
 
     @Override
