@@ -90,7 +90,21 @@ watch(isBankDropdownOpen, (newVal) => {
 })
 
 // Add window resize handler
-onMounted(() => {
+onMounted(async () => {
+  bankList.value = await bankStore.getBanks()
+  accountTypes.value = AccountType
+  if(props.account){
+    editingAccount.value = props.account
+    newAccount.value = {
+      accountName: props.account.accountName,
+      accountType: props.account.accountType,
+      balance: props.account.balance,
+      interpretation: props.account.interpretation || '',
+      bankId: props.account.bank?.id || '',
+      creditLimit: props.account.creditLimit || '',
+      iconUrl: props.account.iconUrl || ''
+    }
+  }
   window.addEventListener('resize', () => {
     if (isTypeDropdownOpen.value) {
       updateTypeDropdownPosition()
@@ -110,11 +124,6 @@ onUnmounted(() => {
       updateBankDropdownPosition()
     }
   })
-})
-
-onMounted(async () => {
-  bankList.value = await bankStore.getBanks()
-  accountTypes.value = AccountType
 })
 
 // Watch for account changes to update form
@@ -183,7 +192,7 @@ const hasChanges = computed(() => {
     editingAccount.value.iconUrl !== newAccount.value.iconUrl
 
   const bankFieldChanged = 
-    (editingAccount.value.bankId || '') !== (newAccount.value.bankId || '')
+    ((editingAccount.value.bankId || editingAccount.value.bank?.id) || '') !== (newAccount.value.bankId || '')
 
   const creditLimitChanged = 
     (editingAccount.value.creditLimit || '') !== (newAccount.value.creditLimit || '')
