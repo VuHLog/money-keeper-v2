@@ -5,9 +5,11 @@ import com.vuhlog.money_keeper.constants.ExpenseLimitTimeEnum;
 import com.vuhlog.money_keeper.dao.DictionaryBucketPaymentRepository;
 import com.vuhlog.money_keeper.dao.DictionaryExpenseRepository;
 import com.vuhlog.money_keeper.dao.ExpenseLimitRepository;
+import com.vuhlog.money_keeper.dao.ReportExpenseRevenueRepository;
 import com.vuhlog.money_keeper.dao.specification.ExpenseLimitSpecification;
 import com.vuhlog.money_keeper.dto.request.ExpenseLimitRequest;
 import com.vuhlog.money_keeper.dto.request.ExpenseLimitSearchRequest;
+import com.vuhlog.money_keeper.dto.request.PeriodOfTimeRequest;
 import com.vuhlog.money_keeper.dto.response.responseinterface.ExpenseLimitDetailResponse;
 import com.vuhlog.money_keeper.dto.response.ExpenseLimitResponse;
 import com.vuhlog.money_keeper.entity.DictionaryBucketPayment;
@@ -18,6 +20,7 @@ import com.vuhlog.money_keeper.exception.ErrorCode;
 import com.vuhlog.money_keeper.mapper.DictionaryBucketPaymentMapper;
 import com.vuhlog.money_keeper.mapper.DictionaryExpenseMapper;
 import com.vuhlog.money_keeper.mapper.ExpenseLimitMapper;
+import com.vuhlog.money_keeper.model.CalculationTime;
 import com.vuhlog.money_keeper.service.ExpenseLimitService;
 import com.vuhlog.money_keeper.util.TimestampUtil;
 import lombok.RequiredArgsConstructor;
@@ -42,6 +45,7 @@ public class ExpenseLimitServiceImpl implements ExpenseLimitService {
     private final ExpenseLimitRepository expenseLimitRepository;
     private final DictionaryBucketPaymentRepository dictionaryBucketPaymentRepository;
     private final DictionaryExpenseRepository dictionaryExpenseRepository;
+    private final ReportExpenseRevenueRepository reportExpenseRevenueRepository;
     private final ExpenseLimitMapper expenseLimitMapper;
     private final DictionaryExpenseMapper dictionaryExpenseMapper;
     private final DictionaryBucketPaymentMapper dictionaryBucketPaymentMapper;
@@ -98,8 +102,12 @@ public class ExpenseLimitServiceImpl implements ExpenseLimitService {
         }
         Sort sortable = req.getSort().equals("asc") ? Sort.by(req.getField()).ascending() : Sort.by(req.getField()).descending();
         Pageable pageable = PageRequest.of(req.getPageNumber(), req.getPageSize(), sortable);
-        return expenseLimitRepository.findAll(specs, pageable).map(expenseLimit -> {;
+        return expenseLimitRepository.findAll(specs, pageable).map(expenseLimit -> {
             ExpenseLimitResponse expenseLimitResponse = expenseLimitMapper.toExpenseLimitResponse(expenseLimit);
+            String endDateLimitStr = expenseLimit.getEndDateLimit() != null ? expenseLimit.getEndDateLimit().toString().split("\\.")[0] : null;;
+            CalculationTime calculationTime = TimestampUtil.calculationTime(expenseLimit.getStartDateLimit().toString().split("\\.")[0], endDateLimitStr);
+            Long totalExpense = reportExpenseRevenueRepository.getTotalExpenseByPeriodOfTime(userId, req.getBucketPaymentIds(), req.getCategoriesId(),calculationTime.getStartDate(), calculationTime.getEndOfStartMonth(), calculationTime.getStartDateBetween(), calculationTime.getEndDateBetween(), calculationTime.getStartDateOfMonthEndDate(), calculationTime.getEndDate());
+            expenseLimitResponse.setSpentAmount(totalExpense);
             return convertToResponse(expenseLimitResponse, expenseLimit.getBucketPaymentIds(), expenseLimit.getCategoriesId(), expenseLimit.getEndDate());
         });
     }
@@ -125,7 +133,7 @@ public class ExpenseLimitServiceImpl implements ExpenseLimitService {
         ExpenseLimit expenseLimit = expenseLimitRepository.findById(id).orElseThrow(() -> new AppException(ErrorCode.EXPENSE_LIMIT_NOT_EXISTED));
         expenseLimitMapper.updateExpenseLimit(expenseLimit, request);
         String endDateString = request.getEndDate();
-        if (endDateString != null) {
+        if (endDateString != null && !endDateString.isEmpty()) {
             expenseLimit.setEndDate(TimestampUtil.stringToTimestamp(endDateString));
             LocalDate endDateMinimum = validEndDate(expenseLimit.getRepeatTime(), expenseLimit.getStartDate(), expenseLimit.getEndDate());
             if (endDateMinimum != null) {

@@ -1,9 +1,6 @@
 package com.vuhlog.money_keeper.service;
 
-import com.vuhlog.money_keeper.dto.request.ExpenseRevenueSituation;
-import com.vuhlog.money_keeper.dto.request.ReportCategoryResponse;
-import com.vuhlog.money_keeper.dto.request.TotalExpenseRevenueForCategoryRequest;
-import com.vuhlog.money_keeper.dto.request.TotalExpenseRevenueRequest;
+import com.vuhlog.money_keeper.dto.request.*;
 import com.vuhlog.money_keeper.dto.response.TotalExpenseRevenueResponse;
 import com.vuhlog.money_keeper.dto.response.responseinterface.*;
 
@@ -29,4 +26,6 @@ public interface ReportService {
     TotalExpenseRevenueByPresent getReportExpenseRevenueByPresent(ExpenseRevenueSituation req);
 
     TotalExpenseRevenueByOptional getReportExpenseRevenueByOptional(ExpenseRevenueSituation req);
+
+    Long getTotalExpenseByPeriodOfTime(PeriodOfTimeRequest req);
 }
