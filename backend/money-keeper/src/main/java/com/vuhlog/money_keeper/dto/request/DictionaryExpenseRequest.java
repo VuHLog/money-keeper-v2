@@ -10,8 +10,6 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @Builder
 public class DictionaryExpenseRequest {
-    private String parentId;
-
     private String name;
 
     private String iconUrl;

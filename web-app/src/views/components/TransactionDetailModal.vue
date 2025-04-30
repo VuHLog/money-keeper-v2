@@ -48,6 +48,32 @@ const isExpense = computed(() => {
 
   return props.transactionType === 'expense'
 })
+
+// Hàm lấy URL icon an toàn
+const getIconUrl = computed(() => {
+  if (!props.transaction) return ''
+  
+  if (props.transactionType === 'revenue' && props.transaction.dictionaryRevenue) {
+    return props.transaction.dictionaryRevenue.iconUrl || ''
+  } else if (props.transactionType === 'expense' && props.transaction.dictionaryExpense) {
+    return props.transaction.dictionaryExpense.iconUrl || ''
+  }
+  
+  return ''
+})
+
+// Hàm lấy tên danh mục an toàn
+const getCategoryName = computed(() => {
+  if (!props.transaction) return ''
+  
+  if (props.transactionType === 'revenue' && props.transaction.dictionaryRevenue) {
+    return props.transaction.dictionaryRevenue.name || ''
+  } else if (props.transactionType === 'expense' && props.transaction.dictionaryExpense) {
+    return props.transaction.dictionaryExpense.name || ''
+  }
+  
+  return ''
+})
 </script>
 
 <template>
@@ -83,11 +109,9 @@ const isExpense = computed(() => {
               <div>
                 <p class="text-sm text-text-secondary">Danh mục</p>
                 <p class="font-medium flex text-text">
-                  <Avatar v-if="props.transactionType === 'revenue'" :src="transaction.dictionaryRevenue.iconUrl" :alt="transaction.dictionaryRevenue.name"
+                  <Avatar v-if="getIconUrl" :src="getIconUrl" :alt="getCategoryName" 
                     size="m" class="mr-2" />
-                  <Avatar v-else-if="props.transactionType === 'expense'" :src="transaction.dictionaryExpense.iconUrl" :alt="transaction.dictionaryExpense.name"
-                    size="m" class="mr-2" />
-                  {{ props.transactionType === 'revenue' ? transaction.dictionaryRevenue.name : transaction.dictionaryExpense.name }}
+                  {{ getCategoryName }}
                 </p>
               </div>
             </div>
