@@ -62,8 +62,7 @@ public class DictionaryRevenueServiceImpl implements DictionaryRevenueService {
     public List<DictionaryRevenueResponse> getAllDictionaryRevenue() {
         Specification<DictionaryRevenue> specs = Specification.where(null);
 
-        specs = specs.and(DictionaryRevenueSpecification.equalSystemDefault(true));
-        specs = specs.or(DictionaryRevenueSpecification.equalUserId(getMyInfo().getId()).and(DictionaryRevenueSpecification.equalSystemDefault(false)));
+        specs = specs.and(DictionaryRevenueSpecification.equalUserId(getMyInfo().getId()));
 
         Sort sortable = Sort.by("name").ascending();
 
@@ -74,9 +73,8 @@ public class DictionaryRevenueServiceImpl implements DictionaryRevenueService {
     public List<DictionaryRevenueResponse> getAllDictionaryRevenueWithoutTransfer() {
         Specification<DictionaryRevenue> specs = Specification.where(null);
 
-        specs = specs.and(DictionaryRevenueSpecification.equalSystemDefault(true));
         specs = specs.and(DictionaryRevenueSpecification.notEqualName("Chuyển khoản"));
-        specs = specs.or(DictionaryRevenueSpecification.equalUserId(getMyInfo().getId()).and(DictionaryRevenueSpecification.equalSystemDefault(false)));
+        specs = specs.and(DictionaryRevenueSpecification.equalUserId(getMyInfo().getId()));
 
         Sort sortable = Sort.by("name").ascending();
 

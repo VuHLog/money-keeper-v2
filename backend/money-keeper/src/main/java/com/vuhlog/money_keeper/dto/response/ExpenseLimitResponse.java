@@ -24,4 +24,5 @@ public class ExpenseLimitResponse {
     private String endDate;
     private String startDateLimit;
     private String endDateLimit;
+    private Long spentAmount;
 }

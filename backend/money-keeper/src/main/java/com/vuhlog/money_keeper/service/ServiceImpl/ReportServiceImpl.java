@@ -6,10 +6,7 @@ import com.vuhlog.money_keeper.constants.TimeOptionType;
 import com.vuhlog.money_keeper.dao.ExpenseRegularRepository;
 import com.vuhlog.money_keeper.dao.ReportExpenseRevenueRepository;
 import com.vuhlog.money_keeper.dao.RevenueRegularRepository;
-import com.vuhlog.money_keeper.dto.request.ExpenseRevenueSituation;
-import com.vuhlog.money_keeper.dto.request.ReportCategoryResponse;
-import com.vuhlog.money_keeper.dto.request.TotalExpenseRevenueForCategoryRequest;
-import com.vuhlog.money_keeper.dto.request.TotalExpenseRevenueRequest;
+import com.vuhlog.money_keeper.dto.request.*;
 import com.vuhlog.money_keeper.dto.response.*;
 import com.vuhlog.money_keeper.dto.response.responseinterface.*;
 import com.vuhlog.money_keeper.entity.Users;
@@ -254,6 +251,45 @@ public class ReportServiceImpl implements ReportService {
         return reportExpenseRevenueRepository.getTotalExpenseRevenueForCategoryByOptional(
                 userCommon.getMyUserInfo().getId(),
                 req.getBucketPaymentIds(),
+                startDate,
+                endOfStartMonth,
+                startDateBetween,
+                endDateBetween,
+                startDateOfMonthEndDate,
+                endDate
+        );
+    }
+
+    @Override
+    public Long getTotalExpenseByPeriodOfTime(PeriodOfTimeRequest req) {
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+        LocalDate startDate = LocalDate.parse(req.getStartDate(), formatter);
+        LocalDate endDate = LocalDate.parse(req.getEndDate(), formatter);
+
+        // start date -> end day of month
+        LocalDate endOfStartMonth = startDate.withDayOfMonth(startDate.lengthOfMonth());
+
+        // months in between
+        YearMonth current = YearMonth.from(startDate).plusMonths(1);
+        YearMonth endMonth = YearMonth.from(endDate);
+        LocalDate startDateBetween = null;
+        LocalDate endDateBetween = null;
+
+        // start day of month end date -> end date
+        LocalDate startDateOfMonthEndDate = null;
+
+        if(endMonth.isAfter(current)){
+            startDateBetween = current.atDay(1);
+            endDateBetween = endMonth.minusMonths(1).atEndOfMonth();
+
+            startDateOfMonthEndDate = endDate.withDayOfMonth(1);
+        }else {
+            endOfStartMonth = endDate;
+        }
+        return reportExpenseRevenueRepository.getTotalExpenseByPeriodOfTime(
+                userCommon.getMyUserInfo().getId(),
+                req.getBucketPaymentIds(),
+                req.getCategoriesId(),
                 startDate,
                 endOfStartMonth,
                 startDateBetween,

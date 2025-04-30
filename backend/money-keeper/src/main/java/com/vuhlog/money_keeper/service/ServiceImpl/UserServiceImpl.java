@@ -14,21 +14,29 @@ import com.vuhlog.money_keeper.exception.AppException;
 import com.vuhlog.money_keeper.exception.ErrorCode;
 import com.vuhlog.money_keeper.mapper.UserMapper;
 import com.vuhlog.money_keeper.service.UserService;
-import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
 @Service
 public class UserServiceImpl implements UserService {
-
+    @Autowired
+    private JdbcTemplate jdbcTemplate;
     @Autowired
     private UsersRepository usersRepository;
 
@@ -66,13 +74,17 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public UserResponse addUser(UserCreationRequest request) {
+    @Transactional(rollbackFor = Exception.class)
+    public UserResponse addUser(UserCreationRequest request) throws IOException {
         if(usersRepository.existsByUsername(request.getUsername()))
             throw new AppException(ErrorCode.USER_EXISTED);
 
 
         Users user = userMapper.toUser(request);
         user.setPassword(passwordEncoder.encode(user.getPassword()));
+        if(user.getAvatarUrl() == null || user.getAvatarUrl().isEmpty()) {
+            user.setAvatarUrl("https://res.cloudinary.com/cloud1412/image/upload/v1739899158/hffbxsj6wbkbzkxjfetz.png");
+        }
 
         //xu ly roles request
         Set<UserRole> user_roles = new HashSet<>();
@@ -82,11 +94,30 @@ public class UserServiceImpl implements UserService {
             user_role.setUser(user);
             user_roles.add(user_role);
         }else {
-            request.getRoles().stream().forEach(s -> user_roles.add(new UserRole(user,s)));
+            Users finalUser = user;
+            request.getRoles().stream().forEach(s -> user_roles.add(new UserRole(finalUser,s)));
         }
         user.setUser_roles(user_roles);
+        user = usersRepository.save(user);
 
-        return userMapper.toUserResponse(usersRepository.save(user));
+        return userMapper.toUserResponse(user);
+    }
+
+    @Override
+    public void executeSqlScriptForUser(String userId) throws IOException {
+        InputStream inputStream = getClass().getClassLoader().getResourceAsStream("sql/insert_category.sql");
+        if (inputStream == null) {
+            throw new FileNotFoundException("SQL file not found in resources");
+        }
+
+        String sql = new String(inputStream.readAllBytes(), StandardCharsets.UTF_8);
+
+        sql = sql.replace(":userId", userId);
+
+        String[] sqlStatements = sql.split(";");
+        for (String statement : sqlStatements) {
+            jdbcTemplate.execute(statement.trim());
+        }
     }
 
     @Override
@@ -116,7 +147,7 @@ public class UserServiceImpl implements UserService {
 
 
     @Override
-    @Transactional
+    @Transactional(rollbackFor = Exception.class)
     public UserResponse updateUser(String userId, UserUpdateRequest request) {
         Users user = usersRepository.findById(userId).get();
         userMapper.updateUser(user, request);
@@ -125,7 +156,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    @Transactional
+    @Transactional(rollbackFor = Exception.class)
     public void deleteUser(String userId) {
         userRoleRepository.deleteByUserId(userId);
         usersRepository.deleteById(userId);

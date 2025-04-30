@@ -17,11 +17,25 @@ public class ExpenseLimitSpecification {
     }
 
     public static Specification<ExpenseLimit> filterByCategoriesId(String categoriesId) {
-        return (root, query, criteriaBuilder) -> criteriaBuilder.greaterThan(criteriaBuilder.function("FIND_IN_SET", Integer.class, criteriaBuilder.literal(categoriesId), root.get("categoriesId")),0);
+        return (root, query, criteriaBuilder) -> {
+            String[] ids = categoriesId.split(",");
+            List<Predicate> predicates = new ArrayList<>();
+            for (String id : ids) {
+                predicates.add(criteriaBuilder.greaterThan(criteriaBuilder.function("FIND_IN_SET", Integer.class, criteriaBuilder.literal(id.trim()), root.get("categoriesId")), 0));
+            }
+            return criteriaBuilder.and(predicates.toArray(new Predicate[0]));
+        };
     }
 
     public static Specification<ExpenseLimit> filterByBucketPaymentIds(String bucketPaymentIds) {
-        return (root, query, criteriaBuilder) -> criteriaBuilder.greaterThan(criteriaBuilder.function("FIND_IN_SET", Integer.class, criteriaBuilder.literal(bucketPaymentIds), root.get("bucketPaymentIds")),0);
+        return (root, query, criteriaBuilder) -> {
+            String[] ids = bucketPaymentIds.split(",");
+            List<Predicate> predicates = new ArrayList<>();
+            for (String id : ids) {
+                predicates.add(criteriaBuilder.greaterThan(criteriaBuilder.function("FIND_IN_SET", Integer.class, criteriaBuilder.literal(id.trim()), root.get("bucketPaymentIds")), 0));
+            }
+            return criteriaBuilder.and(predicates.toArray(new Predicate[0]));
+        };
     }
 
     public static Specification<ExpenseLimit> equalDate(Integer day, Integer month, Integer year) {

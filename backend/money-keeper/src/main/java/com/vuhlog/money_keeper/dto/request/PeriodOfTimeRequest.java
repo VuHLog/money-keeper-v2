@@ -6,11 +6,12 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 @Data
-@NoArgsConstructor
 @AllArgsConstructor
+@NoArgsConstructor
 @Builder
-public class DictionaryExpenseRequest {
-    private String name;
-
-    private String iconUrl;
+public class PeriodOfTimeRequest {
+    private String bucketPaymentIds;
+    private String categoriesId;
+    private String startDate;
+    private String endDate;
 }

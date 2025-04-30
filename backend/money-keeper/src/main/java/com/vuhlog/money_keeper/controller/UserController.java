@@ -5,6 +5,7 @@ import com.vuhlog.money_keeper.dto.request.UserCreationRequest;
 import com.vuhlog.money_keeper.dto.request.UserUpdateRequest;
 import com.vuhlog.money_keeper.dto.response.ApiResponse;
 import com.vuhlog.money_keeper.dto.response.UserResponse;
+import com.vuhlog.money_keeper.entity.Users;
 import com.vuhlog.money_keeper.service.UserService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -14,6 +15,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.web.bind.annotation.*;
 
+import java.io.IOException;
+
 @RestController
 @RequestMapping("/users")
 @Slf4j
@@ -22,10 +25,13 @@ public class UserController {
     private UserService userService;
 
     @PostMapping("/registration")
-    public ApiResponse<UserResponse> createUser(@RequestBody UserCreationRequest request) {
-
+    public ApiResponse<UserResponse> createUser(@RequestBody UserCreationRequest request) throws IOException {
+        UserResponse userResponse = userService.addUser(request);
+        if(userResponse.getId() != null) {
+            userService.executeSqlScriptForUser(userResponse.getId());
+        }
         return ApiResponse.<UserResponse>builder()
-                .result(userService.addUser(request))
+                .result(userResponse)
                 .build();
     }
 

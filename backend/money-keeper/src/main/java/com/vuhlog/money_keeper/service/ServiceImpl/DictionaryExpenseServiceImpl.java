@@ -65,8 +65,7 @@ public class DictionaryExpenseServiceImpl implements DictionaryExpenseService {
     public List<DictionaryExpenseResponse> getAllDictionaryExpense() {
         Specification<DictionaryExpense> specs = Specification.where(null);
 
-        specs = specs.and(DictionaryExpenseSpecification.equalSystemDefault(true));
-        specs = specs.or(DictionaryExpenseSpecification.equalUserId(getMyInfo().getId()).and(DictionaryExpenseSpecification.equalSystemDefault(false)));
+        specs = specs.and(DictionaryExpenseSpecification.equalUserId(getMyInfo().getId()));
 
         Sort sortable = Sort.by("name").ascending();
 
@@ -77,9 +76,8 @@ public class DictionaryExpenseServiceImpl implements DictionaryExpenseService {
     public List<DictionaryExpenseResponse> getAllDictionaryExpenseWithoutTransfer(String search) {
         Specification<DictionaryExpense> specs = Specification.where(null);
 
-        specs = specs.and(DictionaryExpenseSpecification.equalSystemDefault(true));
         specs = specs.and(DictionaryExpenseSpecification.notEqualName("Chuyển khoản"));
-        specs = specs.or(DictionaryExpenseSpecification.equalUserId(getMyInfo().getId()).and(DictionaryExpenseSpecification.equalSystemDefault(false)));
+        specs = specs.and(DictionaryExpenseSpecification.equalUserId(getMyInfo().getId()));
 
         if(search != null && !search.isEmpty()){
             specs = specs.and(DictionaryExpenseSpecification.likeName(search));

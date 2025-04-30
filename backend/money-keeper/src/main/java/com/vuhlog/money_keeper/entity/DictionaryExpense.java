@@ -18,8 +18,6 @@ public class DictionaryExpense {
     @GeneratedValue(strategy = GenerationType.UUID)
     private String id;
 
-    private String parentId;
-
     private String name;
 
     private boolean regular;

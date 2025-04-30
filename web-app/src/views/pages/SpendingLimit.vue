@@ -22,9 +22,23 @@ const dictionaryExpenseStore = useDictionaryExpenseStore()
 const spendingLimits = ref([])
 const categories = ref([])
 const accounts = ref([])
+
+// Computed properties for pagination
+const paginationInfo = computed(() => {
+  const start = ((expenseLimitStore.pagination.pageNumber - 1) * expenseLimitStore.pagination.pageSize) + 1
+  const end = Math.min(start + expenseLimitStore.pagination.pageSize - 1, expenseLimitStore.pagination.totalElements)
+  return {
+    start,
+    end,
+    total: expenseLimitStore.pagination.totalElements,
+    currentPage: expenseLimitStore.pagination.pageNumber,
+    totalPages: expenseLimitStore.pagination.totalPages
+  }
+})
+
 onMounted(async () => {
-  spendingLimits.value = await expenseLimitStore.getExpenseLimits()
-  categories.value = await dictionaryExpenseStore.getMyExpenseCategoriesWithoutTransfer()
+  await getData()
+  categories.value = await dictionaryExpenseStore.getMyExpenseCategories()
   accounts.value = await dictionaryBucketPaymentStore.getMyBucketPayments()
 })
 
@@ -38,14 +52,43 @@ const showDetailModal = ref(false)
 const selectedLimitForDetail = ref(null)
 
 // Methods
-const handleFilterChange = (filters) => {
-  console.log('Filters changed:', filters)
-  // TODO: Apply filters to spending limits
+const getData = async () => {
+  await expenseLimitStore.getExpenseLimitsPagination()
+  spendingLimits.value = expenseLimitStore.expenseLimits
 }
 
-const handleFilterReset = () => {
-  console.log('Filters reset')
-  // TODO: Reset spending limits to original state
+const handlePageChange = async (newPage) => {
+  expenseLimitStore.pagination.pageNumber = newPage
+  await getData()
+}
+
+// Methods
+const handleFilterChange = (filters) => {
+  // Safely handle categories filter
+  if (!filters?.category || filters.category.length === 0 || filters.category[0] === 'all') {
+    expenseLimitStore.categoriesId = null
+  } else {
+    expenseLimitStore.categoriesId = filters.category.join(',')
+  }
+
+  // Safely handle account filter
+  if (!filters?.account || filters.account.length === 0 || filters.account[0] === 'all') {
+    expenseLimitStore.bucketPaymentIds = null
+  } else {
+    expenseLimitStore.bucketPaymentIds = filters.account.join(',')
+  }
+}
+
+const handleApplyFilter = async () => {
+  expenseLimitStore.resetPagination()
+  await getData()
+}
+
+const handleFilterReset = async () => {
+  expenseLimitStore.categoriesId = null
+  expenseLimitStore.bucketPaymentIds = null
+  expenseLimitStore.resetPagination()
+  await getData()
 }
 
 const openAddLimitModal = () => {
@@ -138,42 +181,59 @@ const formatCurrency = (amount) => {
 // Thêm computed property để tính toán số tiền đã chi
 const calculateSpentAmount = (limit) => {
   // TODO: Thay thế bằng dữ liệu thực từ API
-  // Giả lập dữ liệu chi tiêu
-  return Math.floor(Math.random() * limit.amount * 1.2) // Tạm thời random để demo
+  return limit.spentAmount || 0 // Giá trị cố định để test
 }
 
 // Thêm hàm format phần trăm
 const formatPercentage = (spent, total) => {
+  if (!total) return 0
   const percentage = (spent / total) * 100
   return Math.min(Math.round(percentage), 999) // Giới hạn tối đa 999%
 }
 
-// Thêm hàm tính toán style cho progress bar
-const getProgressBarStyle = (spent, total) => {
-  const percentage = (spent / total) * 100
-  let color = 'var(--color-success)'
+// Thêm ref để theo dõi trạng thái animation
+const animatedPercentages = ref({})
 
-  if (percentage > 100) {
-    color = 'var(--color-danger)'
+// Thêm hàm tính toán style cho progress bar với animation
+const getProgressBarStyle = (spent, total) => {
+  if (!total) return { width: '0%', backgroundColor: '#10B981' }
+
+  const percentage = (spent / total) * 100
+  const limitedPercentage = Math.min(percentage, 100)
+  let color = '#10B981' // Default color
+
+  if (percentage >= 100) {
+    color = '#EF4444' // Đỏ khi vượt quá 100%
   } else if (percentage >= 80) {
-    color = 'var(--color-warning)'
+    color = '#F59E0B' // Vàng khi đạt 80-99%
+  } else if (percentage >= 60) {
+    color = '#F97316' // Cam khi đạt 60-79%
+  } else if (percentage >= 40) {
+    color = '#22C55E' // Xanh lá đậm khi đạt 40-59%
   }
 
   return {
-    width: `${Math.min(percentage, 100)}%`,
-    backgroundColor: color
+    width: `${limitedPercentage}%`,
+    backgroundColor: color,
+    transition: 'all 1s ease-out'
   }
 }
 
 // Thêm hàm lấy class cho status badge
 const getStatusClass = (spent, total) => {
+  if (!total) return ['text-xs font-medium px-2 py-0.5 rounded-full', 'bg-success/10 text-success']
+
   const percentage = (spent / total) * 100
   let colorClass = 'bg-success/10 text-success'
 
-  if (percentage > 100) {
-    colorClass = 'bg-danger/10 text-danger'
+  if (percentage >= 100) {
+    colorClass = 'bg-red-500/10 text-red-500'
   } else if (percentage >= 80) {
-    colorClass = 'bg-warning/10 text-warning'
+    colorClass = 'bg-yellow-500/10 text-yellow-500'
+  } else if (percentage >= 60) {
+    colorClass = 'bg-orange-500/10 text-orange-500'
+  } else if (percentage >= 40) {
+    colorClass = 'bg-green-500/10 text-green-500'
   }
 
   return ['text-xs font-medium px-2 py-0.5 rounded-full', colorClass]
@@ -183,13 +243,30 @@ const openDetailModal = (limit) => {
   selectedLimitForDetail.value = limit
   showDetailModal.value = true
 }
+
+// Thêm style cho component
+const style = `
+@keyframes progressAnimation {
+  0% {
+    width: 0%;
+  }
+  100% {
+    width: var(--target-width);
+  }
+}
+
+.progress-bar-animate {
+  animation: progressAnimation 1s ease-out forwards;
+}
+`
 </script>
 
 <template>
   <div class="p-4">
     <!-- Filter Options -->
-    <FilterOptions :show-time-range="false" :show-transaction-type="false" :show-account="true" :show-category-expense="true"
-      @filter-change="handleFilterChange" @filter-reset="handleFilterReset" />
+    <FilterOptions :show-time-range="false" :show-transaction-type="false" :show-account="true"
+      :show-category-expense="true" @filter-change="handleFilterChange" @filter-reset="handleFilterReset"
+      @apply-filter="handleApplyFilter" />
 
     <!-- Spending Limits Table -->
     <div class="mt-6 bg-white rounded-lg shadow-sm p-4">
@@ -293,21 +370,23 @@ const openDetailModal = (limit) => {
                   </div>
 
                   <!-- Progress bar container -->
-                  <div class="relative w-full h-2 bg-gray-100 rounded-full overflow-hidden">
-                    <!-- Progress bar background -->
-                    <div class="absolute inset-0 bg-gray-50"></div>
-
+                  <div class="relative w-full h-2.5 rounded-full overflow-hidden"
+                    :class="{ 'bg-gray-100': calculateSpentAmount(limit) <= limit.amount, 'bg-red-100': calculateSpentAmount(limit) > limit.amount }">
                     <!-- Progress bar indicator -->
-                    <div class="absolute h-full left-0 top-0 rounded-full transition-all duration-300 ease-in-out"
-                      :style="getProgressBarStyle(calculateSpentAmount(limit), limit.amount)"></div>
+                    <div class="absolute h-full left-0 top-0 rounded-full progress-bar-animate" :style="[
+                      getProgressBarStyle(calculateSpentAmount(limit), limit.amount),
+                      { '--target-width': `${Math.min((calculateSpentAmount(limit) / limit.amount) * 100, 100)}%` }
+                    ]">
+                    </div>
 
                     <!-- Limit indicator line -->
-                    <div class="absolute h-full w-0.5 bg-gray-400" style="left: 100%; transform: translateX(-50%);">
+                    <div v-if="calculateSpentAmount(limit) <= limit.amount" class="absolute h-full w-0.5 bg-gray-400/50"
+                      style="left: 100%; transform: translateX(-50%);">
                     </div>
                   </div>
 
                   <!-- Legend -->
-                  <div class="flex items-center justify-between text-xs text-gray-500">
+                  <div class="flex items-center justify-between text-xs text-gray-500 mt-1">
                     <span>0 ₫</span>
                     <span>{{ formatCurrency(limit.amount) }}</span>
                   </div>
@@ -327,6 +406,62 @@ const openDetailModal = (limit) => {
             </tr>
           </tbody>
         </table>
+      </div>
+
+      <!-- Add pagination section after the table -->
+      <div class="mt-4 flex justify-between items-center px-6 py-3 border-t border-gray-200">
+        <!-- Pagination info -->
+        <div class="text-sm text-gray-500">
+          Hiển thị {{ paginationInfo.start }} đến {{ paginationInfo.end }}
+          trên tổng số {{ paginationInfo.total }} hạn mức
+        </div>
+
+        <!-- Pagination controls -->
+        <div class="flex space-x-2">
+          <!-- Previous button -->
+          <button @click="handlePageChange(paginationInfo.currentPage - 1)" :disabled="paginationInfo.currentPage === 1"
+            class="px-3 py-1 rounded-lg text-sm" :class="[
+              paginationInfo.currentPage === 1
+                ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                : 'bg-white text-gray-700 hover:bg-gray-50 border border-gray-200'
+            ]">
+            <font-awesome-icon :icon="['fas', 'chevron-left']" />
+          </button>
+
+          <!-- Page numbers -->
+          <template v-for="pageNumber in paginationInfo.totalPages" :key="pageNumber">
+            <button v-if="
+              pageNumber === 1 ||
+              pageNumber === paginationInfo.totalPages ||
+              (pageNumber >= paginationInfo.currentPage - 1 && pageNumber <= paginationInfo.currentPage + 1)
+            " @click="handlePageChange(pageNumber)" class="px-3 py-1 rounded-lg text-sm" :class="[
+                pageNumber === paginationInfo.currentPage
+                  ? 'bg-primary text-white'
+                  : 'bg-white text-gray-700 hover:bg-gray-50 border border-gray-200'
+              ]">
+              {{ pageNumber }}
+            </button>
+
+            <!-- Ellipsis -->
+            <span v-if="
+              (pageNumber === 1 && paginationInfo.currentPage - 2 > 1) ||
+              (pageNumber === paginationInfo.totalPages - 1 && paginationInfo.currentPage + 2 < paginationInfo.totalPages)
+            " class="px-2 py-1 text-gray-500">
+              ...
+            </span>
+          </template>
+
+          <!-- Next button -->
+          <button @click="handlePageChange(paginationInfo.currentPage + 1)"
+            :disabled="paginationInfo.currentPage === paginationInfo.totalPages" class="px-3 py-1 rounded-lg text-sm"
+            :class="[
+              paginationInfo.currentPage === paginationInfo.totalPages
+                ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                : 'bg-white text-gray-700 hover:bg-gray-50 border border-gray-200'
+            ]">
+            <font-awesome-icon :icon="['fas', 'chevron-right']" />
+          </button>
+        </div>
       </div>
     </div>
 
@@ -415,5 +550,40 @@ td {
   --color-success: #10B981;
   --color-warning: #F59E0B;
   --color-danger: #EF4444;
+  --color-orange: #F97316;
+  --color-green: #22C55E;
+}
+
+/* Add new animation for pulse effect */
+@keyframes pulse {
+  0% {
+    opacity: 0.6;
+  }
+
+  50% {
+    opacity: 1;
+  }
+
+  100% {
+    opacity: 0.6;
+  }
+}
+
+.animate-pulse {
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+@keyframes progressAnimation {
+  0% {
+    width: 0%;
+  }
+
+  100% {
+    width: var(--target-width);
+  }
+}
+
+.progress-bar-animate {
+  animation: progressAnimation 1s ease-out forwards;
 }
 </style>

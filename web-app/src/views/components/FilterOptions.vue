@@ -44,7 +44,7 @@ const props = defineProps({
   }
 })
 
-const emit = defineEmits(['filter-change', 'filter-reset'])
+const emit = defineEmits(['filter-change', 'filter-reset', 'apply-filter'])
 
 // Time range options
 const timeRanges = [
@@ -155,6 +155,10 @@ const handleFilterChange = () => {
     customDateRange: customDateRange.value,
     selectedDate: selectedDate.value
   })
+}
+
+const applyFilter = () => {
+  emit('apply-filter')
 }
 
 const handleReset = () => {
@@ -398,7 +402,7 @@ watch(categoryType, () => {
         Đặt lại
       </button>
       <button
-        @click="handleFilterChange"
+        @click="applyFilter"
         class="px-4 py-2 text-sm font-medium text-white bg-primary rounded-lg hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-primary/20"
       >
         <font-awesome-icon :icon="['fas', 'check']" class="mr-2" />

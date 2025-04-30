@@ -12,8 +12,6 @@ import lombok.NoArgsConstructor;
 public class DictionaryExpenseResponse {
     private String id;
 
-    private String parentId;
-
     private String name;
 
     private boolean regular;

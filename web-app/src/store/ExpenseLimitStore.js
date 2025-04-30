@@ -234,6 +234,7 @@ export const useExpenseLimitStore = defineStore("expenseLimit", {
       let response = null;
       let request = {
         ...this.pagination,
+        pageNumber: this.pagination.pageNumber - 1,
         categoriesId: this.categoriesId,
         bucketPaymentIds: this.bucketPaymentIds,
       }
@@ -243,7 +244,7 @@ export const useExpenseLimitStore = defineStore("expenseLimit", {
         this.pagination.totalElements = response.totalElements;
         this.pagination.totalPages = response.totalPages;
       })
-      return response;
+      return response.content;
     },
     async getExpenseLimitByExpenseLimitId(expenseLimitId){
       let response = null;
@@ -270,6 +271,15 @@ export const useExpenseLimitStore = defineStore("expenseLimit", {
         response = res.result;
       })
       return response;
+    },
+    resetPagination(){
+      this.pagination.pageNumber = 1;
+      this.pagination.pageSize = 5;
+      this.pagination.sort = "desc";
+      this.pagination.search = "";
+      this.pagination.totalElements = 0;
+      this.pagination.totalPages = 0;
+
     },
     async updateExpenseLimit(expenseLimit){
       let response = null;

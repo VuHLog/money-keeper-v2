@@ -54,6 +54,7 @@ const emit = defineEmits(['update:modelValue', 'change'])
 
 const isDropdownOpen = ref(false)
 const searchQuery = ref('')
+const isOnMounted = ref(false)
 
 onMounted(() => {
   if(props.isMultiple && (props.modelValue.length === 0 || props.modelValue[0] === 'all')) {
@@ -61,6 +62,7 @@ onMounted(() => {
     handleSelectAll()
   }
   document.addEventListener('mousedown', handleClickOutside)
+  isOnMounted.value = true
 })
 
 onUnmounted(() => {
@@ -75,7 +77,20 @@ const selectedOption = computed({
 
 // For multiple select
 const selectedValues = computed({
-  get: () => props.isMultiple ? (Array.isArray(props.modelValue) ? props.modelValue : []) : [],
+  get: () => {
+    if (props.isMultiple) {
+      if(Array.isArray(props.modelValue)) {
+        if(props.modelValue.length === 0 || props.modelValue[0] === 'all') {
+          return []
+        } else {
+          return props.modelValue
+        }
+      } else {
+        return []
+      }
+    }
+    return []
+  },
   set: (value) => emit('update:modelValue', value)
 })
 
@@ -152,7 +167,9 @@ const handleSelectAll = () => {
     selectedValues.value = [...allOptionIds]
   }
   
-  emit('change', selectedValues.value)
+  if(isOnMounted.value){
+    emit('change', selectedValues.value)
+  }
 }
 
 // Click outside handler

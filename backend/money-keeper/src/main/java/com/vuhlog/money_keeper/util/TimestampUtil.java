@@ -1,15 +1,14 @@
 package com.vuhlog.money_keeper.util;
 
 import com.vuhlog.money_keeper.constants.TimeOptionType;
+import com.vuhlog.money_keeper.model.CalculationTime;
 import com.vuhlog.money_keeper.model.PeriodOfTime;
 
 import java.sql.Timestamp;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.time.DayOfWeek;
-import java.time.Instant;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
+import java.time.*;
+import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.time.temporal.TemporalAdjusters;
 import java.util.Calendar;
@@ -17,6 +16,7 @@ import java.util.Calendar;
 public class TimestampUtil {
     public static Timestamp stringToTimestamp(String dateString) {
         try {
+            if(dateString == null || dateString.isEmpty()) return null;
             SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
             return new Timestamp(dateFormat.parse(dateString).getTime());
         } catch (ParseException e) {
@@ -147,5 +147,40 @@ public class TimestampUtil {
             }
         }
         return null;
+    }
+
+    public static CalculationTime calculationTime(String startDateStr, String endDateStr) {
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+        LocalDate startDate = LocalDate.parse(startDateStr, formatter);
+        LocalDate endDate = LocalDate.parse(endDateStr, formatter);
+
+        // start date -> end day of month
+        LocalDate endOfStartMonth = startDate.withDayOfMonth(startDate.lengthOfMonth());
+
+        // months in between
+        YearMonth current = YearMonth.from(startDate).plusMonths(1);
+        YearMonth endMonth = YearMonth.from(endDate);
+        LocalDate startDateBetween = null;
+        LocalDate endDateBetween = null;
+
+        // start day of month end date -> end date
+        LocalDate startDateOfMonthEndDate = null;
+
+        if(endMonth.isAfter(current)){
+            startDateBetween = current.atDay(1);
+            endDateBetween = endMonth.minusMonths(1).atEndOfMonth();
+
+            startDateOfMonthEndDate = endDate.withDayOfMonth(1);
+        }else {
+            endOfStartMonth = endDate;
+        }
+        return CalculationTime.builder()
+                .startDate(startDate)
+                .endOfStartMonth(endOfStartMonth)
+                .startDateBetween(startDateBetween)
+                .endDateBetween(endDateBetween)
+                .startDateOfMonthEndDate(startDateOfMonthEndDate)
+                .endDate(endDate)
+                .build();
     }
 }

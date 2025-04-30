@@ -26,7 +26,7 @@ export const useDictionaryExpenseStore = defineStore("dictionaryExpense", {
     async update(id, data) {
       let response = null;
       await base
-        .put("/dictionary-expense/" + id, data)
+        .patch("/dictionary-expense/" + id, data)
         .then((res) => {
           response = res.result;
         })
