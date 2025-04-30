@@ -8,6 +8,8 @@ import com.vuhlog.money_keeper.entity.Users;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
+import java.io.IOException;
+
 public interface UserService {
     public Page<UserResponse> getUsers(Pageable pageable);
 
@@ -20,11 +22,13 @@ public interface UserService {
 
     String changePassword(ChangePasswordRequest request);
 
-    public UserResponse addUser(UserCreationRequest request);
+    public UserResponse addUser(UserCreationRequest request) throws IOException;
 
     public UserResponse updateUser(String userId, UserUpdateRequest request);
 
     public void deleteUser(String userId);
 
     public UserResponse getMyInfo();
+
+    void executeSqlScriptForUser(String userId) throws IOException;
 }
