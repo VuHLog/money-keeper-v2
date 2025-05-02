@@ -48,10 +48,9 @@ const emit = defineEmits(['filter-change', 'filter-reset', 'apply-filter'])
 
 // Time range options
 const timeRanges = [
-  { id: 'day', name: 'Theo ngày', icon: 'calendar', color: 'text-blue-500', pickerType: 'date' },
-  { id: 'month', name: 'Theo tháng', icon: 'calendar', color: 'text-blue-500', pickerType: 'month' },
-  { id: 'year', name: 'Theo năm', icon: 'calendar', color: 'text-blue-500', pickerType: 'year' },
-  { id: 'custom', name: 'Tùy chọn', icon: 'calendar', color: 'text-blue-500', pickerType: 'daterange' }
+  { id: 'month', name: 'Theo tháng', icon: 'calendar', color: 'text-blue-500', pickerType: 'monthrange' },
+  { id: 'year', name: 'Theo năm', icon: 'calendar', color: 'text-blue-500', pickerType: 'yearrange' },
+  { id: 'date', name: 'Tùy chọn', icon: 'calendar', color: 'text-blue-500', pickerType: 'daterange' }
 ]
 
 // Transaction type options
@@ -92,16 +91,7 @@ const selectedTimeRange = ref('month')
 const selectedTransactionType = ref(['all'])
 const selectedAccount = ref(['all'])
 const selectedCategory = ref(['all'])
-const customDateRange = ref([null, null])
-
-// Set default date based on current time
-const currentDate = new Date()
-const selectedDate = ref(
-  selectedTimeRange.value === 'day' ? currentDate :
-  selectedTimeRange.value === 'month' ? new Date(currentDate.getFullYear(), currentDate.getMonth(), 1) :
-  selectedTimeRange.value === 'year' ? new Date(currentDate.getFullYear(), 0, 1) :
-  null
-)
+const customTimeRange = ref([new Date().toISOString().slice(0, 7), new Date().toISOString().slice(0, 7)])
 
 // Store original values for reset
 const originalValues = {
@@ -110,11 +100,9 @@ const originalValues = {
   account: ['all'],
   category: ['all'],
   categoryType: 'expense',
-  date: selectedDate.value,
-  customDateRange: [null, null]
+  customTimeRange: [(new Date()).toISOString().slice(0, 7), new Date().toISOString().slice(0, 7)]
 }
 
-const categorySearch = ref('')
 
 // Dropdown states
 const isTimeRangeDropdownOpen = ref(false)
@@ -126,6 +114,7 @@ const isCategoryTypeDropdownOpen = ref(false)
 const dictionaryBucketPaymentStore = useDictionaryBucketPaymentStore()
 const dictionaryExpenseStore = useDictionaryExpenseStore()
 const dictionaryRevenueStore = useDictionaryRevenueStore()
+
 onMounted(async() => {
   expenseCategories.value = await dictionaryExpenseStore.getMyExpenseCategories();
   revenueCategories.value = await dictionaryRevenueStore.getMyRevenueCategories();
@@ -139,8 +128,6 @@ onUnmounted(() => {
 })
 
 // Computed properties
-const showCustomDateRange = computed(() => selectedTimeRange.value === 'custom')
-const showDatePicker = computed(() => selectedTimeRange.value !== 'custom')
 const selectedTimeRangeObj = computed(() => {
   return timeRanges.find(range => range.id === selectedTimeRange.value)
 })
@@ -148,12 +135,11 @@ const selectedTimeRangeObj = computed(() => {
 // Methods
 const handleFilterChange = () => {
   emit('filter-change', {
-    timeRange: selectedTimeRange.value,
+    timeOption: selectedTimeRangeObj.value.name,
     transactionType: selectedTransactionType.value,
     account: selectedAccount.value,
     category: selectedCategory.value,
-    customDateRange: customDateRange.value,
-    selectedDate: selectedDate.value
+    customTimeRange: customTimeRange.value,
   })
 }
 
@@ -166,8 +152,7 @@ const handleReset = () => {
   selectedTransactionType.value = [...originalValues.transactionType]
   selectedAccount.value = [...originalValues.account]
   selectedCategory.value = [...originalValues.category]
-  selectedDate.value = originalValues.date
-  customDateRange.value = originalValues.customDateRange
+  customTimeRange.value = originalValues.customTimeRange
   emit('filter-reset')
 }
 
@@ -211,33 +196,36 @@ const handleClickOutside = (event) => {
 
 // Date picker format
 const dateFormat = {
-  date: 'DD/MM/YYYY',
-  month: 'MM/YYYY',
-  year: 'YYYY',
-  daterange: 'DD/MM/YYYY'
+  date: {
+    display: 'DD/MM/YYYY',
+    value: 'YYYY-MM-DD'
+  },
+  month: {
+    display: 'MM/YYYY',
+    value: 'YYYY-MM'
+  },
+  year: {
+    display: 'YYYY',
+    value: 'YYYY'
+  }
 }
 
-// Date picker placeholder
-const datePlaceholder = {
-  date: 'Chọn ngày',
-  month: 'Chọn tháng',
-  year: 'Chọn năm',
-  daterange: 'Chọn khoảng thời gian'
-}
+const toDateStr = (date) => date.toISOString().slice(0, 10)
+const toMonthStr = (date) => date.toISOString().slice(0, 7)
+const toYearStr = (date) => date.getFullYear().toString()
 
-// Method to update selected date when time range changes
-const updateSelectedDate = () => {
+const updateCustomTimeRange = () => {
   const currentDate = new Date()
-  selectedDate.value = 
-    selectedTimeRange.value === 'day' ? currentDate :
-    selectedTimeRange.value === 'month' ? new Date(currentDate.getFullYear(), currentDate.getMonth(), 1) :
-    selectedTimeRange.value === 'year' ? new Date(currentDate.getFullYear(), 0, 1) :
+  customTimeRange.value = 
+    selectedTimeRange.value === 'date' ? [toDateStr(currentDate), toDateStr(currentDate)] :
+    selectedTimeRange.value === 'month' ? [toMonthStr(currentDate), toMonthStr(currentDate)] :
+    selectedTimeRange.value === 'year' ? [toYearStr(currentDate), toYearStr(currentDate)] :
     null
 }
 
 // Watch for time range changes
 watch(selectedTimeRange, () => {
-  updateSelectedDate()
+  updateCustomTimeRange()
   handleFilterChange()
 })
 
@@ -312,30 +300,16 @@ watch(categoryType, () => {
             </div>
           </div>
 
-          <!-- Date Picker -->
-          <div v-if="showDatePicker" class="mt-2">
-            <el-date-picker
-              v-model="selectedDate"
-              :type="selectedTimeRangeObj.pickerType"
-              :format="dateFormat[selectedTimeRangeObj.pickerType]"
-              :placeholder="datePlaceholder[selectedTimeRangeObj.pickerType]"
-              @change="handleFilterChange"
-              class="w-full"
-              :clearable="false"
-            />
-          </div>
-
           <!-- Custom Date Range -->
-          <div v-if="showCustomDateRange" class="mt-2">
+          <div class="mt-2">
             <el-date-picker
-              v-model="customDateRange"
-              type="daterange"
+              v-model="customTimeRange"
+              :type="selectedTimeRangeObj.pickerType"
               range-separator="Đến"
-              start-placeholder="Từ ngày"
-              end-placeholder="Đến ngày"
-              format="DD/MM/YYYY"
-              value-format="YYYY-MM-DD"
+              :format="dateFormat[selectedTimeRangeObj.id].display"
+              :value-format="dateFormat[selectedTimeRangeObj.id].value"
               @change="handleFilterChange"
+              :clearable="false"
               class="w-full"
             />
           </div>

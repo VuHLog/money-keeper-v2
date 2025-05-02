@@ -25,6 +25,7 @@ public class ReportExpenseRevenue {
     private Timestamp updatedAt;
     private String bucketPaymentId;
     private String categoryId;
+    private Long totalTransaction;
 
     @ManyToOne
     @JoinColumn(name = "user_id")
