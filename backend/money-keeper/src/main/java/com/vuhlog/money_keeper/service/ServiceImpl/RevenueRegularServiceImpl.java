@@ -97,7 +97,7 @@ public class RevenueRegularServiceImpl implements RevenueRegularService {
         updateBalance(dictionaryBucketPayment, request.getAmount(), revenueRegular.getRevenueDate(), null, true);
 
         //update report expense revenue
-        updateTotalRevenueReportExpenseRevenue(revenueRegular.getRevenueDate(), request.getDictionaryBucketPaymentId(), request.getAmount(), request.getDictionaryRevenueId());
+        updateTotalRevenueReportExpenseRevenue(revenueRegular.getRevenueDate(), request.getDictionaryBucketPaymentId(), request.getAmount(), request.getDictionaryRevenueId(), 1);
 
         long balance =  getBalanceWhenCreate(dictionaryBucketPayment, revenueRegular.getRevenueDate(), request.getAmount());
         revenueRegular.setBalance(balance);
@@ -160,8 +160,8 @@ public class RevenueRegularServiceImpl implements RevenueRegularService {
 
         if(!oldCategoryId.equals(newCategoryId)){
             //update report expense revenue
-            updateTotalRevenueReportExpenseRevenue(oldRevenueDate, oldBucketPaymentId, - oldAmount, oldCategoryId);
-            updateTotalRevenueReportExpenseRevenue(oldRevenueDate, newBucketPaymentId, oldAmount, newCategoryId);
+            updateTotalRevenueReportExpenseRevenue(oldRevenueDate, oldBucketPaymentId, - oldAmount, oldCategoryId, -1);
+            updateTotalRevenueReportExpenseRevenue(oldRevenueDate, newBucketPaymentId, oldAmount, newCategoryId, 1);
         }
 
         if(!oldBucketPaymentId.equals(newBucketPaymentId)){
@@ -170,8 +170,8 @@ public class RevenueRegularServiceImpl implements RevenueRegularService {
             updateBalance(dictionaryBucketPayment, oldAmount, oldRevenueDate, null, true);
 
             //update report expense revenue
-            updateTotalRevenueReportExpenseRevenue(oldRevenueDate, oldBucketPaymentId, - oldAmount, newCategoryId);
-            updateTotalRevenueReportExpenseRevenue(oldRevenueDate, newBucketPaymentId, oldAmount, newCategoryId);
+            updateTotalRevenueReportExpenseRevenue(oldRevenueDate, oldBucketPaymentId, - oldAmount, newCategoryId, -1);
+            updateTotalRevenueReportExpenseRevenue(oldRevenueDate, newBucketPaymentId, oldAmount, newCategoryId, 1);
         }
 
         if(newRevenueDate.after(oldRevenueDate)){
@@ -187,14 +187,14 @@ public class RevenueRegularServiceImpl implements RevenueRegularService {
         }
 
         if((newRevenueDate.getMonth() != oldRevenueDate.getMonth()) || (newRevenueDate.getYear() != oldRevenueDate.getYear())){
-            updateTotalRevenueReportExpenseRevenue(oldRevenueDate, newBucketPaymentId, - oldAmount, newCategoryId);
-            updateTotalRevenueReportExpenseRevenue(newRevenueDate, newBucketPaymentId, oldAmount, newCategoryId);
+            updateTotalRevenueReportExpenseRevenue(oldRevenueDate, newBucketPaymentId, - oldAmount, newCategoryId,-1);
+            updateTotalRevenueReportExpenseRevenue(newRevenueDate, newBucketPaymentId, oldAmount, newCategoryId, 1);
         }
 
         if(oldAmount != newAmount){
             revenueRegular.setBalance(revenueRegular.getBalance() + (newAmount - oldAmount));
             updateBalance(dictionaryBucketPayment, newAmount - oldAmount, revenueRegular.getRevenueDate(), null, true);
-            updateTotalRevenueReportExpenseRevenue(newRevenueDate, newBucketPaymentId, (newAmount - oldAmount), newCategoryId);
+            updateTotalRevenueReportExpenseRevenue(newRevenueDate, newBucketPaymentId, (newAmount - oldAmount), newCategoryId, 0);
         }
 
         revenueRegular = revenueRegularRepository.save(revenueRegular);
@@ -220,11 +220,11 @@ public class RevenueRegularServiceImpl implements RevenueRegularService {
         updateBalance(dictionaryBucketPayment, - revenueRegular.getAmount(), revenueRegular.getRevenueDate(), null, true);
 
         //update report
-        updateTotalRevenueReportExpenseRevenue(revenueRegular.getRevenueDate(), revenueRegular.getDictionaryBucketPayment().getId(), - revenueRegular.getAmount(), revenueRegular.getDictionaryRevenue().getId());
+        updateTotalRevenueReportExpenseRevenue(revenueRegular.getRevenueDate(), revenueRegular.getDictionaryBucketPayment().getId(), - revenueRegular.getAmount(), revenueRegular.getDictionaryRevenue().getId(), -1);
     }
 
     @Transactional(rollbackFor = Exception.class)
-    protected void updateTotalRevenueReportExpenseRevenue(Timestamp date, String bucketPaymentId, long amount, String categoryId){
+    protected void updateTotalRevenueReportExpenseRevenue(Timestamp date, String bucketPaymentId, long amount, String categoryId, long incrementTotalTransaction) {
         Calendar calendar = Calendar.getInstance();
         calendar.setTime(date);
         int month = calendar.get(Calendar.MONTH) + 1;
@@ -234,7 +234,9 @@ public class RevenueRegularServiceImpl implements RevenueRegularService {
         Optional<ReportExpenseRevenue> optionalReportExpenseRevenue = reportExpenseRevenueRepository.findByMonthAndYearAndBucketPaymentIdAndCategoryIdAndType(month, year, bucketPaymentId, categoryId, "revenue");
         if(optionalReportExpenseRevenue.isPresent()) {
             reportExpenseRevenue = optionalReportExpenseRevenue.get();
+            Long totalTransaction = reportExpenseRevenue.getTotalTransaction() + incrementTotalTransaction;
             reportExpenseRevenue.setTotalRevenue(reportExpenseRevenue.getTotalRevenue() + amount);
+            reportExpenseRevenue.setTotalTransaction(totalTransaction);
         }else {
             reportExpenseRevenue = ReportExpenseRevenue.builder()
                     .month(month)
@@ -243,6 +245,7 @@ public class RevenueRegularServiceImpl implements RevenueRegularService {
                     .totalRevenue(amount)
                     .bucketPaymentId(bucketPaymentId)
                     .categoryId(categoryId)
+                    .totalTransaction(1L)
                     .type("revenue")
                     .user(userCommon.getMyUserInfo())
                     .build();

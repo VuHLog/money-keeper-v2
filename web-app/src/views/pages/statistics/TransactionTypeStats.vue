@@ -1,21 +1,85 @@
 <script setup>
-import { ref } from 'vue'
+import { ref, onMounted, computed, watch } from 'vue'
+import { useReportStore } from '@stores/ReportStore'
 import VueApexCharts from 'vue3-apexcharts'
 import FilterOptions from '@components/FilterOptions.vue'
+import { formatCurrency } from '@/utils/formatters'
+
+
+const reportStore = useReportStore()
+const filters = ref();
+const data = ref([]);
+const totalExpense = ref(0);
+const totalIncome = ref(0);
 
 // Sample data - Replace with actual data from your API
 const transactionData = ref({
-  monthlyIncome: [3000, 3500, 4000, 3800, 4200, 4500, 5000, 4800, 5200, 5500, 6000, 5800],
-  monthlyExpense: [2500, 2800, 3200, 3000, 3500, 3800, 4000, 4200, 4500, 4800, 5000, 5200],
-  transactionCount: [15, 18, 20, 22, 25, 28, 30, 32, 35, 38, 40, 42],
-  incomeVsExpense: [45, 55] // Percentage
+  income: [],
+  expense: [],
+  transactionCount: [],
+  incomeVsExpense: [] // Percentage
 })
+
+// Generate categories based on timeOption and customTimeRange
+const generateCategories = () => {
+  if (!filters.value || !filters.value.customTimeRange || filters.value.customTimeRange.length < 2) {
+    return ['Tháng 1', 'Tháng 2', 'Tháng 3', 'Tháng 4', 'Tháng 5', 'Tháng 6', 
+            'Tháng 7', 'Tháng 8', 'Tháng 9', 'Tháng 10', 'Tháng 11', 'Tháng 12'];
+  }
+
+  const startDate = new Date(filters.value.customTimeRange[0]);
+  const endDate = new Date(filters.value.customTimeRange[1]);
+  const categories = [];
+  
+  // Based on timeOption
+  if (filters.value.timeOption === "Tùy chọn") {
+    // For dates, we generate daily categories
+    const currentDate = new Date(startDate);
+    while (currentDate <= endDate) {
+      categories.push(currentDate.toLocaleDateString('vi-VN', { day: 'numeric', month: 'numeric', year: 'numeric' }));
+      currentDate.setDate(currentDate.getDate() + 1);
+    }
+  } else if (filters.value.timeOption === "Theo tháng") {
+    // For months, generate monthly categories
+    const currentDate = new Date(startDate);
+    currentDate.setDate(1); // Start from the first day of month
+    
+    while (currentDate <= endDate || 
+          (currentDate.getMonth() <= endDate.getMonth() && currentDate.getFullYear() <= endDate.getFullYear())) {
+      categories.push(`${currentDate.getMonth() + 1}/${currentDate.getFullYear()}`);
+      currentDate.setMonth(currentDate.getMonth() + 1);
+    }
+  } else if (filters.value.timeOption === "Theo năm") {
+    // For years, generate yearly categories
+    const startYear = startDate.getFullYear();
+    const endYear = endDate.getFullYear();
+    
+    for (let year = startYear; year <= endYear; year++) {
+      categories.push(`${year}`);
+    }
+  } else {
+    // Default case for custom ranges
+    const currentDate = new Date(startDate);
+    currentDate.setDate(1); // Start from the first day of month
+    
+    while (currentDate <= endDate || 
+          (currentDate.getMonth() <= endDate.getMonth() && currentDate.getFullYear() <= endDate.getFullYear())) {
+      categories.push(`Tháng ${currentDate.getMonth() + 1}-${currentDate.getFullYear()}`);
+      currentDate.setMonth(currentDate.getMonth() + 1);
+    }
+  }
+  
+  return categories;
+};
+
+// Chart options with computed categories
+const chartCategories = computed(() => generateCategories());
 
 // Chart options
-const monthlyIncomeChart = ref({
+const incomeChart = ref({
   series: [{
     name: 'Thu nhập',
-    data: transactionData.value.monthlyIncome
+    data: transactionData.value.income
   }],
   chart: {
     type: 'bar',
@@ -31,16 +95,29 @@ const monthlyIncomeChart = ref({
     enabled: false
   },
   xaxis: {
-    categories: ['Tháng 1', 'Tháng 2', 'Tháng 3', 'Tháng 4', 'Tháng 5', 'Tháng 6', 
-                'Tháng 7', 'Tháng 8', 'Tháng 9', 'Tháng 10', 'Tháng 11', 'Tháng 12']
+    categories: chartCategories.value
   },
-  colors: ['#10B981']
+  yaxis: {
+    labels: {
+      formatter: function (val) {
+        return formatCurrency(val)
+      }
+    }
+  },
+  colors: ['#10B981'],
+  tooltip: {
+    y: {
+      formatter: function (val) {
+        return formatCurrency(val)
+      }
+    }
+  }
 })
 
-const monthlyExpenseChart = ref({
+const expenseChart = ref({
   series: [{
     name: 'Chi tiêu',
-    data: transactionData.value.monthlyExpense
+    data: transactionData.value.expense
   }],
   chart: {
     type: 'bar',
@@ -56,10 +133,23 @@ const monthlyExpenseChart = ref({
     enabled: false
   },
   xaxis: {
-    categories: ['Tháng 1', 'Tháng 2', 'Tháng 3', 'Tháng 4', 'Tháng 5', 'Tháng 6', 
-                'Tháng 7', 'Tháng 8', 'Tháng 9', 'Tháng 10', 'Tháng 11', 'Tháng 12']
+    categories: chartCategories.value
   },
-  colors: ['#EF4444']
+  yaxis: {
+    labels: {
+      formatter: function (val) {
+        return formatCurrency(val)
+      }
+    }
+  },
+  colors: ['#EF4444'],
+  tooltip: {
+    y: {
+      formatter: function (val) {
+        return formatCurrency(val)
+      }
+    }
+  }
 })
 
 const transactionCountChart = ref({
@@ -75,8 +165,7 @@ const transactionCountChart = ref({
     curve: 'smooth'
   },
   xaxis: {
-    categories: ['Tháng 1', 'Tháng 2', 'Tháng 3', 'Tháng 4', 'Tháng 5', 'Tháng 6', 
-                'Tháng 7', 'Tháng 8', 'Tháng 9', 'Tháng 10', 'Tháng 11', 'Tháng 12']
+    categories: chartCategories.value
   },
   colors: ['#3B82F6']
 })
@@ -91,12 +180,97 @@ const incomeVsExpenseChart = ref({
   colors: ['#10B981', '#EF4444'],
   legend: {
     position: 'bottom'
+  },
+  tooltip: {
+    y: {
+      formatter: function (val) {
+        return formatCurrency(val)
+      }
+    }
   }
 })
 
-const handleFilterChange = (filters) => {
-  // TODO: Call API with new filters and update charts
-  console.log('Filters changed:', filters)
+// Watch for changes in chartCategories and update all charts
+watch(chartCategories, (newCategories) => {
+  incomeChart.value.xaxis = { categories: newCategories };
+  expenseChart.value.xaxis = { categories: newCategories };
+  transactionCountChart.value.xaxis = { categories: newCategories };
+}, { deep: true });
+
+onMounted(async () => {
+  let currentDate = new Date();
+  filters.value = {
+        timeOption: "Theo tháng",
+        account : [],
+        customTimeRange: [currentDate.toISOString().slice(0, 7), currentDate.toISOString().slice(0, 7)],
+  }
+  await getData();
+  updateTransactionData(data.value);
+})
+
+const getData = async () => {
+  data.value = await reportStore.getReportTransactionType(filters.value);
+  data.value = data.value.map(item => {
+    return {
+      ...item,
+      time: item.time.replace("-", "/")
+    }
+  });
+  totalExpense.value = data.value.reduce((sum, item) => sum + item.totalExpense, 0);
+  totalIncome.value = data.value.reduce((sum, item) => sum + item.totalRevenue, 0);
+}
+
+const updateTransactionData = (data) => {
+  incomeChart.value.series[0].data = chartCategories.value.map((category) => {
+    let dataItem = data.find((item) =>category === item.time);
+    return dataItem ? dataItem.totalRevenue : 0;
+  });
+  
+  expenseChart.value.series[0].data = chartCategories.value.map((category) => {
+    let dataItem = data.find((item) => category === item.time);
+    return dataItem ? dataItem.totalExpense : 0;
+  });
+  
+  transactionCountChart.value.series[0].data = chartCategories.value.map((category) => {
+    let dataItem = data.find((item) => category === item.time);
+    return dataItem ? dataItem.totalTransaction : 0;
+  });
+  
+  // Cập nhật biểu đồ với categories mới
+  incomeChart.value = {
+    ...incomeChart.value,
+    xaxis: {
+      categories: chartCategories.value
+    }
+  };
+  
+  expenseChart.value = {
+    ...expenseChart.value,
+    xaxis: {
+      categories: chartCategories.value
+    }
+  };
+  
+  transactionCountChart.value = {
+    ...transactionCountChart.value,
+    xaxis: {
+      categories: chartCategories.value
+    }
+  };
+  incomeVsExpenseChart.value.series = [
+    totalIncome.value,
+    totalExpense.value
+  ];
+}
+
+const handleFilterChange = (filterOptions) => {
+  filters.value = filterOptions;
+  console.log('Filters updated:', filters.value);
+}
+
+const handleApplyFilter = async () => {
+  await getData();
+  updateTransactionData(data.value);
 }
 </script>
 
@@ -105,56 +279,60 @@ const handleFilterChange = (filters) => {
     <!-- Filter Options -->
     <FilterOptions
       :show-time-range="true"
-      :show-transaction-type="true"
+      :show-transaction-type="false"
       :show-account="true"
-      @filter-change="handleFilterChange"
+      :show-expense-category="false"
+      :show-revenue-category="false"
+      @filter-change="handleFilterChange" 
+      @apply-filter="handleApplyFilter"
+      :showCategories="false"
+      :defaultFilters="filters"
     />
 
-    <!-- Charts -->
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-      <!-- Tổng thu nhập theo tháng -->
-      <div class="bg-surface rounded-xl p-4 shadow-sm">
-        <h3 class="text-lg font-medium text-text mb-4">Tổng thu nhập theo tháng</h3>
-        <apexchart
-          type="bar"
-          height="350"
-          :options="monthlyIncomeChart"
-          :series="monthlyIncomeChart.series"
-        />
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
+      <!-- Income Chart -->
+      <div class="bg-gray-50 p-4 rounded-lg">
+        <h3 class="text-lg font-medium text-gray-800 mb-3">Thu nhập theo thời gian</h3>
+        <vue-apex-charts 
+          type="bar" 
+          height="350" 
+          :options="incomeChart" 
+          :series="incomeChart.series">
+        </vue-apex-charts>
       </div>
 
-      <!-- Tổng chi tiêu theo tháng -->
-      <div class="bg-surface rounded-xl p-4 shadow-sm">
-        <h3 class="text-lg font-medium text-text mb-4">Tổng chi tiêu theo tháng</h3>
-        <apexchart
-          type="bar"
-          height="350"
-          :options="monthlyExpenseChart"
-          :series="monthlyExpenseChart.series"
-        />
+      <!-- Expense Chart -->
+      <div class="bg-gray-50 p-4 rounded-lg">
+        <h3 class="text-lg font-medium text-gray-800 mb-3">Chi tiêu theo thời gian</h3>
+        <vue-apex-charts 
+          type="bar" 
+          height="350" 
+          :options="expenseChart" 
+          :series="expenseChart.series">
+        </vue-apex-charts>
       </div>
 
-      <!-- Tổng số giao dịch -->
-      <div class="bg-surface rounded-xl p-4 shadow-sm">
-        <h3 class="text-lg font-medium text-text mb-4">Tổng số giao dịch</h3>
-        <apexchart
-          type="line"
-          height="350"
-          :options="transactionCountChart"
-          :series="transactionCountChart.series"
-        />
+      <!-- Transaction Count Chart -->
+      <div class="bg-gray-50 p-4 rounded-lg">
+        <h3 class="text-lg font-medium text-gray-800 mb-3">Số lượng giao dịch theo thời gian</h3>
+        <vue-apex-charts 
+          type="line" 
+          height="350" 
+          :options="transactionCountChart" 
+          :series="transactionCountChart.series">
+        </vue-apex-charts>
       </div>
 
-      <!-- Tỉ lệ thu/chi -->
-      <div class="bg-surface rounded-xl p-4 shadow-sm">
-        <h3 class="text-lg font-medium text-text mb-4">Tỉ lệ thu/chi</h3>
-        <apexchart
-          type="donut"
-          height="350"
-          :options="incomeVsExpenseChart"
-          :series="incomeVsExpenseChart.series"
-        />
+      <!-- Income vs Expense Donut Chart -->
+      <div class="bg-gray-50 p-4 rounded-lg">
+        <h3 class="text-lg font-medium text-gray-800 mb-3">Tỷ lệ thu nhập và chi tiêu</h3>
+        <vue-apex-charts 
+          type="donut" 
+          height="350" 
+          :options="incomeVsExpenseChart" 
+          :series="incomeVsExpenseChart.series">
+        </vue-apex-charts>
       </div>
     </div>
   </div>
-</template> 
+</template>
