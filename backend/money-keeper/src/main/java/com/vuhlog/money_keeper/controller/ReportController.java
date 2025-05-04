@@ -63,4 +63,18 @@ public class ReportController {
                 .result(reportService.getReportYearlyTrend(request))
                 .build();
     }
+
+    @PostMapping("bucket-payment-balance")
+    public ApiResponse<List<ReportBucketPaymentBalance>> getReportBucketPaymentBalance() {
+        return ApiResponse.<List<ReportBucketPaymentBalance>>builder()
+                .result(reportService.getReportBucketPaymentBalance())
+                .build();
+    }
+
+    @PostMapping("bucket-payment-type-balance")
+    public ApiResponse<List<ReportBucketPaymentTypeBalance>> getReportBucketPaymentTypeBalance() {
+        return ApiResponse.<List<ReportBucketPaymentTypeBalance>>builder()
+                .result(reportService.getReportBucketPaymentTypeBalance())
+                .build();
+    }
 }

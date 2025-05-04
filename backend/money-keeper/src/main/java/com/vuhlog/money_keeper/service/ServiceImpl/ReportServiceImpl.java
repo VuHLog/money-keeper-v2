@@ -162,4 +162,16 @@ public class ReportServiceImpl implements ReportService {
         }
         return response;
     }
+
+    @Override
+    public List<ReportBucketPaymentBalance> getReportBucketPaymentBalance() {
+        String userId = userCommon.getMyUserInfo().getId();
+        return reportExpenseRevenueRepository.getReportBucketPaymentBalance(userId);
+    }
+
+    @Override
+    public List<ReportBucketPaymentTypeBalance> getReportBucketPaymentTypeBalance() {
+        String userId = userCommon.getMyUserInfo().getId();
+        return reportExpenseRevenueRepository.getReportBucketPaymentTypeBalance(userId);
+    }
 }

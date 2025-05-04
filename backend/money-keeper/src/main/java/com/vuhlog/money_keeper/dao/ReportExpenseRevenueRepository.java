@@ -53,6 +53,7 @@ public interface ReportExpenseRevenueRepository extends JpaRepository<ReportExpe
             @Param("endDate") LocalDate endDate
     );
 
+//    REPORT TRANSACTION TYPE
     @Query(value = "SELECT COALESCE(SUM(totalExpense), 0) AS totalExpense, COALESCE(SUM(totalRevenue), 0) AS totalRevenue, time, COALESCE(SUM(totalTransaction), 0) AS totalTransaction\n" +
             "FROM (\n" +
             "\tSELECT COALESCE(SUM(amount), 0) AS totalExpense, 0 AS totalRevenue, DATE(expense_date) AS time, COUNT(er.id) AS totalTransaction\n" +
@@ -107,6 +108,8 @@ public interface ReportExpenseRevenueRepository extends JpaRepository<ReportExpe
             @Param("endYear") int endYear
     );
 
+
+//    REPORT CATEGORY
     @Query(value = "SELECT COALESCE(SUM(amount),0) AS totalRevenue, dr.id as categoryId, dr.`name` AS categoryName, dr.icon_url AS iconUrl, DATE(revenue_date) AS time\n" +
             "FROM revenue_regular rr\n" +
             "JOIN dictionary_bucket_payment dbp ON dbp.id = rr.dictionary_bucket_payment_id\n" +
@@ -212,6 +215,8 @@ public interface ReportExpenseRevenueRepository extends JpaRepository<ReportExpe
             @Param("endYear") int endYear
     );
 
+
+//    REPORT TRENDING
     @Query(value = "SELECT LPAD(dayOfMonth, 2, '0') AS dayOfMonth, total\n" +
             "FROM (\n" +
             "\tSELECT DAYOFMONTH(expense_date) AS dayOfMonth, COALESCE(SUM(amount),0) AS total\n" +
@@ -342,5 +347,24 @@ public interface ReportExpenseRevenueRepository extends JpaRepository<ReportExpe
     List<ReportYearlyTrend> getReportRevenueYearlyTrend(
             @Param("userId") String userId,
             @Param("bucketPaymentIds") String bucketPaymentIds
+    );
+
+
+//    REPORT BUCKET PAYMENT
+    @Query(value = "SELECT id, account_name, account_type, balance, icon_url\n" +
+            "FROM dictionary_bucket_payment dbp\n" +
+            "WHERE dbp.user_id = :userId\n" +
+            "ORDER BY account_name", nativeQuery = true)
+    List<ReportBucketPaymentBalance> getReportBucketPaymentBalance(
+            @Param("userId") String userId
+    );
+
+    @Query(value = "SELECT COALESCE(SUM(balance),0) AS totalBalance, account_type, icon_url\n" +
+            "FROM dictionary_bucket_payment dbp\n" +
+            "WHERE dbp.user_id = :userId\n" +
+            "GROUP BY account_type, icon_url\n" +
+            "ORDER BY account_type", nativeQuery = true)
+    List<ReportBucketPaymentTypeBalance> getReportBucketPaymentTypeBalance(
+            @Param("userId") String userId
     );
 }
