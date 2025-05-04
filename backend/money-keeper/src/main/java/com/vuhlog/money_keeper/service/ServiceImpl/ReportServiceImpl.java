@@ -2,13 +2,12 @@ package com.vuhlog.money_keeper.service.ServiceImpl;
 
 import com.vuhlog.money_keeper.common.UserCommon;
 import com.vuhlog.money_keeper.constants.ReportTimeOptionType;
+import com.vuhlog.money_keeper.constants.TransactionType;
 import com.vuhlog.money_keeper.dao.ExpenseRegularRepository;
 import com.vuhlog.money_keeper.dao.ReportExpenseRevenueRepository;
 import com.vuhlog.money_keeper.dao.RevenueRegularRepository;
 import com.vuhlog.money_keeper.dto.request.ReportFilterOptionsRequest;
-import com.vuhlog.money_keeper.dto.response.responseinterface.report.ReportExpenseCategory;
-import com.vuhlog.money_keeper.dto.response.responseinterface.report.ReportRevenueCategory;
-import com.vuhlog.money_keeper.dto.response.responseinterface.report.ReportTransactionTypeReponse;
+import com.vuhlog.money_keeper.dto.response.responseinterface.report.*;
 import com.vuhlog.money_keeper.mapper.ReportExpenseRevenueMapper;
 import com.vuhlog.money_keeper.service.ReportService;
 import jakarta.persistence.EntityManager;
@@ -104,6 +103,62 @@ public class ReportServiceImpl implements ReportService {
             LocalDate startDate = LocalDate.parse(start);
             LocalDate endDate = LocalDate.parse(end);
             response = reportExpenseRevenueRepository.getReportRevenueCategoryByOptional(userId, bucketPaymentIds, categoriesId, startDate, endDate);
+        }
+        return response;
+    }
+
+    @Override
+    public List<ReportDailyTrend> getReportDailyTrend(ReportFilterOptionsRequest request) {
+        String userId = userCommon.getMyUserInfo().getId();
+        String transactionType = request.getTransactionType();
+        String bucketPaymentIds = request.getBucketPaymentIds();
+        List<ReportDailyTrend> response = new ArrayList<>();
+        if(transactionType.equals(TransactionType.EXPENSE.getType())){
+            response = reportExpenseRevenueRepository.getReportExpenseDailyTrend(userId, bucketPaymentIds);
+        }else if(transactionType.equals(TransactionType.REVENUE.getType())){
+            response = reportExpenseRevenueRepository.getReportRevenueDailyTrend(userId, bucketPaymentIds);
+        }
+        return response;
+    }
+
+    @Override
+    public List<ReportWeeklyTrend> getReportWeeklyTrend(ReportFilterOptionsRequest request) {
+        String userId = userCommon.getMyUserInfo().getId();
+        String transactionType = request.getTransactionType();
+        String bucketPaymentIds = request.getBucketPaymentIds();
+        List<ReportWeeklyTrend> response = new ArrayList<>();
+        if(transactionType.equals(TransactionType.EXPENSE.getType())){
+            response = reportExpenseRevenueRepository.getReportExpenseWeeklyTrend(userId, bucketPaymentIds);
+        }else if(transactionType.equals(TransactionType.REVENUE.getType())){
+            response = reportExpenseRevenueRepository.getReportRevenueWeeklyTrend(userId, bucketPaymentIds);
+        }
+        return response;
+    }
+
+    @Override
+    public List<ReportMonthlyTrend> getReportMonthlyTrend(ReportFilterOptionsRequest request) {
+        String userId = userCommon.getMyUserInfo().getId();
+        String transactionType = request.getTransactionType();
+        String bucketPaymentIds = request.getBucketPaymentIds();
+        List<ReportMonthlyTrend> response = new ArrayList<>();
+        if(transactionType.equals(TransactionType.EXPENSE.getType())){
+            response = reportExpenseRevenueRepository.getReportExpenseMonthlyTrend(userId, bucketPaymentIds);
+        }else if(transactionType.equals(TransactionType.REVENUE.getType())){
+            response = reportExpenseRevenueRepository.getReportRevenueMonthlyTrend(userId, bucketPaymentIds);
+        }
+        return response;
+    }
+
+    @Override
+    public List<ReportYearlyTrend> getReportYearlyTrend(ReportFilterOptionsRequest request) {
+        String userId = userCommon.getMyUserInfo().getId();
+        String transactionType = request.getTransactionType();
+        String bucketPaymentIds = request.getBucketPaymentIds();
+        List<ReportYearlyTrend> response = new ArrayList<>();
+        if(transactionType.equals(TransactionType.EXPENSE.getType())){
+            response = reportExpenseRevenueRepository.getReportExpenseYearlyTrend(userId, bucketPaymentIds);
+        }else if(transactionType.equals(TransactionType.REVENUE.getType())){
+            response = reportExpenseRevenueRepository.getReportRevenueYearlyTrend(userId, bucketPaymentIds);
         }
         return response;
     }
