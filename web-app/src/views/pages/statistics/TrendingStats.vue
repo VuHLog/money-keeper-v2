@@ -34,10 +34,23 @@ const dailyTrendsChart = ref({
   xaxis: {
     categories: ['01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12', '13', '14', '15', '16', '17', '18', '19', '20', '21', '22', '23', '24', '25', '26', '27', '28', '29', '30', '31']
   },
+  yaxis: {
+    labels: {
+      show: true,
+      formatter: function (val) {
+        return formatCurrency(val);
+      }
+    }
+  },
   tooltip: {
     x: {
       formatter: function (val) {
         return 'Ngày ' + val.toString().padStart(2, '0'); // Thay đổi tiêu đề (ví dụ: "Ngày: 10")
+      }
+    },
+    y: {
+      formatter: function (val) {
+        return formatCurrency(val);
       }
     }
   },
@@ -71,6 +84,21 @@ const weeklyTrendsChart = ref({
   xaxis: {
     categories: ['Thứ 2', 'Thứ 3', 'Thứ 4', 'Thứ 5', 'Thứ 6', 'Thứ 7', 'Chủ nhật']
   },
+  yaxis: {
+    labels: {
+      show: true,
+      formatter: function (val) {
+        return formatCurrency(val);
+      }
+    }
+  },
+  tooltip: {
+    y: {
+      formatter: function (val) {
+        return formatCurrency(val);
+      }
+    }
+  },
   colors: ['#10B981'],
   noData: {
     text: "Không có dữ liệu",
@@ -101,6 +129,21 @@ const monthlyTrendsChart = ref({
   xaxis: {
     categories: ['Tháng 1', 'Tháng 2', 'Tháng 3', 'Tháng 4', 'Tháng 5', 'Tháng 6', 'Tháng 7', 'Tháng 8', 'Tháng 9', 'Tháng 10', 'Tháng 11', 'Tháng 12']
   },
+  yaxis: {
+    labels: {
+      show: true,
+      formatter: function (val) {
+        return formatCurrency(val);
+      }
+    }
+  },
+  tooltip: {
+    y: {
+      formatter: function (val) {
+        return formatCurrency(val);
+      }
+    }
+  },
   colors: ['#F59E0B'],
   noData: {
     text: "Không có dữ liệu",
@@ -130,6 +173,21 @@ const yearlyTrendsChart = ref({
   },
   xaxis: {
     categories: Array.from({ length: 5 }, (_, i) => (new Date().getFullYear() - 4 + i).toString())
+  },
+  yaxis: {
+    labels: {
+      show: true,
+      formatter: function (val) {
+        return formatCurrency(val);
+      }
+    }
+  },
+  tooltip: {
+    y: {
+      formatter: function (val) {
+        return formatCurrency(val);
+      }
+    }
   },
   colors: ['#EF4444'],
   noData: {

@@ -16,4 +16,8 @@ public interface ReportService {
     List<ReportWeeklyTrend> getReportWeeklyTrend(ReportFilterOptionsRequest request);
     List<ReportMonthlyTrend> getReportMonthlyTrend(ReportFilterOptionsRequest request);
     List<ReportYearlyTrend> getReportYearlyTrend(ReportFilterOptionsRequest request);
+
+    List<ReportBucketPaymentBalance> getReportBucketPaymentBalance();
+
+    List<ReportBucketPaymentTypeBalance> getReportBucketPaymentTypeBalance();
 }

@@ -138,5 +138,29 @@ export const useReportStore = defineStore("report", {
         });
       return response;
     },
+    async getReportBucketPaymentBalance() {
+      let response = null;
+      await base
+        .post("/report/bucket-payment-balance")
+        .then((res) => {
+          response = res.result;
+        })
+        .catch((err) => {
+          console.log(err);
+        });
+      return response;
+    },
+    async getReportBucketPaymentTypeBalance() {
+      let response = null;
+      await base
+        .post("/report/bucket-payment-type-balance")
+        .then((res) => {
+          response = res.result;
+        })
+        .catch((err) => {
+          console.log(err);
+        });
+      return response;
+    },
   },
 });
