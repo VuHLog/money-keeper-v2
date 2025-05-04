@@ -32,4 +32,11 @@ export const formatMillions = (amount, decimals = 1) => {
  */
 export const formatNumber = (amount, locale = 'vi-VN') => {
   return new Intl.NumberFormat(locale).format(amount)
-} 
+}
+
+// Format a date string from yyyy-mm-dd to dd-mm-yyyy
+export const formatReverseStringDate = (dateStr) => {
+  if (!dateStr) return ''
+  const [year, month, day] = dateStr.split('-')
+  return `${day}-${month}-${year}`
+}

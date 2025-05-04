@@ -18,17 +18,9 @@ const props = defineProps({
     type: Boolean,
     default: true
   },
-  showTransactionType: {
-    type: Boolean,
-    default: true
-  },
   showAccount: {
     type: Boolean,
     default: true
-  },
-  showCategory: {
-    type: Boolean,
-    default: false
   },
   showExpenseCategory: {
     type: Boolean,
@@ -53,44 +45,15 @@ const timeRanges = [
   { id: 'date', name: 'Tùy chọn', icon: 'calendar', color: 'text-blue-500', pickerType: 'daterange' }
 ]
 
-// Transaction type options
-const transactionTypes = [
-  { id: 'all', name: 'Tất cả', icon: 'list', color: 'text-gray-400' },
-  { id: 'income', name: 'Thu nhập', icon: 'arrow-up', color: 'text-success' },
-  { id: 'expense', name: 'Chi tiêu', icon: 'arrow-down', color: 'text-red-500' }
-]
-
-// Loại danh mục thu nhập/chi tiêu
-const categoryTypes = [
-  { id: 'expense', name: 'Danh mục chi tiêu', icon: 'arrow-down', color: 'text-red-500' },
-  { id: 'revenue', name: 'Danh mục thu nhập', icon: 'arrow-up', color: 'text-success' }
-]
-
 const accounts = ref([]);
 const expenseCategories = ref([]);
 const revenueCategories = ref([]);
-const categoryType = ref('expense'); // Mặc định chọn danh mục chi tiêu
-
-// Computed để lấy danh mục theo loại đã chọn
-const categories = computed(() => {
-  // Thêm option "all" vào đầu danh sách
-  const allOption = { id: 'all', name: 'Tất cả danh mục', icon: 'list', color: 'text-gray-400' };
-  
-  if (categoryType.value === 'expense' || selectedTransactionType.value.includes('expense')) {
-    return [allOption, ...expenseCategories.value];
-  } else if (categoryType.value === 'revenue' || selectedTransactionType.value.includes('income')) {
-    return [allOption, ...revenueCategories.value];
-  }
-  
-  // Mặc định trả về danh sách rỗng với option "all"
-  return [allOption];
-});
 
 // Selected values - change to arrays for multiple select
 const selectedTimeRange = ref('month')
-const selectedTransactionType = ref(['all'])
 const selectedAccount = ref(['all'])
-const selectedCategory = ref(['all'])
+const selectedExpenseCategory = ref(['all'])
+const selectedRevenueCategory = ref(['all'])
 const customTimeRange = ref([new Date().toISOString().slice(0, 7), new Date().toISOString().slice(0, 7)])
 
 // Store original values for reset
@@ -98,7 +61,8 @@ const originalValues = {
   timeRange: 'month',
   transactionType: ['all'],
   account: ['all'],
-  category: ['all'],
+  expenseCategory: ['all'],
+  revenueCategory: ['all'],
   categoryType: 'expense',
   customTimeRange: [(new Date()).toISOString().slice(0, 7), new Date().toISOString().slice(0, 7)]
 }
@@ -116,8 +80,11 @@ const dictionaryExpenseStore = useDictionaryExpenseStore()
 const dictionaryRevenueStore = useDictionaryRevenueStore()
 
 onMounted(async() => {
+  const allOption = { id: 'all', name: 'Tất cả danh mục', icon: 'list', color: 'text-gray-400' };
   expenseCategories.value = await dictionaryExpenseStore.getMyExpenseCategories();
+  expenseCategories.value.unshift(allOption);
   revenueCategories.value = await dictionaryRevenueStore.getMyRevenueCategories();
+  revenueCategories.value.unshift(allOption);
   accounts.value = await dictionaryBucketPaymentStore.getMyBucketPayments();
   
   document.addEventListener('mousedown', handleClickOutside)
@@ -136,9 +103,9 @@ const selectedTimeRangeObj = computed(() => {
 const handleFilterChange = () => {
   emit('filter-change', {
     timeOption: selectedTimeRangeObj.value.name,
-    transactionType: selectedTransactionType.value,
     account: selectedAccount.value,
-    category: selectedCategory.value,
+    expenseCategory: selectedExpenseCategory.value,
+    revenueCategory: selectedRevenueCategory.value,
     customTimeRange: customTimeRange.value,
   })
 }
@@ -149,9 +116,9 @@ const applyFilter = () => {
 
 const handleReset = () => {
   selectedTimeRange.value = originalValues.timeRange
-  selectedTransactionType.value = [...originalValues.transactionType]
   selectedAccount.value = [...originalValues.account]
-  selectedCategory.value = [...originalValues.category]
+  selectedExpenseCategory.value = [...originalValues.expenseCategory]
+  selectedRevenueCategory.value = [...originalValues.revenueCategory]
   customTimeRange.value = originalValues.customTimeRange
   emit('filter-reset')
 }
@@ -169,12 +136,6 @@ const handleClickOutside = (event) => {
     isTimeRangeDropdownOpen.value = false
   }
   
-  // Xử lý dropdown loại giao dịch
-  const transactionTypeDropdownEl = document.querySelector('.transaction-type-dropdown-container')
-  if (transactionTypeDropdownEl && !transactionTypeDropdownEl.contains(event.target) && isTransactionTypeDropdownOpen.value) {
-    isTransactionTypeDropdownOpen.value = false
-  }
-  
   // Xử lý dropdown tài khoản
   const accountDropdownEl = document.querySelector('.account-dropdown-container')
   if (accountDropdownEl && !accountDropdownEl.contains(event.target) && isAccountDropdownOpen.value) {
@@ -185,12 +146,6 @@ const handleClickOutside = (event) => {
   const categoryDropdownEl = document.querySelector('.category-dropdown-container')
   if (categoryDropdownEl && !categoryDropdownEl.contains(event.target) && isCategoryDropdownOpen.value) {
     isCategoryDropdownOpen.value = false
-  }
-
-  // Xử lý dropdown loại danh mục
-  const categoryTypeDropdownEl = document.querySelector('.category-type-dropdown-container')
-  if (categoryTypeDropdownEl && !categoryTypeDropdownEl.contains(event.target) && isCategoryTypeDropdownOpen.value) {
-    isCategoryTypeDropdownOpen.value = false
   }
 }
 
@@ -227,25 +182,6 @@ const updateCustomTimeRange = () => {
 watch(selectedTimeRange, () => {
   updateCustomTimeRange()
   handleFilterChange()
-})
-
-// Watch for transaction type changes to update category type
-watch(selectedTransactionType, (newVal) => {
-  if (newVal.includes('income') && !newVal.includes('expense') && !newVal.includes('all')) {
-    categoryType.value = 'revenue';
-  } else if (newVal.includes('expense') && !newVal.includes('income') && !newVal.includes('all')) {
-    categoryType.value = 'expense';
-  }
-  // Reset danh mục đã chọn khi thay đổi loại giao dịch
-  selectedCategory.value = ['all'];
-  handleFilterChange();
-})
-
-// Watch for category type changes
-watch(categoryType, () => {
-  // Reset danh mục đã chọn khi thay đổi loại danh mục
-  selectedCategory.value = ['all'];
-  handleFilterChange();
 })
 </script>
 
@@ -316,19 +252,6 @@ watch(categoryType, () => {
         </div>
       </div>
 
-      <!-- Transaction Type Filter -->
-      <div v-if="showTransactionType">
-        <SelectDropdown
-          v-model="selectedTransactionType"
-          :options="transactionTypes"
-          label="Loại giao dịch"
-          placeholder="Chọn loại giao dịch"
-          :is-multiple="true"
-          default-icon="list"
-          @change="handleFilterChange"
-        />
-      </div>
-
       <!-- Account Filter -->
       <div v-if="showAccount">
         <SelectDropdown
@@ -343,19 +266,37 @@ watch(categoryType, () => {
       </div>
 
       <!-- Category Filter -->
-      <div v-if="showExpenseCategory || showRevenueCategory">
+      <div v-if="showExpenseCategory">
         <!-- Tự động xác định loại danh mục -->
         <div class="hidden">
-          {{ showExpenseCategory && !showRevenueCategory ? categoryType = 'expense' : 
-             !showExpenseCategory && showRevenueCategory ? categoryType = 'revenue' : 
-             categoryType = categoryType }}
+          Danh mục chi tiêu
         </div>
 
         <!-- Category Filter -->
         <SelectDropdown
-          v-model="selectedCategory"
-          :options="categories"
-          :label="'Danh mục' + (showExpenseCategory ? ' chi' : showRevenueCategory ? ' thu' : '')"
+          v-model="selectedExpenseCategory"
+          :options="expenseCategories"
+          :label="'Danh mục chi'"
+          placeholder="Chọn danh mục"
+          :show-search="true"
+          :is-multiple="true"
+          search-placeholder="Tìm kiếm danh mục..."
+          default-icon="list"
+          @change="handleFilterChange"
+        />
+      </div>
+
+      <div v-if="showRevenueCategory">
+        <!-- Tự động xác định loại danh mục -->
+        <div class="hidden">
+          Danh mục thu nhập
+        </div>
+
+        <!-- Category Filter -->
+        <SelectDropdown
+          v-model="selectedRevenueCategory"
+          :options="revenueCategories"
+          :label="'Danh mục thu'"
           placeholder="Chọn danh mục"
           :show-search="true"
           :is-multiple="true"

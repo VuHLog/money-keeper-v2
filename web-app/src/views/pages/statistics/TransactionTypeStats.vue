@@ -3,7 +3,7 @@ import { ref, onMounted, computed, watch } from 'vue'
 import { useReportStore } from '@stores/ReportStore'
 import VueApexCharts from 'vue3-apexcharts'
 import FilterOptions from '@components/FilterOptions.vue'
-import { formatCurrency } from '@/utils/formatters'
+import { formatCurrency, formatReverseStringDate } from '@/utils/formatters'
 
 
 const reportStore = useReportStore()
@@ -23,37 +23,40 @@ const transactionData = ref({
 // Generate categories based on timeOption and customTimeRange
 const generateCategories = () => {
   if (!filters.value || !filters.value.customTimeRange || filters.value.customTimeRange.length < 2) {
-    return ['Tháng 1', 'Tháng 2', 'Tháng 3', 'Tháng 4', 'Tháng 5', 'Tháng 6', 
-            'Tháng 7', 'Tháng 8', 'Tháng 9', 'Tháng 10', 'Tháng 11', 'Tháng 12'];
+    return ['Tháng 01', 'Tháng 02', 'Tháng 03', 'Tháng 04', 'Tháng 05', 'Tháng 06',
+      'Tháng 07', 'Tháng 08', 'Tháng 09', 'Tháng 10', 'Tháng 11', 'Tháng 12'];
   }
 
   const startDate = new Date(filters.value.customTimeRange[0]);
   const endDate = new Date(filters.value.customTimeRange[1]);
   const categories = [];
-  
+
   // Based on timeOption
   if (filters.value.timeOption === "Tùy chọn") {
     // For dates, we generate daily categories
     const currentDate = new Date(startDate);
     while (currentDate <= endDate) {
-      categories.push(currentDate.toLocaleDateString('vi-VN', { day: 'numeric', month: 'numeric', year: 'numeric' }));
+      const day = String(currentDate.getDate()).padStart(2, '0');
+      const month = String(currentDate.getMonth() + 1).padStart(2, '0');
+      categories.push(`${day}/${month}/${currentDate.getFullYear()}`);
       currentDate.setDate(currentDate.getDate() + 1);
     }
   } else if (filters.value.timeOption === "Theo tháng") {
     // For months, generate monthly categories
     const currentDate = new Date(startDate);
     currentDate.setDate(1); // Start from the first day of month
-    
-    while (currentDate <= endDate || 
-          (currentDate.getMonth() <= endDate.getMonth() && currentDate.getFullYear() <= endDate.getFullYear())) {
-      categories.push(`${currentDate.getMonth() + 1}/${currentDate.getFullYear()}`);
+
+    while (currentDate <= endDate ||
+      (currentDate.getMonth() <= endDate.getMonth() && currentDate.getFullYear() <= endDate.getFullYear())) {
+      const month = String(currentDate.getMonth() + 1).padStart(2, '0');
+      categories.push(`${month}/${currentDate.getFullYear()}`);
       currentDate.setMonth(currentDate.getMonth() + 1);
     }
   } else if (filters.value.timeOption === "Theo năm") {
     // For years, generate yearly categories
     const startYear = startDate.getFullYear();
     const endYear = endDate.getFullYear();
-    
+
     for (let year = startYear; year <= endYear; year++) {
       categories.push(`${year}`);
     }
@@ -61,14 +64,15 @@ const generateCategories = () => {
     // Default case for custom ranges
     const currentDate = new Date(startDate);
     currentDate.setDate(1); // Start from the first day of month
-    
-    while (currentDate <= endDate || 
-          (currentDate.getMonth() <= endDate.getMonth() && currentDate.getFullYear() <= endDate.getFullYear())) {
-      categories.push(`Tháng ${currentDate.getMonth() + 1}-${currentDate.getFullYear()}`);
+
+    while (currentDate <= endDate ||
+      (currentDate.getMonth() <= endDate.getMonth() && currentDate.getFullYear() <= endDate.getFullYear())) {
+      const month = String(currentDate.getMonth() + 1).padStart(2, '0');
+      categories.push(`Tháng ${month}-${currentDate.getFullYear()}`);
       currentDate.setMonth(currentDate.getMonth() + 1);
     }
   }
-  
+
   return categories;
 };
 
@@ -111,6 +115,18 @@ const incomeChart = ref({
         return formatCurrency(val)
       }
     }
+  },
+  noData: {
+    text: "Không có dữ liệu",
+    align: 'center',
+    verticalAlign: 'middle',
+    offsetX: 0,
+    offsetY: 0,
+    style: {
+      color: undefined,
+      fontSize: '16px',
+      fontFamily: undefined
+    }
   }
 })
 
@@ -148,6 +164,18 @@ const expenseChart = ref({
       formatter: function (val) {
         return formatCurrency(val)
       }
+    }
+  },
+  noData: {
+    text: "Không có dữ liệu",
+    align: 'center',
+    verticalAlign: 'middle',
+    offsetX: 0,
+    offsetY: 0,
+    style: {
+      color: undefined,
+      fontSize: '16px',
+      fontFamily: undefined
     }
   }
 })
@@ -187,7 +215,20 @@ const incomeVsExpenseChart = ref({
         return formatCurrency(val)
       }
     }
+  },
+  noData: {
+    text: "Không có dữ liệu",
+    align: 'center',
+    verticalAlign: 'middle',
+    offsetX: 0,
+    offsetY: 0,
+    style: {
+      color: undefined,
+      fontSize: '16px',
+      fontFamily: undefined
+    }
   }
+  
 })
 
 // Watch for changes in chartCategories and update all charts
@@ -213,7 +254,7 @@ const getData = async () => {
   data.value = data.value.map(item => {
     return {
       ...item,
-      time: item.time.replace("-", "/")
+      time: filters.value.timeOption === "Tùy chọn" ?formatReverseStringDate(item.time).replace(/-/g, "/") : item.time.replace(/-/g, "/"),
     }
   });
   totalExpense.value = data.value.reduce((sum, item) => sum + item.totalExpense, 0);
