@@ -1,5 +1,7 @@
 package com.vuhlog.money_keeper.dao;
 
+import com.vuhlog.money_keeper.dto.response.responseinterface.report.ReportExpenseCategory;
+import com.vuhlog.money_keeper.dto.response.responseinterface.report.ReportRevenueCategory;
 import com.vuhlog.money_keeper.dto.response.responseinterface.report.ReportTransactionTypeReponse;
 import com.vuhlog.money_keeper.entity.ReportExpenseRevenue;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -79,7 +81,7 @@ public interface ReportExpenseRevenueRepository extends JpaRepository<ReportExpe
             @Param("endDate") LocalDate endDate
     );
 
-    @Query(value = "SELECT COALESCE(SUM(total_expense),0) AS totalExpense, COALESCE(SUM(total_revenue),0) AS totalRevenue, CONCAT(rer.`month`, '/', rer.`year`) AS `time`,COALESCE(SUM(total_transaction),0) AS totalTransaction\n" +
+    @Query(value = "SELECT COALESCE(SUM(total_expense),0) AS totalExpense, COALESCE(SUM(total_revenue),0) AS totalRevenue, CONCAT(LPAD(rer.`month`, 2, '0'), '/', rer.`year`) AS `time`,COALESCE(SUM(total_transaction),0) AS totalTransaction\n" +
             "FROM report_expense_revenue rer\n" +
             "WHERE rer.user_id = :userId\n" +
             "AND ( :bucketPaymentIds IS NULL OR FIND_IN_SET(rer.bucket_payment_id, :bucketPaymentIds))\n" +
@@ -103,6 +105,111 @@ public interface ReportExpenseRevenueRepository extends JpaRepository<ReportExpe
     List<ReportTransactionTypeReponse> getReportForTransactionTypeByYear(
             @Param("userId") String userId,
             @Param("bucketPaymentIds") String bucketPaymentIds,
+            @Param("startYear") int startYear,
+            @Param("endYear") int endYear
+    );
+
+    @Query(value = "SELECT COALESCE(SUM(amount),0) AS totalRevenue, dr.id as categoryId, dr.`name` AS categoryName, dr.icon_url AS iconUrl, DATE(revenue_date) AS time\n" +
+            "FROM revenue_regular rr\n" +
+            "JOIN dictionary_bucket_payment dbp ON dbp.id = rr.dictionary_bucket_payment_id\n" +
+            "JOIN dictionary_revenue dr ON rr.dictionary_revenue_id = dr.id\n" +
+            "WHERE dbp.user_id = :userId\n" +
+            "AND (:bucketPaymentIds IS NULL OR FIND_IN_SET(rr.dictionary_bucket_payment_id, :bucketPaymentIds))\n" +
+            "AND( :categoriesId IS NULL OR FIND_IN_SET(rr.dictionary_revenue_id, :categoriesId))\n" +
+            "and DATE(revenue_date) >= :startDate AND DATE(revenue_date) <= :endDate\n" +
+            "GROUP BY DATE(revenue_date), dr.id, dr.`name`, dr.icon_url\n" +
+            "ORDER BY DATE(revenue_date), dr.name", nativeQuery = true)
+    List<ReportRevenueCategory> getReportRevenueCategoryByOptional(
+            @Param("userId") String userId,
+            @Param("bucketPaymentIds") String bucketPaymentIds,
+            @Param("categoriesId") String categoriesId,
+            @Param("startDate") LocalDate startDate,
+            @Param("endDate") LocalDate endDate
+    );
+
+    @Query(value = "SELECT COALESCE(SUM(total_revenue),0) AS totalRevenue, dr.id as categoryId, dr.`name` AS categoryName, dr.icon_url AS iconUrl, CONCAT(LPAD(rer.`month`, 2, '0'), '/', rer.`year`) AS `time`\n" +
+            "FROM report_expense_revenue rer\n" +
+            "JOIN dictionary_revenue dr ON rer.`type` = 'revenue' AND rer.category_id = dr.id\n" +
+            "WHERE rer.user_id = :userId\n" +
+            "AND ( :bucketPaymentIds IS NULL OR FIND_IN_SET(rer.bucket_payment_id, :bucketPaymentIds))\n" +
+            "AND( :categoriesId IS NULL OR FIND_IN_SET(rer.category_id, :categoriesId))\n" +
+            "AND (DATE(CONCAT(year, '-', LPAD(month, 2, '0'), '-01')) BETWEEN :startMonth AND :endMonth)\n" +
+            "GROUP BY MONTH, YEAR, dr.id, dr.`name`, dr.icon_url\n" +
+            "ORDER BY YEAR ASC, MONTH ASC, dr.name", nativeQuery = true)
+    List<ReportRevenueCategory> getReportRevenueCategoryByMonth(
+            @Param("userId") String userId,
+            @Param("bucketPaymentIds") String bucketPaymentIds,
+            @Param("categoriesId") String categoriesId,
+            @Param("startMonth") LocalDate startMonth,
+            @Param("endMonth") LocalDate endMonth
+    );
+
+    @Query(value = "SELECT COALESCE(SUM(total_revenue),0) AS totalRevenue, dr.id as categoryId, dr.`name` AS categoryName, dr.icon_url AS iconUrl, rer.`year` AS `time`\n" +
+            "FROM report_expense_revenue rer\n" +
+            "JOIN dictionary_revenue dr ON rer.`type` = 'revenue' AND rer.category_id = dr.id\n" +
+            "WHERE rer.user_id = :userId\n" +
+            "AND ( :bucketPaymentIds IS NULL OR FIND_IN_SET(rer.bucket_payment_id, :bucketPaymentIds))\n" +
+            "AND( :categoriesId IS NULL OR FIND_IN_SET(rer.category_id, :categoriesId))\n" +
+            "AND year BETWEEN :startYear AND :endYear\n" +
+            "GROUP BY YEAR, dr.id, dr.`name`, dr.icon_url\n" +
+            "ORDER BY YEAR ASC, dr.name", nativeQuery = true)
+    List<ReportRevenueCategory> getReportRevenueCategoryByYear(
+            @Param("userId") String userId,
+            @Param("bucketPaymentIds") String bucketPaymentIds,
+            @Param("categoriesId") String categoriesId,
+            @Param("startYear") int startYear,
+            @Param("endYear") int endYear
+    );
+
+    @Query(value = "SELECT COALESCE(SUM(amount), 0) AS totalExpense, de.id as categoryId, de.`name` AS categoryName, de.icon_url AS iconUrl, DATE(expense_date) AS time\n" +
+            "FROM expense_regular er\n" +
+            "JOIN dictionary_bucket_payment dbp ON dbp.id = er.dictionary_bucket_payment_id\n" +
+            "JOIN dictionary_expense de ON de.id = er.dictionary_expense_id\n" +
+            "WHERE dbp.user_id = :userId\n" +
+            "AND (:bucketPaymentIds IS NULL OR FIND_IN_SET(er.dictionary_bucket_payment_id, :bucketPaymentIds))\n" +
+            "AND( :categoriesId IS NULL OR FIND_IN_SET(er.dictionary_expense_id,:categoriesId))\n" +
+            "and DATE(expense_date) >= :startDate AND DATE(expense_date) <= :endDate\n" +
+            "GROUP BY DATE(expense_date), de.id, de.`name`, de.icon_url\n" +
+            "ORDER BY DATE(expense_date), de.name", nativeQuery = true)
+    List<ReportExpenseCategory> getReportExpenseCategoryByOptional(
+            @Param("userId") String userId,
+            @Param("bucketPaymentIds") String bucketPaymentIds,
+            @Param("categoriesId") String categoriesId,
+            @Param("startDate") LocalDate startDate,
+            @Param("endDate") LocalDate endDate
+    );
+
+    @Query(value = "SELECT COALESCE(SUM(total_expense),0) AS totalExpense, de.id as categoryId, de.`name` AS categoryName, de.icon_url AS iconUrl, CONCAT(LPAD(rer.`month`, 2, '0'), '/', rer.`year`) AS `time`\n" +
+            "FROM report_expense_revenue rer\n" +
+            "JOIN dictionary_expense de ON rer.`type` = 'expense' AND rer.category_id = de.id\n" +
+            "WHERE rer.user_id = :userId\n" +
+            "AND ( :bucketPaymentIds IS NULL OR FIND_IN_SET(rer.bucket_payment_id, :bucketPaymentIds))\n" +
+            "AND( :categoriesId IS NULL OR FIND_IN_SET(rer.category_id,:categoriesId))\n" +
+            "AND (DATE(CONCAT(year, '-', LPAD(month, 2, '0'), '-01')) BETWEEN :startMonth AND :endMonth)\n" +
+            "GROUP BY MONTH, YEAR, de.id, de.`name`, de.icon_url\n" +
+            "ORDER BY YEAR ASC, MONTH ASC, de.name", nativeQuery = true)
+    List<ReportExpenseCategory> getReportExpenseCategoryByMonth(
+            @Param("userId") String userId,
+            @Param("bucketPaymentIds") String bucketPaymentIds,
+            @Param("categoriesId") String categoriesId,
+            @Param("startMonth") LocalDate startMonth,
+            @Param("endMonth") LocalDate endMonth
+    );
+
+    @Query(value = "SELECT COALESCE(SUM(total_expense),0) AS totalExpense, de.id as categoryId, de.`name` AS categoryName, de.icon_url AS iconUrl, rer.`year` AS `time`\n" +
+            "FROM report_expense_revenue rer\n" +
+            "JOIN dictionary_expense de ON rer.`type` = 'expense' AND rer.category_id = de.id\n" +
+            "WHERE rer.user_id = :userId\n" +
+            "AND ( :bucketPaymentIds IS NULL OR FIND_IN_SET(rer.bucket_payment_id, :bucketPaymentIds))\n" +
+            "AND( :categoriesId IS NULL OR FIND_IN_SET(rer.category_id,:categoriesId))\n" +
+            "AND year BETWEEN :startYear AND :endYear\n" +
+            "GROUP BY YEAR, de.id, de.`name`, de.icon_url\n" +
+            "ORDER BY YEAR ASC" +
+            "ORDER BY YEAR ASC, de.name", nativeQuery = true)
+    List<ReportExpenseCategory> getReportExpenseCategoryByYear(
+            @Param("userId") String userId,
+            @Param("bucketPaymentIds") String bucketPaymentIds,
+            @Param("categoriesId") String categoriesId,
             @Param("startYear") int startYear,
             @Param("endYear") int endYear
     );

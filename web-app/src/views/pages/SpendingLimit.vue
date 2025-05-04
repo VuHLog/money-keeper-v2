@@ -65,10 +65,10 @@ const handlePageChange = async (newPage) => {
 // Methods
 const handleFilterChange = (filters) => {
   // Safely handle categories filter
-  if (!filters?.category || filters.category.length === 0 || filters.category[0] === 'all') {
+  if (!filters?.expenseCategory || filters.expenseCategory.length === 0 || filters.expenseCategory[0] === 'all') {
     expenseLimitStore.categoriesId = null
   } else {
-    expenseLimitStore.categoriesId = filters.category.join(',')
+    expenseLimitStore.categoriesId = filters.expenseCategory.join(',')
   }
 
   // Safely handle account filter
@@ -264,8 +264,7 @@ const style = `
 <template>
   <div class="p-4">
     <!-- Filter Options -->
-    <FilterOptions :show-time-range="false" :show-transaction-type="false" :show-account="true"
-      :show-category-expense="true" @filter-change="handleFilterChange" @filter-reset="handleFilterReset"
+    <FilterOptions :show-time-range="false" :show-revenue-category="false" @filter-change="handleFilterChange" @filter-reset="handleFilterReset"
       @apply-filter="handleApplyFilter" />
 
     <!-- Spending Limits Table -->

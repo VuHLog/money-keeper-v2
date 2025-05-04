@@ -13,8 +13,8 @@ import java.util.List;
 @Builder
 public class ReportFilterOptionsRequest {
     private String timeOption;
-    private String transactionType;
     private String bucketPaymentIds;
-    private String categoriesId;
+    private String expenseCategoriesId;
+    private String revenueCategoriesId;
     private List<String> customTimeRange;
 }
