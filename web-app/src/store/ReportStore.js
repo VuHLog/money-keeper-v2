@@ -69,6 +69,74 @@ export const useReportStore = defineStore("report", {
           console.log(err);
         });
       return response;
-    }
+    },
+    async getReportDailyTrend(filters) {
+      let response = null;
+      let bucketPaymentIds = (filters.account === null || filters.account.length === 0 || filters.account[0] === "all") ? null : filters.account.join(",");
+      let request = {
+        transactionType: filters.transactionType,
+        bucketPaymentIds,
+      }
+      await base
+        .post("/report/daily-trend", request)
+        .then((res) => {
+          response = res.result;
+        })
+        .catch((err) => {
+          console.log(err);
+        });
+      return response;
+    },
+    async getReportWeeklyTrend(filters) {
+      let response = null;
+      let bucketPaymentIds = (filters.account === null || filters.account.length === 0 || filters.account[0] === "all") ? null : filters.account.join(",");
+      let request = {
+        transactionType: filters.transactionType,
+        bucketPaymentIds,
+      }
+      await base
+        .post("/report/weekly-trend", request)
+        .then((res) => {
+          response = res.result;
+        })
+        .catch((err) => {
+          console.log(err);
+        });
+      return response;
+    },
+    async getReportMonthlyTrend(filters) {
+      let response = null;
+      let bucketPaymentIds = (filters.account === null || filters.account.length === 0 || filters.account[0] === "all") ? null : filters.account.join(",");
+      let request = {
+        transactionType: filters.transactionType,
+        bucketPaymentIds,
+      }
+      await base
+        .post("/report/monthly-trend", request)
+        .then((res) => {
+          response = res.result;
+        })
+        .catch((err) => {
+          console.log(err);
+        });
+      return response;
+    },
+    async getReportYearlyTrend(filters) {
+      let response = null;
+      let bucketPaymentIds = (filters.account === null || filters.account.length === 0 || filters.account[0] === "all") ? null : filters.account.join(",");
+      let request = {
+        transactionType: filters.transactionType,
+        bucketPaymentIds,
+      }
+      await base
+        .post("/report/yearly-trend", request)
+        .then((res) => {
+          response = res.result;
+        })
+        .catch((err) => {
+          console.log(err);
+        });
+      return response;
+    },
   },
 });

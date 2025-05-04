@@ -17,4 +17,5 @@ public class ReportFilterOptionsRequest {
     private String expenseCategoriesId;
     private String revenueCategoriesId;
     private List<String> customTimeRange;
+    private String transactionType;
 }

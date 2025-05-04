@@ -1,8 +1,6 @@
 package com.vuhlog.money_keeper.dao;
 
-import com.vuhlog.money_keeper.dto.response.responseinterface.report.ReportExpenseCategory;
-import com.vuhlog.money_keeper.dto.response.responseinterface.report.ReportRevenueCategory;
-import com.vuhlog.money_keeper.dto.response.responseinterface.report.ReportTransactionTypeReponse;
+import com.vuhlog.money_keeper.dto.response.responseinterface.report.*;
 import com.vuhlog.money_keeper.entity.ReportExpenseRevenue;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -212,5 +210,137 @@ public interface ReportExpenseRevenueRepository extends JpaRepository<ReportExpe
             @Param("categoriesId") String categoriesId,
             @Param("startYear") int startYear,
             @Param("endYear") int endYear
+    );
+
+    @Query(value = "SELECT LPAD(dayOfMonth, 2, '0') AS dayOfMonth, total\n" +
+            "FROM (\n" +
+            "\tSELECT DAYOFMONTH(expense_date) AS dayOfMonth, COALESCE(SUM(amount),0) AS total\n" +
+            "\tFROM expense_regular er\n" +
+            "\tJOIN dictionary_bucket_payment dbp ON dbp.id = er.dictionary_bucket_payment_id\n" +
+            "\tWHERE dbp.user_id = :userId\n" +
+            "\tAND (:bucketPaymentIds IS NULL OR FIND_IN_SET(er.dictionary_bucket_payment_id, :bucketPaymentIds))\n" +
+            "\tGROUP BY DAYOFMONTH(expense_date)\n" +
+            "\tORDER BY DAYOFMONTH(expense_date)\n" +
+            ") AS temp", nativeQuery = true)
+    List<ReportDailyTrend> getReportExpenseDailyTrend(
+            @Param("userId") String userId,
+            @Param("bucketPaymentIds") String bucketPaymentIds
+    );
+
+    @Query(value = "SELECT\n" +
+            "    CASE \n" +
+            "        WHEN dayOfWeek = 1 THEN 'Chủ nhật'\n" +
+            "        WHEN dayOfWeek = 2 THEN 'Thứ 2'\n" +
+            "        WHEN dayOfWeek = 3 THEN 'Thứ 3'\n" +
+            "        WHEN dayOfWeek = 4 THEN 'Thứ 4'\n" +
+            "        WHEN dayOfWeek = 5 THEN 'Thứ 5'\n" +
+            "        WHEN dayOfWeek = 6 THEN 'Thứ 6'\n" +
+            "        WHEN dayOfWeek = 7 THEN 'Thứ 7'\n" +
+            "    END AS dayOfWeek,\n" +
+            "    total\n" +
+            "FROM\n" +
+            "(\n" +
+            "\tSELECT \n" +
+            "\t    DAYOFWEEK(expense_date) AS dayOfWeek,\n" +
+            "\t    COALESCE(SUM(amount), 0) AS total\n" +
+            "\tFROM expense_regular er\n" +
+            "\tJOIN dictionary_bucket_payment dbp ON dbp.id = er.dictionary_bucket_payment_id\n" +
+            "\tWHERE dbp.user_id = :userId\n" +
+            "\tAND (:bucketPaymentIds IS NULL OR FIND_IN_SET(er.dictionary_bucket_payment_id, :bucketPaymentIds))\n" +
+            "\tGROUP BY DAYOFWEEK(expense_date)\n" +
+            "\tORDER BY DAYOFWEEK(expense_date)\n" +
+            ") AS temp", nativeQuery = true)
+    List<ReportWeeklyTrend> getReportExpenseWeeklyTrend(
+            @Param("userId") String userId,
+            @Param("bucketPaymentIds") String bucketPaymentIds
+    );
+
+    @Query(value = "SELECT CONCAT('Tháng ', MONTH) AS month, COALESCE(SUM(total_expense),0) AS total\n" +
+            "FROM report_expense_revenue rer\n" +
+            "WHERE rer.user_id = :userId\n" +
+            "AND (:bucketPaymentIds IS NULL OR FIND_IN_SET(rer.bucket_payment_id, :bucketPaymentIds))\n" +
+            "GROUP BY month\n" +
+            "ORDER BY month", nativeQuery = true)
+    List<ReportMonthlyTrend> getReportExpenseMonthlyTrend(
+            @Param("userId") String userId,
+            @Param("bucketPaymentIds") String bucketPaymentIds
+    );
+
+    @Query(value = "SELECT YEAR AS year, COALESCE(SUM(total_expense),0) AS total\n" +
+            "FROM report_expense_revenue rer\n" +
+            "WHERE rer.user_id = :userId\n" +
+            "AND (:bucketPaymentIds IS NULL OR FIND_IN_SET(rer.bucket_payment_id, :bucketPaymentIds))\n" +
+            "AND YEAR >= YEAR(NOW()) - 4\n" +
+            "GROUP BY year\n" +
+            "ORDER BY YEAR", nativeQuery = true)
+    List<ReportYearlyTrend> getReportExpenseYearlyTrend(
+            @Param("userId") String userId,
+            @Param("bucketPaymentIds") String bucketPaymentIds
+    );
+
+    @Query(value = "SELECT LPAD(dayOfMonth, 2, '0') AS dayOfMonth, total\n" +
+            "FROM (\n" +
+            "\tSELECT DAYOFMONTH(revenue_date) AS dayOfMonth, COALESCE(SUM(amount),0) AS total\n" +
+            "\tFROM revenue_regular rr\n" +
+            "\tJOIN dictionary_bucket_payment dbp ON dbp.id = rr.dictionary_bucket_payment_id\n" +
+            "\tWHERE dbp.user_id = :userId\n" +
+            "\tAND (:bucketPaymentIds IS NULL OR FIND_IN_SET(rr.dictionary_bucket_payment_id, :bucketPaymentIds))\n" +
+            "\tGROUP BY DAYOFMONTH(revenue_date)\n" +
+            "\tORDER BY DAYOFMONTH(revenue_date)\n" +
+            ") AS temp", nativeQuery = true)
+    List<ReportDailyTrend> getReportRevenueDailyTrend(
+            @Param("userId") String userId,
+            @Param("bucketPaymentIds") String bucketPaymentIds
+    );
+
+    @Query(value = "SELECT\n" +
+            "    CASE \n" +
+            "        WHEN dayOfWeek = 1 THEN 'Chủ nhật'\n" +
+            "        WHEN dayOfWeek = 2 THEN 'Thứ 2'\n" +
+            "        WHEN dayOfWeek = 3 THEN 'Thứ 3'\n" +
+            "        WHEN dayOfWeek = 4 THEN 'Thứ 4'\n" +
+            "        WHEN dayOfWeek = 5 THEN 'Thứ 5'\n" +
+            "        WHEN dayOfWeek = 6 THEN 'Thứ 6'\n" +
+            "        WHEN dayOfWeek = 7 THEN 'Thứ 7'\n" +
+            "    END AS dayOfWeek,\n" +
+            "    total\n" +
+            "FROM\n" +
+            "(\n" +
+            "\tSELECT \n" +
+            "\t    DAYOFWEEK(revenue_date) AS dayOfWeek,\n" +
+            "\t    COALESCE(SUM(amount), 0) AS total\n" +
+            "\tFROM revenue_regular rr\n" +
+            "\tJOIN dictionary_bucket_payment dbp ON dbp.id = rr.dictionary_bucket_payment_id\n" +
+            "\tWHERE dbp.user_id = :userId\n" +
+            "\tAND (:bucketPaymentIds IS NULL OR FIND_IN_SET(rr.dictionary_bucket_payment_id, :bucketPaymentIds))\n" +
+            "\tGROUP BY DAYOFWEEK(revenue_date)\n" +
+            "\tORDER BY DAYOFWEEK(revenue_date)\n" +
+            ") AS temp", nativeQuery = true)
+    List<ReportWeeklyTrend> getReportRevenueWeeklyTrend(
+            @Param("userId") String userId,
+            @Param("bucketPaymentIds") String bucketPaymentIds
+    );
+
+    @Query(value = "SELECT CONCAT('Tháng ', MONTH) AS month, COALESCE(SUM(total_revenue),0) AS total\n" +
+            "FROM report_expense_revenue rer\n" +
+            "WHERE rer.user_id = :userId\n" +
+            "AND (:bucketPaymentIds IS NULL OR FIND_IN_SET(rer.bucket_payment_id, :bucketPaymentIds))\n" +
+            "GROUP BY month\n" +
+            "ORDER BY MONTH\n", nativeQuery = true)
+    List<ReportMonthlyTrend> getReportRevenueMonthlyTrend(
+            @Param("userId") String userId,
+            @Param("bucketPaymentIds") String bucketPaymentIds
+    );
+
+    @Query(value = "SELECT YEAR AS year, COALESCE(SUM(total_revenue),0) AS total\n" +
+            "FROM report_expense_revenue rer\n" +
+            "WHERE rer.user_id = :userId\n" +
+            "AND (:bucketPaymentIds IS NULL OR FIND_IN_SET(rer.bucket_payment_id, :bucketPaymentIds))\n" +
+            "AND YEAR >= YEAR(NOW()) - 4\n" +
+            "GROUP BY year\n" +
+            "ORDER BY year", nativeQuery = true)
+    List<ReportYearlyTrend> getReportRevenueYearlyTrend(
+            @Param("userId") String userId,
+            @Param("bucketPaymentIds") String bucketPaymentIds
     );
 }

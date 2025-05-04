@@ -2,9 +2,7 @@ package com.vuhlog.money_keeper.controller;
 
 import com.vuhlog.money_keeper.dto.request.ReportFilterOptionsRequest;
 import com.vuhlog.money_keeper.dto.response.ApiResponse;
-import com.vuhlog.money_keeper.dto.response.responseinterface.report.ReportExpenseCategory;
-import com.vuhlog.money_keeper.dto.response.responseinterface.report.ReportRevenueCategory;
-import com.vuhlog.money_keeper.dto.response.responseinterface.report.ReportTransactionTypeReponse;
+import com.vuhlog.money_keeper.dto.response.responseinterface.report.*;
 import com.vuhlog.money_keeper.service.ReportService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
@@ -35,6 +33,34 @@ public class ReportController {
     public ApiResponse<List<ReportRevenueCategory>> getReportRevenueCategory(@RequestBody ReportFilterOptionsRequest request) {
         return ApiResponse.<List<ReportRevenueCategory>>builder()
                 .result(reportService.getReportRevenueCategory(request))
+                .build();
+    }
+
+    @PostMapping("daily-trend")
+    public ApiResponse<List<ReportDailyTrend>> getReportDailyTrend(@RequestBody ReportFilterOptionsRequest request) {
+        return ApiResponse.<List<ReportDailyTrend>>builder()
+                .result(reportService.getReportDailyTrend(request))
+                .build();
+    }
+
+    @PostMapping("weekly-trend")
+    public ApiResponse<List<ReportWeeklyTrend>> getReportWeeklyTrend(@RequestBody ReportFilterOptionsRequest request) {
+        return ApiResponse.<List<ReportWeeklyTrend>>builder()
+                .result(reportService.getReportWeeklyTrend(request))
+                .build();
+    }
+
+    @PostMapping("monthly-trend")
+    public ApiResponse<List<ReportMonthlyTrend>> getReportMonthlyTrend(@RequestBody ReportFilterOptionsRequest request) {
+        return ApiResponse.<List<ReportMonthlyTrend>>builder()
+                .result(reportService.getReportMonthlyTrend(request))
+                .build();
+    }
+
+    @PostMapping("yearly-trend")
+    public ApiResponse<List<ReportYearlyTrend>> getReportYearlyTrend(@RequestBody ReportFilterOptionsRequest request) {
+        return ApiResponse.<List<ReportYearlyTrend>>builder()
+                .result(reportService.getReportYearlyTrend(request))
                 .build();
     }
 }

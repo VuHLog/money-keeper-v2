@@ -1,0 +1,288 @@
+<script setup>
+import { ref, onMounted, watch, computed } from 'vue'
+import { useReportStore } from '@stores/ReportStore'
+import VueApexCharts from 'vue3-apexcharts'
+import FilterOptions from '@components/FilterOptions.vue'
+import { formatCurrency } from '@/utils/formatters'
+
+
+const reportStore = useReportStore()
+const dailyTrendData = ref([])
+const weeklyTrendData = ref([])
+const monthlyTrendData = ref([])
+const yearlyTrendData = ref([])
+const filters = ref();
+const transactionType = ref('expense')
+const dailyTrendsCategories = ref(['01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12', '13', '14', '15', '16', '17', '18', '19', '20', '21', '22', '23', '24', '25', '26', '27', '28', '29', '30', '31'])
+const weeklyTrendsCategories = ref(['Thứ 2', 'Thứ 3', 'Thứ 4', 'Thứ 5', 'Thứ 6', 'Thứ 7', 'Chủ nhật'])
+const monthlyTrendsCategories = ref(['Tháng 1', 'Tháng 2', 'Tháng 3', 'Tháng 4', 'Tháng 5', 'Tháng 6', 'Tháng 7', 'Tháng 8', 'Tháng 9', 'Tháng 10', 'Tháng 11', 'Tháng 12'])
+const yearlyTrendsCategories = ref(Array.from({ length: 5 }, (_, i) => (new Date().getFullYear() - 4 + i).toString()))
+
+// Chart options
+const dailyTrendsChart = ref({
+  series: [{
+    name: 'Chi tiêu',
+    data: dailyTrendData.value
+  }],
+  chart: {
+    type: 'line',
+    height: 350
+  },
+  stroke: {
+    curve: 'smooth'
+  },
+  xaxis: {
+    categories: ['01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12', '13', '14', '15', '16', '17', '18', '19', '20', '21', '22', '23', '24', '25', '26', '27', '28', '29', '30', '31']
+  },
+  tooltip: {
+    x: {
+      formatter: function (val) {
+        return 'Ngày ' + val.toString().padStart(2, '0'); // Thay đổi tiêu đề (ví dụ: "Ngày: 10")
+      }
+    }
+  },
+  colors: ['#3B82F6'],
+  noData: {
+    text: "Không có dữ liệu",
+    align: 'center',
+    verticalAlign: 'middle',
+    offsetX: 0,
+    offsetY: 0,
+    style: {
+      color: undefined,
+      fontSize: '16px',
+      fontFamily: undefined
+    }
+  }
+})
+
+const weeklyTrendsChart = ref({
+  series: [{
+    name: 'Chi tiêu',
+    data: weeklyTrendData.value
+  }],
+  chart: {
+    type: 'line',
+    height: 350
+  },
+  stroke: {
+    curve: 'smooth'
+  },
+  xaxis: {
+    categories: ['Thứ 2', 'Thứ 3', 'Thứ 4', 'Thứ 5', 'Thứ 6', 'Thứ 7', 'Chủ nhật']
+  },
+  colors: ['#10B981'],
+  noData: {
+    text: "Không có dữ liệu",
+    align: 'center',
+    verticalAlign: 'middle',
+    offsetX: 0,
+    offsetY: 0,
+    style: {
+      color: undefined,
+      fontSize: '16px',
+      fontFamily: undefined
+    }
+  }
+})
+
+const monthlyTrendsChart = ref({
+  series: [{
+    name: 'Chi tiêu',
+    data: monthlyTrendData.value
+  }],
+  chart: {
+    type: 'line',
+    height: 350
+  },
+  stroke: {
+    curve: 'smooth'
+  },
+  xaxis: {
+    categories: ['Tháng 1', 'Tháng 2', 'Tháng 3', 'Tháng 4', 'Tháng 5', 'Tháng 6', 'Tháng 7', 'Tháng 8', 'Tháng 9', 'Tháng 10', 'Tháng 11', 'Tháng 12']
+  },
+  colors: ['#F59E0B'],
+  noData: {
+    text: "Không có dữ liệu",
+    align: 'center',
+    verticalAlign: 'middle',
+    offsetX: 0,
+    offsetY: 0,
+    style: {
+      color: undefined,
+      fontSize: '16px',
+      fontFamily: undefined
+    }
+  }
+})
+
+const yearlyTrendsChart = ref({
+  series: [{
+    name: 'Chi tiêu',
+    data: yearlyTrendData.value
+  }],
+  chart: {
+    type: 'line',
+    height: 350
+  },
+  stroke: {
+    curve: 'smooth'
+  },
+  xaxis: {
+    categories: Array.from({ length: 5 }, (_, i) => (new Date().getFullYear() - 4 + i).toString())
+  },
+  colors: ['#EF4444'],
+  noData: {
+    text: "Không có dữ liệu",
+    align: 'center',
+    verticalAlign: 'middle',
+    offsetX: 0,
+    offsetY: 0,
+    style: {
+      color: undefined,
+      fontSize: '16px',
+      fontFamily: undefined
+    }
+  }
+})
+
+onMounted(async () => {
+  filters.value = {
+    account: [],
+    transactionType: 'expense',
+  }
+  await getData();
+  updateTransactionData();
+})
+
+const getData = async () => {
+  dailyTrendData.value = await reportStore.getReportDailyTrend(filters.value);
+  weeklyTrendData.value = await reportStore.getReportWeeklyTrend(filters.value);
+  monthlyTrendData.value = await reportStore.getReportMonthlyTrend(filters.value);
+  yearlyTrendData.value = await reportStore.getReportYearlyTrend(filters.value);
+}
+
+const handleFilterChange = (filterOptions) => {
+  filters.value = filterOptions;
+  console.log('Filters updated:', filters.value);
+}
+
+const handleApplyFilter = async () => {
+  transactionType.value = filters.value.transactionType;
+  await getData();
+  updateTransactionData();
+}
+
+const updateTransactionData = () => {
+  let name = transactionType.value === 'expense' ? 'Chi tiêu' : 'Doanh thu';
+  dailyTrendsChart.value.series[0].name = name;
+  dailyTrendsChart.value.series[0].data = dailyTrendsCategories.value.map((category) => {
+    let dataItem = dailyTrendData.value.find((item) => category === item.dayOfMonth);
+    return dataItem ? dataItem.total : 0;
+  });
+  dailyTrendsChart.value = {
+    ...dailyTrendsChart.value,
+    xaxis: {
+      categories: dailyTrendsCategories.value
+    },
+  };
+
+  weeklyTrendsChart.value.series[0].name = name;
+  weeklyTrendsChart.value.series[0].data = weeklyTrendsCategories.value.map((category) => {
+    let dataItem = weeklyTrendData.value.find((item) => category === item.dayOfWeek);
+    return dataItem ? dataItem.total : 0;
+  });
+  weeklyTrendsChart.value = {
+    ...weeklyTrendsChart.value,
+    xaxis: {
+      categories: weeklyTrendsCategories.value
+    },
+  };
+
+  monthlyTrendsChart.value.series[0].name = name;
+  monthlyTrendsChart.value.series[0].data = monthlyTrendsCategories.value.map((category) => {
+    let dataItem = monthlyTrendData.value.find((item) => category === item.month);
+    return dataItem ? dataItem.total : 0;
+  });
+  monthlyTrendsChart.value = {
+    ...monthlyTrendsChart.value,
+    xaxis: {
+      categories: monthlyTrendsCategories.value
+    },
+  };
+
+  yearlyTrendsChart.value.series[0].name = name;
+  yearlyTrendsChart.value.series[0].data = yearlyTrendsCategories.value.map((category) => {
+    let dataItem = yearlyTrendData.value.find((item) => category === item.year);
+    return dataItem ? dataItem.total : 0;
+  });
+  yearlyTrendsChart.value = {
+    ...yearlyTrendsChart.value,
+    xaxis: {
+      categories: yearlyTrendsCategories.value
+    },
+  };
+}
+</script>
+
+<template>
+  <div>
+    <!-- Filter Options -->
+    <FilterOptions
+      :show-time-range="false"
+      :show-account="true"
+      :show-expense-category="false"
+      :show-revenue-category="false"
+      :show-transaction-type="true"
+      @filter-change="handleFilterChange"
+      @apply-filter="handleApplyFilter"
+    />
+
+    <!-- Charts -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <!-- Daily Trends -->
+      <div class="bg-surface rounded-xl p-4 shadow-sm">
+        <h3 class="text-lg font-medium text-text mb-4">Xu hướng {{ transactionType === 'expense' ? 'chi tiêu' : 'thu nhập' }} theo ngày</h3>
+        <apexchart
+          type="line"
+          height="350"
+          :options="dailyTrendsChart"
+          :series="dailyTrendsChart.series"
+        />
+      </div>
+
+      <!-- Weekly Trends -->
+      <div class="bg-surface rounded-xl p-4 shadow-sm">
+        <h3 class="text-lg font-medium text-text mb-4">Xu hướng {{ transactionType === 'expense' ? 'chi tiêu' : 'thu nhập' }} theo tuần</h3>
+        <apexchart
+          type="line"
+          height="350"
+          :options="weeklyTrendsChart"
+          :series="weeklyTrendsChart.series"
+        />
+      </div>
+
+      <!-- Monthly Trends -->
+      <div class="bg-surface rounded-xl p-4 shadow-sm">
+        <h3 class="text-lg font-medium text-text mb-4">Xu hướng {{ transactionType === 'expense' ? 'chi tiêu' : 'thu nhập' }} theo tháng</h3>
+        <apexchart
+          type="line"
+          height="350"
+          :options="monthlyTrendsChart"
+          :series="monthlyTrendsChart.series"
+        />
+      </div>
+
+      <!-- Yearly Trends -->
+      <div class="bg-surface rounded-xl p-4 shadow-sm">
+        <h3 class="text-lg font-medium text-text mb-4">Xu hướng {{ transactionType === 'expense' ? 'chi tiêu' : 'thu nhập' }} 5 năm gần nhất</h3>
+        <apexchart
+          type="line"
+          height="350"
+          :options="yearlyTrendsChart"
+          :series="yearlyTrendsChart.series"
+        />
+      </div>
+    </div>
+  </div>
+</template> 

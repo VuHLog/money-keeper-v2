@@ -30,6 +30,10 @@ const props = defineProps({
     type: Boolean,
     default: true
   },
+  showTransactionType: {
+    type: Boolean,
+    default: true
+  },
   activeTab: {
     type: String,
     default: ''
@@ -45,6 +49,12 @@ const timeRanges = [
   { id: 'date', name: 'Tùy chọn', icon: 'calendar', color: 'text-blue-500', pickerType: 'daterange' }
 ]
 
+const transactionTypes = [
+  { id: 'revenue', name: 'Thu nhập', icon: 'arrow-up', color: 'text-success' },
+  { id: 'expense', name: 'Chi tiêu', icon: 'arrow-down', color: 'text-red-500' }
+]
+
+const categoryType = ref('expense');
 const accounts = ref([]);
 const expenseCategories = ref([]);
 const revenueCategories = ref([]);
@@ -54,12 +64,13 @@ const selectedTimeRange = ref('month')
 const selectedAccount = ref(['all'])
 const selectedExpenseCategory = ref(['all'])
 const selectedRevenueCategory = ref(['all'])
+const selectedTransactionType = ref('expense')
 const customTimeRange = ref([new Date().toISOString().slice(0, 7), new Date().toISOString().slice(0, 7)])
 
 // Store original values for reset
 const originalValues = {
   timeRange: 'month',
-  transactionType: ['all'],
+  transactionType: ['expense'],
   account: ['all'],
   expenseCategory: ['all'],
   revenueCategory: ['all'],
@@ -107,6 +118,7 @@ const handleFilterChange = () => {
     expenseCategory: selectedExpenseCategory.value,
     revenueCategory: selectedRevenueCategory.value,
     customTimeRange: customTimeRange.value,
+    transactionType: selectedTransactionType.value,
   })
 }
 
@@ -120,6 +132,7 @@ const handleReset = () => {
   selectedExpenseCategory.value = [...originalValues.expenseCategory]
   selectedRevenueCategory.value = [...originalValues.revenueCategory]
   customTimeRange.value = originalValues.customTimeRange
+  selectedTransactionType.value = [...originalValues.transactionType]
   emit('filter-reset')
 }
 
@@ -146,6 +159,11 @@ const handleClickOutside = (event) => {
   const categoryDropdownEl = document.querySelector('.category-dropdown-container')
   if (categoryDropdownEl && !categoryDropdownEl.contains(event.target) && isCategoryDropdownOpen.value) {
     isCategoryDropdownOpen.value = false
+  }
+
+  const transactionTypeDropdownEl = document.querySelector('.transaction-type-dropdown-container')
+  if (transactionTypeDropdownEl && !transactionTypeDropdownEl.contains(event.target) && isTransactionTypeDropdownOpen.value) {
+    isTransactionTypeDropdownOpen.value = false
   }
 }
 
@@ -182,6 +200,16 @@ const updateCustomTimeRange = () => {
 watch(selectedTimeRange, () => {
   updateCustomTimeRange()
   handleFilterChange()
+})
+
+
+watch(selectedTransactionType, (newVal) => {
+  if (newVal.includes('revenue') && !newVal.includes('expense')) {
+    categoryType.value = 'revenue';
+  } else if (newVal.includes('expense') && !newVal.includes('revenue')) {
+    categoryType.value = 'expense';
+  }
+  handleFilterChange();
 })
 </script>
 
@@ -261,6 +289,17 @@ watch(selectedTimeRange, () => {
           placeholder="Chọn tài khoản"
           :is-multiple="true"
           default-icon="wallet"
+          @change="handleFilterChange"
+        />
+      </div>
+
+      <div v-if="showTransactionType">
+        <SelectDropdown
+          v-model="selectedTransactionType"
+          :options="transactionTypes"
+          label="Loại giao dịch"
+          placeholder="Chọn loại giao dịch"
+          default-icon="list"
           @change="handleFilterChange"
         />
       </div>
