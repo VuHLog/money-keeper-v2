@@ -135,7 +135,7 @@ const resetForm = () => {
     amount: '',
     categoryId: '',
     accountId: '',
-    date: new Date(),
+    date: getVietnamDateTime(),
     location: '',
     event: '',
     paidTo: '',
