@@ -1,7 +1,10 @@
 package com.vuhlog.money_keeper.dao;
 
+import com.vuhlog.money_keeper.dto.response.responseinterface.dashboard.TotalExpenseRevenue;
 import com.vuhlog.money_keeper.dto.response.responseinterface.report.*;
 import com.vuhlog.money_keeper.entity.ReportExpenseRevenue;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -12,6 +15,12 @@ import java.util.Optional;
 
 public interface ReportExpenseRevenueRepository extends JpaRepository<ReportExpenseRevenue, String> {
     Optional<ReportExpenseRevenue> findByMonthAndYearAndBucketPaymentIdAndCategoryIdAndType(int month, int year, String bucketPaymentId, String categoryId, String type);
+
+    @Query(value = "SELECT COALESCE(SUM(total_expense), 0) AS totalExpense, COALESCE(SUM(total_revenue), 0) AS totalRevenue \n" +
+            "FROM report_expense_revenue rer \n" +
+            "WHERE rer.user_id = :userId \n" +
+            "AND MONTH = MONTH(NOW()) AND YEAR = YEAR(NOW())", nativeQuery = true)
+    TotalExpenseRevenue getTotalExpenseRevenueThisMonthByUserId(@Param("userId") String userId);
 
     @Query(value = "SELECT SUM(totalExpense) as finalTotalExpense FROM (" +
             "SELECT COALESCE(SUM(amount), 0) as totalExpense " +
@@ -366,5 +375,87 @@ public interface ReportExpenseRevenueRepository extends JpaRepository<ReportExpe
             "ORDER BY account_type", nativeQuery = true)
     List<ReportBucketPaymentTypeBalance> getReportBucketPaymentTypeBalance(
             @Param("userId") String userId
+    );
+
+//    TRANSACTION HISTORY
+    @Query(value = "SELECT er.id,'expense' AS transactionType ,er.amount, de.`name` AS categoryName, de.icon_url AS categoryIconUrl, dbp.account_name as accountName, dbp.icon_url AS bucketPaymentIconUrl, expense_date AS date, er.transfer_type as transferType, er.interpretation\n" +
+            "FROM expense_regular er\n" +
+            "JOIN dictionary_bucket_payment dbp ON dbp.id = er.dictionary_bucket_payment_id\n" +
+            "JOIN dictionary_expense de ON de.id = er.dictionary_expense_id\n" +
+            "WHERE dbp.user_id = :userId\n" +
+            "AND ( :bucketPaymentIds IS NULL OR FIND_IN_SET(er.dictionary_expense_id, :bucketPaymentIds)) \n" +
+            "AND ( :startDate IS NULL OR :endDate IS NULL OR (date(expense_date) BETWEEN DATE(:startDate) AND DATE(:endDate)))\n" +
+            "UNION ALL\n" +
+            "SELECT rr.id,'revenue' AS transactionType ,rr.amount, dr.`name` AS categoryName, dr.icon_url AS categoryIconUrl, dbp.account_name as accountName, dbp.icon_url AS bucketPaymentIconUrl, revenue_date AS date, rr.transfer_type as transferType, rr.interpretation\n" +
+            "FROM revenue_regular rr\n" +
+            "JOIN dictionary_bucket_payment dbp ON dbp.id = rr.dictionary_bucket_payment_id\n" +
+            "JOIN dictionary_revenue dr ON dr.id = rr.dictionary_revenue_id\n" +
+            "WHERE dbp.user_id = :userId\n" +
+            "AND ( :bucketPaymentIds IS NULL OR FIND_IN_SET(rr.dictionary_revenue_id, :bucketPaymentIds)) \n" +
+            "AND ( :startDate IS NULL OR :endDate IS NULL OR (date(revenue_date) BETWEEN DATE(:startDate) AND DATE(:endDate)))"
+            , countQuery = "SELECT COUNT(*) FROM (" +
+            "SELECT er.id " +
+            "FROM expense_regular er " +
+            "JOIN dictionary_bucket_payment dbp ON dbp.id = er.dictionary_bucket_payment_id " +
+            "WHERE dbp.user_id = :userId " +
+            "AND (:bucketPaymentIds IS NULL OR FIND_IN_SET(er.dictionary_expense_id, :bucketPaymentIds)) " +
+            "AND (:startDate IS NULL OR :endDate IS NULL OR (date(expense_date) BETWEEN DATE(:startDate) AND DATE(:endDate))) " +
+            "UNION ALL " +
+            "SELECT rr.id " +
+            "FROM revenue_regular rr " +
+            "JOIN dictionary_bucket_payment dbp ON dbp.id = rr.dictionary_bucket_payment_id " +
+            "WHERE dbp.user_id = :userId " +
+            "AND (:bucketPaymentIds IS NULL OR FIND_IN_SET(rr.dictionary_revenue_id, :bucketPaymentIds)) " +
+            "AND (:startDate IS NULL OR :endDate IS NULL OR (date(revenue_date) BETWEEN DATE(:startDate) AND DATE(:endDate)))" +
+            ") AS count_table", nativeQuery = true)
+    Page<TransactionHistory> getAllExpenseRevenueHistory(
+            @Param("userId") String userId,
+            @Param("bucketPaymentIds") String bucketPaymentIds,
+            @Param("startDate") LocalDate startDate,
+            @Param("endDate") LocalDate endDate,
+            Pageable pageable
+    );
+
+    @Query(value = "SELECT er.id,'expense' AS transactionType ,er.amount, de.`name` AS categoryName, de.icon_url AS categoryIconUrl, dbp.account_name as accountName, dbp.icon_url AS bucketPaymentIconUrl, expense_date AS date, er.transfer_type as transferType, er.interpretation\n" +
+            "FROM expense_regular er\n" +
+            "JOIN dictionary_bucket_payment dbp ON dbp.id = er.dictionary_bucket_payment_id\n" +
+            "JOIN dictionary_expense de ON de.id = er.dictionary_expense_id\n" +
+            "WHERE dbp.user_id = :userId\n" +
+            "AND ( :bucketPaymentIds IS NULL OR FIND_IN_SET(er.dictionary_expense_id, :bucketPaymentIds)) \n" +
+            "AND ( :startDate IS NULL OR :endDate IS NULL OR (date(expense_date) BETWEEN DATE(:startDate) AND DATE(:endDate)))",
+            countQuery ="SELECT count(er.id)" +
+                    "FROM expense_regular er " +
+                    "JOIN dictionary_bucket_payment dbp ON dbp.id = er.dictionary_bucket_payment_id " +
+                    "WHERE dbp.user_id = :userId " +
+                    "AND (:bucketPaymentIds IS NULL OR FIND_IN_SET(er.dictionary_expense_id, :bucketPaymentIds)) " +
+                    "AND (:startDate IS NULL OR :endDate IS NULL OR (date(expense_date) BETWEEN DATE(:startDate) AND DATE(:endDate))) ", nativeQuery = true)
+    Page<TransactionHistory> getAllExpenseHistory(
+            @Param("userId") String userId,
+            @Param("bucketPaymentIds") String bucketPaymentIds,
+            @Param("startDate") LocalDate startDate,
+            @Param("endDate") LocalDate endDate,
+            Pageable pageable
+    );
+
+    @Query(value = "SELECT rr.id,'revenue' AS transactionType ,rr.amount, dr.`name` AS categoryName, dr.icon_url AS categoryIconUrl, dbp.account_name as accountName, dbp.icon_url AS bucketPaymentIconUrl, revenue_date AS date, rr.transfer_type as transferType, rr.interpretation\n" +
+            "FROM revenue_regular rr\n" +
+            "JOIN dictionary_bucket_payment dbp ON dbp.id = rr.dictionary_bucket_payment_id\n" +
+            "JOIN dictionary_revenue dr ON dr.id = rr.dictionary_revenue_id\n" +
+            "WHERE dbp.user_id = :userId\n" +
+            "AND ( :bucketPaymentIds IS NULL OR FIND_IN_SET(rr.dictionary_revenue_id, :bucketPaymentIds)) \n" +
+            "AND ( :startDate IS NULL OR :endDate IS NULL OR (date(revenue_date) BETWEEN DATE(:startDate) AND DATE(:endDate)))",
+            countQuery = "SELECT count(rr.id)" +
+                    "FROM revenue_regular rr " +
+                    "JOIN dictionary_bucket_payment dbp ON dbp.id = rr.dictionary_bucket_payment_id " +
+                    "WHERE dbp.user_id = :userId " +
+                    "AND (:bucketPaymentIds IS NULL OR FIND_IN_SET(rr.dictionary_revenue_id, :bucketPaymentIds)) " +
+                    "AND (:startDate IS NULL OR :endDate IS NULL OR (date(revenue_date) BETWEEN DATE(:startDate) AND DATE(:endDate)))"
+            ,nativeQuery = true)
+    Page<TransactionHistory> getAllRevenueHistory(
+            @Param("userId") String userId,
+            @Param("bucketPaymentIds") String bucketPaymentIds,
+            @Param("startDate") LocalDate startDate,
+            @Param("endDate") LocalDate endDate,
+            Pageable pageable
     );
 }

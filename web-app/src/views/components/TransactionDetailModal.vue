@@ -45,6 +45,7 @@ const formatDate = (dateString) => {
 // Xác định loại giao dịch (thu/chi) để hiển thị đúng màu sắc và biểu tượng
 const isExpense = computed(() => {
   if (!props.transaction) return false
+  if (!props.transactionType) return false
 
   return props.transactionType === 'expense'
 })
@@ -123,7 +124,11 @@ const getCategoryName = computed(() => {
               </div>
               <div>
                 <p class="text-sm text-text-secondary">Tài khoản</p>
-                <p class="font-medium">{{ transaction.dictionaryBucketPayment.accountName || 'Không có' }}</p>
+                <p class="font-medium flex text-text">
+                  <Avatar v-if="transaction.dictionaryBucketPayment?.iconUrl" :src="transaction.dictionaryBucketPayment?.iconUrl" :alt="transaction.dictionaryBucketPayment?.accountName" 
+                    size="m" class="mr-2" />
+                    {{ transaction.dictionaryBucketPayment?.accountName || 'Không có' }}
+                </p>
               </div>
             </div>
 
@@ -170,6 +175,28 @@ const getCategoryName = computed(() => {
                 <p class="font-medium">{{ isExpense ? transaction.beneficiaryAccount.accountName : transaction.senderAccount.accountName }}</p>
               </div>
             </div>
+
+            <div v-if="transaction.beneficiary || transaction.collectMoneyWho" class="flex items-start">
+              <div class="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0 mr-3">
+                <font-awesome-icon :icon="['fas', 'user']" class="text-primary" />
+              </div>
+              <div>
+                <p class="text-sm text-text-secondary">{{ isExpense ? 'Chi cho' : 'Nhận từ ' }}</p>
+                <p class="font-medium">{{ isExpense ? transaction.beneficiary : transaction.collectMoneyWho}}</p>
+              </div>
+            </div>
+
+          
+            <div v-if="transaction.benecificary || transaction.collectMoneyWho" class="flex items-start">
+              <div class="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0 mr-3">
+                <font-awesome-icon :icon="['fas', 'user']" class="text-primary" />
+              </div>
+              <div>
+                <p class="text-sm text-text-secondary">{{ isExpense ? 'Chi cho' : 'Nhận từ ' }}</p>
+                <p class="font-medium">{{ isExpense ? transaction.benecificary : transaction.collectMoneyWho}}</p>
+              </div>
+            </div>
+
 
             <!-- Mô tả (nếu có) -->
             <div v-if="transaction.interpretation" class="flex items-start">
