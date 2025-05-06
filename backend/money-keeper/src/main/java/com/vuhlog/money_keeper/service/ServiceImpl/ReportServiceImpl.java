@@ -7,12 +7,17 @@ import com.vuhlog.money_keeper.dao.ExpenseRegularRepository;
 import com.vuhlog.money_keeper.dao.ReportExpenseRevenueRepository;
 import com.vuhlog.money_keeper.dao.RevenueRegularRepository;
 import com.vuhlog.money_keeper.dto.request.ReportFilterOptionsRequest;
+import com.vuhlog.money_keeper.dto.response.responseinterface.dashboard.TotalExpenseRevenue;
 import com.vuhlog.money_keeper.dto.response.responseinterface.report.*;
 import com.vuhlog.money_keeper.mapper.ReportExpenseRevenueMapper;
 import com.vuhlog.money_keeper.service.ReportService;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
@@ -173,5 +178,51 @@ public class ReportServiceImpl implements ReportService {
     public List<ReportBucketPaymentTypeBalance> getReportBucketPaymentTypeBalance() {
         String userId = userCommon.getMyUserInfo().getId();
         return reportExpenseRevenueRepository.getReportBucketPaymentTypeBalance(userId);
+    }
+
+    @Override
+    public TotalExpenseRevenue getTotalExpenseRevenueThisMonth() {
+        return reportExpenseRevenueRepository.getTotalExpenseRevenueThisMonthByUserId(userCommon.getMyUserInfo().getId());
+    }
+
+    @Override
+    public Page<TransactionHistory> getAllTransactionHistory(String field, Integer pageNumber, Integer pageSize, String sort, ReportFilterOptionsRequest request) {
+        String userId = userCommon.getMyUserInfo().getId();
+        String timeOption = request.getTimeOption();
+        String transactionType = request.getTransactionType();
+        String bucketPaymentIds = request.getBucketPaymentIds();
+        String start = null;
+        String end = null;
+        if(request.getCustomTimeRange() != null && request.getCustomTimeRange().size() > 0){
+            start = request.getCustomTimeRange().get(0);
+            end = request.getCustomTimeRange().get(1);
+        }
+        LocalDate startDate = null;
+        LocalDate endDate = null;
+        Sort sortable = Sort.by("date").descending();
+        Pageable pageable = PageRequest.of(pageNumber, pageSize, sortable);
+
+        if(timeOption.equals(ReportTimeOptionType.MONTH.getType())){
+            YearMonth startMonth = YearMonth.parse(start);
+            YearMonth endMonth = YearMonth.parse(end);
+            startDate = startMonth.atDay(1);
+            endDate = endMonth.atEndOfMonth();
+        }else if (timeOption.equals(ReportTimeOptionType.YEAR.getType())){
+            int startYear = Integer.parseInt(start);
+            int endYear = Integer.parseInt(end);
+            startDate = LocalDate.of(startYear, 1, 1);
+            endDate = LocalDate.of(endYear, 12, 31);
+        } else if (timeOption.equals(ReportTimeOptionType.OPTIONAL.getType())) {
+            startDate = LocalDate.parse(start);
+            endDate = LocalDate.parse(end);
+        }
+
+        if(transactionType.equals(TransactionType.EXPENSE.getType())) {
+            return reportExpenseRevenueRepository.getAllExpenseHistory(userId, bucketPaymentIds, startDate, endDate, pageable);
+        } else if (transactionType.equals(TransactionType.REVENUE.getType())){
+            return reportExpenseRevenueRepository.getAllRevenueHistory(userId, bucketPaymentIds, startDate, endDate, pageable);
+        } else {
+            return reportExpenseRevenueRepository.getAllExpenseRevenueHistory(userId, bucketPaymentIds, startDate, endDate, pageable);
+        }
     }
 }

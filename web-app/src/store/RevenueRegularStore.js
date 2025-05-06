@@ -40,6 +40,13 @@ export const useRevenueRegularStore = defineStore("revenueRegular", {
       });
       return response;
     },
+    async getRevenueRegularById(id) {
+      let response = null;
+      await base.get("/revenue-regular/" + id).then((res) => {
+        response = res.result;
+      });
+      return response;
+    },
     async getAllRevenueRegularPagination() {
       let response = null;
       await base.get("/revenue-regular/pagination", {

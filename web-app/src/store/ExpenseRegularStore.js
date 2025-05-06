@@ -47,6 +47,13 @@ export const useExpenseRegularStore = defineStore("expenseRegular", {
       });
       return response;
     },
+    async getExpenseRegularById(id) {
+      let response = null;
+      await base.get("/expense-regular/" + id).then((res) => {
+        response = res.result;
+      });
+      return response;
+    },
     async getAllExpenseRegularPagination() {
       let response = null;
       await base.get("/expense-regular/pagination", {

@@ -5,6 +5,7 @@ import com.vuhlog.money_keeper.dto.response.ApiResponse;
 import com.vuhlog.money_keeper.dto.response.responseinterface.report.*;
 import com.vuhlog.money_keeper.service.ReportService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -75,6 +76,18 @@ public class ReportController {
     public ApiResponse<List<ReportBucketPaymentTypeBalance>> getReportBucketPaymentTypeBalance() {
         return ApiResponse.<List<ReportBucketPaymentTypeBalance>>builder()
                 .result(reportService.getReportBucketPaymentTypeBalance())
+                .build();
+    }
+
+    @PostMapping("transaction-history")
+    public ApiResponse<Page<TransactionHistory>> getAllTransactionHistory(
+            @RequestParam(name = "field", required = false, defaultValue = "date") String field,
+            @RequestParam(name = "pageNumber", required = false, defaultValue = "0") Integer pageNumber,
+            @RequestParam(name = "pageSize", required = false, defaultValue = "10") Integer pageSize,
+            @RequestParam(name = "sort", required = false, defaultValue = "desc") String sort,
+            @RequestBody ReportFilterOptionsRequest request) {
+        return ApiResponse.<Page<TransactionHistory>>builder()
+                .result(reportService.getAllTransactionHistory(field, pageNumber, pageSize, sort, request))
                 .build();
     }
 }

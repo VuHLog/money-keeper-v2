@@ -215,6 +215,11 @@ public class DictionaryBucketPaymentServiceImpl implements DictionaryBucketPayme
         return result != null ? result : 0;
     }
 
+    @Override
+    public Long getMyTotalBalance() {
+        return dictionaryBucketPaymentRepository.getTotalBalanceByUserId(userCommon.getMyUserInfo().getId());
+    }
+
     private List<ExpenseRevenueHistory> convertToExpenseRevenueHistory(List<Object[]> list) {
         return list.stream().map(obj ->
                 new ExpenseRevenueHistory(

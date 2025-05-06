@@ -33,4 +33,6 @@ public interface DictionaryBucketPaymentService {
     Long getTotalRevenueByBucketPaymentId(ExpenseRevenueHistoryRequest req);
 
     Long getBalanceByBucketPaymentId(String bucketPaymentId);
+
+    Long getMyTotalBalance();
 }

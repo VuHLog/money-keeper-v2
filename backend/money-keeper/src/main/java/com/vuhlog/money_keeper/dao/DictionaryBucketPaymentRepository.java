@@ -10,8 +10,13 @@ import org.springframework.data.repository.query.Param;
 
 import com.vuhlog.money_keeper.entity.DictionaryBucketPayment;
 
-public interface DictionaryBucketPaymentRepository
-        extends JpaRepository<DictionaryBucketPayment, String>, JpaSpecificationExecutor<DictionaryBucketPayment> {
+public interface DictionaryBucketPaymentRepository extends JpaRepository<DictionaryBucketPayment, String>, JpaSpecificationExecutor<DictionaryBucketPayment> {
+
+    @Query(value = "SELECT COALESCE(SUM(balance),0)\n" +
+            "FROM dictionary_bucket_payment\n" +
+            "WHERE user_id = :userId",nativeQuery = true)
+    Long getTotalBalanceByUserId(@Param("userId") String userId);
+
     @Query(
             value =
                     "SELECT er.id, er.balance, er.expense_date AS date, amount,de.icon_url, de.name AS category_name, 'expense' AS TYPE, er.interpretation, transfer_type, dbp.account_name FROM expense_regular er\n"
@@ -33,9 +38,6 @@ public interface DictionaryBucketPaymentRepository
             @Param("bucketPaymentId") String bucketPaymentId,
             @Param("startDate") Timestamp startDate,
             @Param("endDate") Timestamp endDate);
-
-    @Query("select dbp.balance from DictionaryBucketPayment dbp where dbp.id = :bucketPaymentId")
-    long getBalanceByBucketPaymentId(@Param("bucketPaymentId") String bucketPaymentId);
 
     @Query(value = "SELECT balance\n" +
             "FROM (\n" +
