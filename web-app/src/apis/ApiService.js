@@ -1,5 +1,6 @@
 import axios from "axios";
 import { useAuthStore } from "@/store/AuthStore.js";
+import { useLayoutStore } from "@/store/LayoutStore.js";
 
 // Tạo một instance của axios với các default config
 const instance = axios.create({
@@ -14,6 +15,8 @@ const instance = axios.create({
 //Tạo một interceptor để thêm token vào header của request
 instance.interceptors.request.use(
   (config) => {
+    const layoutStore = useLayoutStore()
+    layoutStore.incrementApiLoadingCount()
     const token = sessionStorage.getItem('token')
     if (token) {
       config.headers.Authorization = `Bearer ${token}`
@@ -25,7 +28,11 @@ instance.interceptors.request.use(
 
 // Tạo một interceptor để xử lý các lỗi trả về từ server
 instance.interceptors.response.use(
-  (response) => response,
+  (response) => {
+    const layoutStore = useLayoutStore()
+    layoutStore.decrementApiLoadingCount()
+    return response
+  },
   async (error) => {
     const originalConfig = error.config;
     if (originalConfig.url !== "/auth/token" && error.response) {
