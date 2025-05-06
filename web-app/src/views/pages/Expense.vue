@@ -628,7 +628,7 @@ const handleConfirmDelete = async () => {
                       <div class="flex items-center text-sm text-text-secondary">
                         <span>{{ transaction.transferType === 'transfer' ? 'Chuyển ' +
                           transaction.dictionaryExpense.name.toLowerCase() + ' sang ' +
-                          transaction.receiverAccount.accountName :
+                          transaction.beneficiaryAccount.accountName :
                           transaction.dictionaryExpense.name }}</span>
                         <span class="mx-1">•</span>
                         <span>{{ formatDateToVietnam(transaction.expenseDate) }}</span>
