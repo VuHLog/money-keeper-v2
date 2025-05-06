@@ -80,6 +80,11 @@ const menuItems = [
     icon: ['fas', 'tags']
   },
   {
+    label: 'Lịch Sử Giao Dịch',
+    path: '/transaction-history',
+    icon: ['fas', 'history']
+  },
+  {
     label: 'Thống Kê',
     path: '/statistics',
     icon: ['fas', 'chart-bar']

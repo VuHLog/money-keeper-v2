@@ -37,6 +37,10 @@ const props = defineProps({
   activeTab: {
     type: String,
     default: ''
+  },
+  isReset: {
+    type: Boolean,
+    default: false
   }
 })
 
@@ -91,6 +95,9 @@ const dictionaryExpenseStore = useDictionaryExpenseStore()
 const dictionaryRevenueStore = useDictionaryRevenueStore()
 
 onMounted(async() => {
+  if(props.isReset){
+    handleReset();
+  }
   const allOption = { id: 'all', name: 'Tất cả danh mục', icon: 'list', color: 'text-gray-400' };
   expenseCategories.value = await dictionaryExpenseStore.getMyExpenseCategories();
   expenseCategories.value.unshift(allOption);
@@ -132,7 +139,7 @@ const handleReset = () => {
   selectedExpenseCategory.value = [...originalValues.expenseCategory]
   selectedRevenueCategory.value = [...originalValues.revenueCategory]
   customTimeRange.value = originalValues.customTimeRange
-  selectedTransactionType.value = [...originalValues.transactionType]
+  selectedTransactionType.value = props.isReset ? '' : [...originalValues.transactionType]
   emit('filter-reset')
 }
 

@@ -4,7 +4,6 @@ import TransactionTypeStats from './statistics/TransactionTypeStats.vue'
 import CategoryStats from './statistics/CategoryStats.vue'
 import TrendStats from './statistics/TrendingStats.vue'
 import AccountStats from './statistics/AccountStats.vue'
-import TransactionHistory from './statistics/TransactionHistory.vue'
 
 const activeTab = ref('transaction')
 
@@ -13,7 +12,6 @@ const tabs = [
   { id: 'category', name: 'Danh mục' },
   { id: 'trend', name: 'Xu hướng' },
   { id: 'account', name: 'Tài khoản' },
-  { id: 'history', name: 'Lịch sử giao dịch' }
 ]
 
 const changeTab = (tabId) => {
@@ -61,10 +59,6 @@ const changeTab = (tabId) => {
       
       <div v-if="activeTab === 'account'">
         <AccountStats />
-      </div>
-
-      <div v-if="activeTab === 'history'">
-        <TransactionHistory />
       </div>
     </div>
   </div>
