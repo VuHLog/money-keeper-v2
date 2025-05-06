@@ -87,7 +87,10 @@ const incomeChart = ref({
   }],
   chart: {
     type: 'bar',
-    height: 350
+    height: 350,
+    zoom: {
+      enabled: true
+    },
   },
   plotOptions: {
     bar: {
@@ -234,6 +237,7 @@ const incomeVsExpenseChart = ref({
 // Watch for changes in chartCategories and update all charts
 watch(chartCategories, (newCategories) => {
   incomeChart.value.xaxis = { categories: newCategories };
+  incomeChart.value.chart.zoom = { enabled: true };
   expenseChart.value.xaxis = { categories: newCategories };
   transactionCountChart.value.xaxis = { categories: newCategories };
 }, { deep: true });
