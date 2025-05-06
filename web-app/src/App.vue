@@ -3,6 +3,7 @@ import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useRoute } from 'vue-router'
 import Header from '@/views/components/Header.vue'
 import Sidebar from '@/views/components/Sidebar.vue'
+import Loading from '@/views/components/Loading.vue'
 
 // State management for sidebar and screen size
 const route = useRoute()
@@ -48,6 +49,7 @@ onUnmounted(() => {
 </script>
 
 <template>
+  <Loading />
   <!-- Root container -->
   <div class="min-h-screen bg-background flex">
     <!-- Main layout container when not authenticated -->
