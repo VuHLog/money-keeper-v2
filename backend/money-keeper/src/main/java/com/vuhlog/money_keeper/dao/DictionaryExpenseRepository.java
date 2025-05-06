@@ -9,7 +9,7 @@ import org.springframework.data.repository.query.Param;
 import java.util.List;
 
 public interface DictionaryExpenseRepository extends JpaRepository<DictionaryExpense, String>, JpaSpecificationExecutor<DictionaryExpense> {
-    DictionaryExpense findByName(String name);
+    DictionaryExpense findByNameAndUser_Id(String name, String userId);
 
     @Query(
             value = "SELECT * FROM dictionary_expense\n" +

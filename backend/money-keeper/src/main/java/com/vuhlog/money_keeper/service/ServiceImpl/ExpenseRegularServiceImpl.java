@@ -156,7 +156,7 @@ public class ExpenseRegularServiceImpl implements ExpenseRegularService {
         DictionaryBucketPayment beneficiaryAccount = dictionaryBucketPaymentRepository.findById(request.getBeneficiaryAccountId()).orElseThrow(() -> new AppException(ErrorCode.BUCKET_PAYMENT_NOT_EXISTED));
         expenseRegular.setBeneficiaryAccount(beneficiaryAccount);
 
-        DictionaryExpense dictionaryExpense = dictionaryExpenseRepository.findByName("Chuyển khoản");
+        DictionaryExpense dictionaryExpense = dictionaryExpenseRepository.findByNameAndUser_Id("Chuyển khoản", dictionaryBucketPayment.getUser().getId());
         expenseRegular.setDictionaryExpense(dictionaryExpense);
 
         //save revenue for received account
@@ -165,7 +165,7 @@ public class ExpenseRegularServiceImpl implements ExpenseRegularService {
         revenueRegular.setSenderAccount(dictionaryBucketPayment);
         revenueRegular.setTransferType(TransferType.TRANSFER.getType());
         revenueRegular.setExpenseRegularId(expenseRegular.getId());
-        DictionaryRevenue dictionaryRevenue = dictionaryRevenueRepository.findByName("Chuyển khoản");
+        DictionaryRevenue dictionaryRevenue = dictionaryRevenueRepository.findByNameAndUser_Id("Chuyển khoản", beneficiaryAccount.getUser().getId());
         revenueRegular.setDictionaryRevenue(dictionaryRevenue);
 
         //update balance for sender accocunt
