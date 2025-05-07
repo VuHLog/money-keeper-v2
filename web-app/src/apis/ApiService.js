@@ -34,6 +34,8 @@ instance.interceptors.response.use(
     return response
   },
   async (error) => {
+    const layoutStore = useLayoutStore()
+    layoutStore.decrementApiLoadingCount()
     const originalConfig = error.config;
     if (originalConfig.url !== "/auth/token" && error.response) {
       // Access Token was expired
