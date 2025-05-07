@@ -1,6 +1,7 @@
 package com.vuhlog.money_keeper.controller;
 
 import com.vuhlog.money_keeper.dto.response.ApiResponse;
+import com.vuhlog.money_keeper.dto.response.responseinterface.dashboard.TotalExpenseRevenue;
 import com.vuhlog.money_keeper.service.DictionaryBucketPaymentService;
 import com.vuhlog.money_keeper.service.ReportService;
 import lombok.RequiredArgsConstructor;
@@ -22,5 +23,10 @@ public class DashboardController {
                 .build();
     }
 
-
+    @GetMapping("/total-transaction-this-month")
+    public ApiResponse<TotalExpenseRevenue> getTotalExpenseRevenueThisMonth() {
+        return ApiResponse.<TotalExpenseRevenue>builder()
+                .result(reportService.getTotalExpenseRevenueThisMonth())
+                .build();
+    }
 }

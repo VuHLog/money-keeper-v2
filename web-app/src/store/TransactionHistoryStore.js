@@ -9,7 +9,7 @@ export const useTransactionHistoryStore = defineStore("transactionHistory", {
       pagination: {
         field: "date",
         pageNumber: 1,
-        pageSize: 10,
+        pageSize: 5,
         sort: "desc",
         search: "",
         totalElements: 0,
