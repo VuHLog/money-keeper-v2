@@ -34,13 +34,29 @@ const incomeExpenseChart = ref({
       type: 'bar',
       toolbar: {
         show: false
+      },
+      // Thêm animations để biểu đồ có hiệu ứng khi tải
+      animations: {
+        enabled: true,
+        easing: 'easeinout',
+        speed: 800,
+        animateGradually: {
+          enabled: true,
+          delay: 150
+        },
+        dynamicAnimation: {
+          enabled: true,
+          speed: 350
+        }
       }
     },
     plotOptions: {
       bar: {
         horizontal: false,
         columnWidth: '55%',
-        endingShape: 'rounded'
+        endingShape: 'rounded',
+        // Đảm bảo các cột luôn hiển thị, kể cả khi giá trị là 0
+        minHeight: 5
       }
     },
     dataLabels: {
@@ -73,7 +89,9 @@ const incomeExpenseChart = ref({
         style: {
           colors: '#64748b'
         }
-      }
+      },
+      // Đảm bảo trục y luôn hiển thị giá trị tối thiểu (để hiển thị các giá trị 0)
+      min: 0
     },
     fill: {
       opacity: 1,
@@ -91,6 +109,19 @@ const incomeExpenseChart = ref({
       horizontalAlign: 'center',
       labels: {
         colors: '#64748b'
+      }
+    },
+    // Thêm thuộc tính noData để hiển thị khi không có dữ liệu
+    noData: {
+      text: "Không có dữ liệu",
+      align: 'center',
+      verticalAlign: 'middle',
+      offsetX: 0,
+      offsetY: 0,
+      style: {
+        color: '#64748b',
+        fontSize: '16px',
+        fontFamily: undefined
       }
     }
   }

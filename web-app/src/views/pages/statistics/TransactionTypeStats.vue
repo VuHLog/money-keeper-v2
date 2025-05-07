@@ -91,6 +91,19 @@ const incomeChart = ref({
     zoom: {
       enabled: true
     },
+    animations: {
+      enabled: true,
+      easing: 'easeinout',
+      speed: 800,
+      animateGradually: {
+        enabled: true,
+        delay: 150
+      },
+      dynamicAnimation: {
+        enabled: true,
+        speed: 350
+      }
+    }
   },
   plotOptions: {
     bar: {
@@ -140,7 +153,20 @@ const expenseChart = ref({
   }],
   chart: {
     type: 'bar',
-    height: 350
+    height: 350,
+    animations: {
+      enabled: true,
+      easing: 'easeinout',
+      speed: 800,
+      animateGradually: {
+        enabled: true,
+        delay: 150
+      },
+      dynamicAnimation: {
+        enabled: true,
+        speed: 350
+      }
+    }
   },
   plotOptions: {
     bar: {
@@ -190,13 +216,40 @@ const transactionCountChart = ref({
   }],
   chart: {
     type: 'line',
-    height: 350
+    height: 350,
+    animations: {
+      enabled: true,
+      easing: 'easeinout',
+      speed: 800,
+      animateGradually: {
+        enabled: true,
+        delay: 150
+      },
+      dynamicAnimation: {
+        enabled: true,
+        speed: 350
+      }
+    }
   },
   stroke: {
     curve: 'smooth'
   },
+  markers: {
+    size: 4,
+    hover: {
+      size: 6
+    }
+  },
   xaxis: {
     categories: chartCategories.value
+  },
+  yaxis: {
+    labels: {
+      formatter: function (val) {
+        return val.toFixed(0) // Số lượng giao dịch không cần định dạng tiền tệ
+      }
+    },
+    min: 0 // Đảm bảo hiển thị giá trị 0
   },
   colors: ['#3B82F6']
 })
@@ -205,7 +258,20 @@ const incomeVsExpenseChart = ref({
   series: transactionData.value.incomeVsExpense,
   chart: {
     type: 'donut',
-    height: 350
+    height: 350,
+    animations: {
+      enabled: true,
+      easing: 'easeinout',
+      speed: 800,
+      animateGradually: {
+        enabled: true,
+        delay: 150
+      },
+      dynamicAnimation: {
+        enabled: true,
+        speed: 350
+      }
+    }
   },
   labels: ['Thu nhập', 'Chi tiêu'],
   colors: ['#10B981', '#EF4444'],
@@ -231,7 +297,6 @@ const incomeVsExpenseChart = ref({
       fontFamily: undefined
     }
   }
-  
 })
 
 // Watch for changes in chartCategories and update all charts
@@ -242,6 +307,9 @@ watch(chartCategories, (newCategories) => {
   transactionCountChart.value.xaxis = { categories: newCategories };
 }, { deep: true });
 
+// Thêm biến kiểm soát hiển thị biểu đồ
+const showCharts = ref(false);
+
 onMounted(async () => {
   let currentDate = new Date();
   filters.value = {
@@ -249,9 +317,25 @@ onMounted(async () => {
         account : [],
         customTimeRange: [currentDate.toISOString().slice(0, 7), currentDate.toISOString().slice(0, 7)],
   }
+  
+  // Lấy dữ liệu trước
   await getData();
+  
+  // Cập nhật dữ liệu cho biểu đồ
   updateTransactionData(data.value);
+  
+  // Hiển thị biểu đồ với animation
+  setTimeout(() => {
+    showCharts.value = true;
+  }, 300);
 })
+
+const preserveChartSettings = (originalChart) => {
+    const { chart: chartSettings } = originalChart;
+    return {
+      animations: chartSettings.animations
+    };
+};
 
 const getData = async () => {
   data.value = await reportStore.getReportTransactionType(filters.value);
@@ -266,46 +350,79 @@ const getData = async () => {
 }
 
 const updateTransactionData = (data) => {
-  incomeChart.value.series[0].data = chartCategories.value.map((category) => {
-    let dataItem = data.find((item) =>category === item.time);
+  // Prepare data first
+  const incomeData = chartCategories.value.map((category) => {
+    let dataItem = data.find((item) => category === item.time);
     return dataItem ? dataItem.totalRevenue : 0;
   });
   
-  expenseChart.value.series[0].data = chartCategories.value.map((category) => {
+  const expenseData = chartCategories.value.map((category) => {
     let dataItem = data.find((item) => category === item.time);
     return dataItem ? dataItem.totalExpense : 0;
   });
   
-  transactionCountChart.value.series[0].data = chartCategories.value.map((category) => {
+  const transactionCountData = chartCategories.value.map((category) => {
     let dataItem = data.find((item) => category === item.time);
     return dataItem ? dataItem.totalTransaction : 0;
   });
   
-  // Cập nhật biểu đồ với categories mới
+  // Update charts while preserving animation settings
+  const incomeChartSettings = preserveChartSettings(incomeChart.value);
+  
+  // Update income chart
+  incomeChart.value.series[0].data = incomeData;
   incomeChart.value = {
     ...incomeChart.value,
     xaxis: {
       categories: chartCategories.value
+    },
+    chart: {
+      ...incomeChart.value.chart,
+      ...incomeChartSettings.animations
     }
   };
   
+  // Update expense chart
+  const expenseChartSettings = preserveChartSettings(expenseChart.value);
+  expenseChart.value.series[0].data = expenseData;
   expenseChart.value = {
     ...expenseChart.value,
     xaxis: {
       categories: chartCategories.value
+    },
+    chart: {
+      ...expenseChart.value.chart,
+      ...expenseChartSettings.animations
     }
   };
   
+  // Update transaction count chart
+  const transactionCountChartSettings = preserveChartSettings(transactionCountChart.value);
+  transactionCountChart.value.series[0].data = transactionCountData;
   transactionCountChart.value = {
     ...transactionCountChart.value,
     xaxis: {
       categories: chartCategories.value
+    },
+    chart: {
+      ...transactionCountChart.value.chart,
+      ...transactionCountChartSettings.animations
     }
   };
+  
+  // Update donut chart
+  const incomeVsExpenseChartSettings = preserveChartSettings(incomeVsExpenseChart.value);
   incomeVsExpenseChart.value.series = [
-    totalIncome.value,
+    totalIncome.value, 
     totalExpense.value
   ];
+  incomeVsExpenseChart.value = {
+    ...incomeVsExpenseChart.value,
+    chart: {
+      ...incomeVsExpenseChart.value.chart,
+      ...incomeVsExpenseChartSettings.animations
+    }
+  };
 }
 
 const handleFilterChange = (filterOptions) => {
@@ -314,8 +431,18 @@ const handleFilterChange = (filterOptions) => {
 }
 
 const handleApplyFilter = async () => {
+  // Ẩn biểu đồ trước khi cập nhật
+  showCharts.value = false;
+  
   await getData();
+  
+  // Cập nhật dữ liệu cho biểu đồ
   updateTransactionData(data.value);
+  
+  // Hiển thị lại biểu đồ sau một khoảng thời gian ngắn để kích hoạt animation
+  setTimeout(() => {
+    showCharts.value = true;
+  }, 100);
 }
 </script>
 
@@ -342,7 +469,8 @@ const handleApplyFilter = async () => {
           type="bar" 
           height="350" 
           :options="incomeChart" 
-          :series="incomeChart.series">
+          :series="incomeChart.series"
+          v-if="showCharts">
         </vue-apex-charts>
       </div>
 
@@ -353,7 +481,8 @@ const handleApplyFilter = async () => {
           type="bar" 
           height="350" 
           :options="expenseChart" 
-          :series="expenseChart.series">
+          :series="expenseChart.series"
+          v-if="showCharts">
         </vue-apex-charts>
       </div>
 
@@ -364,7 +493,8 @@ const handleApplyFilter = async () => {
           type="line" 
           height="350" 
           :options="transactionCountChart" 
-          :series="transactionCountChart.series">
+          :series="transactionCountChart.series"
+          v-if="showCharts">
         </vue-apex-charts>
       </div>
 
@@ -375,7 +505,8 @@ const handleApplyFilter = async () => {
           type="donut" 
           height="350" 
           :options="incomeVsExpenseChart" 
-          :series="incomeVsExpenseChart.series">
+          :series="incomeVsExpenseChart.series"
+          v-if="showCharts">
         </vue-apex-charts>
       </div>
     </div>

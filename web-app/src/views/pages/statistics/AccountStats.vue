@@ -13,6 +13,8 @@ const accountBalanceColors = ref([])
 const accountTypeBalanceData = ref([])
 const accountTypeBalanceColors = ref([])
 const filters = ref();
+// Add showCharts variable to control chart visibility
+const showCharts = ref(false);
 
 
 // Sample data - Replace with actual data from your API
@@ -29,7 +31,20 @@ const accountBalancesChart = ref({
   series: accountBalanceData.value.map((e) => e.balance),
   chart: {
     type: 'donut',
-    height: 350
+    height: 350,
+    animations: {
+      enabled: true,
+      easing: 'easeinout',
+      speed: 800,
+      animateGradually: {
+        enabled: true,
+        delay: 150
+      },
+      dynamicAnimation: {
+        enabled: true,
+        speed: 350
+      }
+    }
   },
   labels: accountBalanceData.value.map((e) => e.accountName),
   colors: [],
@@ -56,10 +71,29 @@ const accountTransactionsChart = ref({
   chart: {
     type: 'line',
     height: 350,
-    stacked: false
+    stacked: false,
+    animations: {
+      enabled: true,
+      easing: 'easeinout',
+      speed: 800,
+      animateGradually: {
+        enabled: true,
+        delay: 150
+      },
+      dynamicAnimation: {
+        enabled: true,
+        speed: 350
+      }
+    }
   },
   stroke: {
     curve: 'smooth'
+  },
+  markers: {
+    size: 4,
+    hover: {
+      size: 6
+    }
   },
   xaxis: {
     categories: ['Tháng 1', 'Tháng 2', 'Tháng 3', 'Tháng 4', 'Tháng 5']
@@ -70,7 +104,8 @@ const accountTransactionsChart = ref({
       formatter: function (val) {
         return formatCurrency(val);
       }
-    }
+    },
+    min: 0
   },
   tooltip: {
     y: {
@@ -86,7 +121,20 @@ const accountTypesChart = ref({
   series: accountTypeBalanceData.value.map(type => type.totalBalance),
   chart: {
     type: 'donut',
-    height: 350
+    height: 350,
+    animations: {
+      enabled: true,
+      easing: 'easeinout',
+      speed: 800,
+      animateGradually: {
+        enabled: true,
+        delay: 150
+      },
+      dynamicAnimation: {
+        enabled: true,
+        speed: 350
+      }
+    }
   },
   labels: accountTypeBalanceData.value.map(type => type.accountType),
   colors: [],
@@ -112,6 +160,11 @@ onMounted(async () => {
   // }
   await getData();
   updateTransactionData();
+  
+  // Show charts with animation after a delay
+  setTimeout(() => {
+    showCharts.value = true;
+  }, 500);
 })
 
 const getData = async () => {
@@ -125,11 +178,32 @@ const handleFilterChange = (filterOptions) => {
 }
 
 const handleApplyFilter = async () => {
+  // Hide charts before updating data
+  showCharts.value = false;
+  
   await getData();
   updateTransactionData();
+  
+  // Show charts again after a delay to trigger animations
+  setTimeout(() => {
+    showCharts.value = true;
+  }, 300);
 }
 
+// Add preserveChartSettings function
+const preserveChartSettings = (originalChart) => {
+  const { chart: chartSettings } = originalChart;
+  return {
+    animations: chartSettings.animations
+  };
+};
+
 const updateTransactionData = () => {
+  // Reset color arrays
+  accountBalanceColors.value = [];
+  accountTypeBalanceColors.value = [];
+  
+  // Assign colors for account balances
   const availableAccountBalanceColors = [...colorRepos];
   accountBalanceData.value.forEach(() => {
     const randomIndex = Math.floor(Math.random() * availableAccountBalanceColors.length);
@@ -137,11 +211,18 @@ const updateTransactionData = () => {
     accountBalanceColors.value.push(selectedColor);
     availableAccountBalanceColors.splice(randomIndex, 1);
   });
+  
+  // Preserve account balances chart animations
+  const accountBalancesChartSettings = preserveChartSettings(accountBalancesChart.value);
   accountBalancesChart.value.series = accountBalanceData.value.map((e) => e.balance);
   accountBalancesChart.value.labels = accountBalanceData.value.map((e) => e.accountName);
   accountBalancesChart.value = {
     ...accountBalancesChart.value,
     colors: accountBalanceColors.value,
+    chart: {
+      ...accountBalancesChart.value.chart,
+      ...accountBalancesChartSettings.animations
+    },
     tooltip: {
       custom: function ({ series, seriesIndex, dataPointIndex, w }) {
         return `<div class="flex items-center py-1 px-2" style="background: ${accountBalanceColors.value[seriesIndex]}">
@@ -159,6 +240,7 @@ const updateTransactionData = () => {
     }
   };
 
+  // Assign colors for account types
   const availableAccountTypeBalanceColors = [...colorRepos];
   accountTypeBalanceData.value.forEach(() => {
     const randomIndex = Math.floor(Math.random() * availableAccountTypeBalanceColors.length);
@@ -166,11 +248,18 @@ const updateTransactionData = () => {
     accountTypeBalanceColors.value.push(selectedColor);
     availableAccountTypeBalanceColors.splice(randomIndex, 1);
   });
+  
+  // Preserve account types chart animations
+  const accountTypesChartSettings = preserveChartSettings(accountTypesChart.value);
   accountTypesChart.value.series = accountTypeBalanceData.value.map((e) => e.totalBalance);
   accountTypesChart.value.labels = accountTypeBalanceData.value.map((e) => e.accountType);
   accountTypesChart.value = {
     ...accountTypesChart.value,
     colors: accountTypeBalanceColors.value,
+    chart: {
+      ...accountTypesChart.value.chart,
+      ...accountTypesChartSettings.animations
+    },
     tooltip: {
       custom: function ({ series, seriesIndex, dataPointIndex, w }) {
         return `<div class="flex items-center py-1 px-2" style="background: ${accountTypeBalanceColors.value[seriesIndex]}">
@@ -185,6 +274,20 @@ const updateTransactionData = () => {
                   <span class="">${accountTypeBalanceData.value[seriesIndex].accountType}: <strong class="text-sm">${formatCurrency(series[seriesIndex])}</strong></span>
                 </div>`
       }
+    }
+  };
+  
+  // Preserve account transactions chart animations
+  const accountTransactionsChartSettings = preserveChartSettings(accountTransactionsChart.value);
+  accountTransactionsChart.value = {
+    ...accountTransactionsChart.value,
+    series: Object.entries(transactionData.value.accountTransactions).map(([name, data]) => ({
+      name,
+      data
+    })),
+    chart: {
+      ...accountTransactionsChart.value.chart,
+      ...accountTransactionsChartSettings.animations
     }
   };
 }
@@ -202,19 +305,19 @@ const updateTransactionData = () => {
       <!-- Account Balances -->
       <div class="bg-surface rounded-xl p-4 shadow-sm">
         <h3 class="text-lg font-medium text-text mb-4">Số dư tài khoản</h3>
-        <apexchart type="donut" height="350" :options="accountBalancesChart" :series="accountBalancesChart.series" />
+        <apexchart v-if="showCharts" type="donut" height="350" :options="accountBalancesChart" :series="accountBalancesChart.series" />
       </div>
 
       <!-- Account Types -->
       <div class="bg-surface rounded-xl p-4 shadow-sm">
         <h3 class="text-lg font-medium text-text mb-4">Phân bổ theo loại tài khoản</h3>
-        <apexchart type="donut" height="350" :options="accountTypesChart" :series="accountTypesChart.series" />
+        <apexchart v-if="showCharts" type="donut" height="350" :options="accountTypesChart" :series="accountTypesChart.series" />
       </div>
 
       <!-- Account Transactions -->
       <div class="bg-surface rounded-xl p-4 shadow-sm md:col-span-2">
         <h3 class="text-lg font-medium text-text mb-4">Biến động số dư tài khoản</h3>
-        <apexchart type="line" height="350" :options="accountTransactionsChart"
+        <apexchart v-if="showCharts" type="line" height="350" :options="accountTransactionsChart"
           :series="accountTransactionsChart.series" />
       </div>
     </div>
