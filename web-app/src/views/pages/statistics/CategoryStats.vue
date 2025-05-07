@@ -84,6 +84,19 @@ const revenueCategoriesChart = ref({
     height: 350,
     toolbar: {
       show: false
+    },
+    animations: {
+      enabled: true,
+      easing: 'easeinout',
+      speed: 800,
+      animateGradually: {
+        enabled: true,
+        delay: 150
+      },
+      dynamicAnimation: {
+        enabled: true,
+        speed: 350
+      }
     }
   },
   plotOptions: {
@@ -155,6 +168,19 @@ const expenseCategoriesChart = ref({
     height: 350,
     toolbar: {
       show: false
+    },
+    animations: {
+      enabled: true,
+      easing: 'easeinout',
+      speed: 800,
+      animateGradually: {
+        enabled: true,
+        delay: 150
+      },
+      dynamicAnimation: {
+        enabled: true,
+        speed: 350
+      }
     }
   },
   plotOptions: {
@@ -224,11 +250,30 @@ const expenseCategoryTrendsChart = ref({
     stacked: false,
     toolbar: {
       show: true
+    },
+    animations: {
+      enabled: true,
+      easing: 'easeinout',
+      speed: 800,
+      animateGradually: {
+        enabled: true,
+        delay: 150
+      },
+      dynamicAnimation: {
+        enabled: true,
+        speed: 350
+      }
     }
   },
   stroke: {
     curve: 'smooth',
     width: 3
+  },
+  markers: {
+    size: 4,
+    hover: {
+      size: 6
+    }
   },
   xaxis: {
     categories: [],
@@ -239,7 +284,8 @@ const expenseCategoryTrendsChart = ref({
       formatter: function (val) {
         return formatCurrency(val);
       }
-    }
+    },
+    min: 0
   },
   colors: ['#3B82F6', '#10B981', '#F59E0B', '#F97316', '#8B5CF6', '#EC4899'],
   tooltip: {
@@ -274,11 +320,30 @@ const revenueCategoryTrendsChart = ref({
     stacked: false,
     toolbar: {
       show: true
+    },
+    animations: {
+      enabled: true,
+      easing: 'easeinout',
+      speed: 800,
+      animateGradually: {
+        enabled: true,
+        delay: 150
+      },
+      dynamicAnimation: {
+        enabled: true,
+        speed: 350
+      }
     }
   },
   stroke: {
     curve: 'smooth',
     width: 3
+  },
+  markers: {
+    size: 4,
+    hover: {
+      size: 6
+    }
   },
   xaxis: {
     categories: [],
@@ -289,7 +354,8 @@ const revenueCategoryTrendsChart = ref({
       formatter: function (val) {
         return formatCurrency(val);
       }
-    }
+    },
+    min: 0
   },
   colors: ['#3B82F6', '#10B981', '#F59E0B', '#F97316', '#8B5CF6', '#EC4899'],
   tooltip: {
@@ -321,6 +387,9 @@ watch(chartCategories, (newCategories) => {
   revenueCategoryTrendsChart.value.xaxis = { categories: newCategories };
 }, { deep: true });
 
+// Add showCharts variable to control chart visibility
+const showCharts = ref(false);
+
 onMounted(async () => {
   let currentDate = new Date();
   filters.value = {
@@ -332,7 +401,20 @@ onMounted(async () => {
   }
   await getData();
   updateTransactionData();
+  
+  // Show charts with animation after a delay
+  setTimeout(() => {
+    showCharts.value = true;
+  }, 500);
 })
+
+// Add preserveChartSettings function
+const preserveChartSettings = (originalChart) => {
+  const { chart: chartSettings } = originalChart;
+  return {
+    animations: chartSettings.animations
+  };
+};
 
 const getData = async () => {
   expenseCategoryData.value = await reportStore.getReportExpenseCategory(filters.value);
@@ -357,11 +439,20 @@ const handleFilterChange = (filterOptions) => {
 }
 
 const handleApplyFilter = async () => {
+  // Hide charts before updating data
+  showCharts.value = false;
+  
   await getData();
   updateTransactionData();
+  
+  // Show charts again after a delay to trigger animations
+  setTimeout(() => {
+    showCharts.value = true;
+  }, 300);
 }
 
 const updateTransactionData = () => {
+  // Build expense and revenue category sets
   let expenseCategorySet = new Set(
     expenseCategoryData.value.map(item =>
       JSON.stringify({
@@ -384,6 +475,10 @@ const updateTransactionData = () => {
     )
   );
 
+  // Assign colors to categories
+  expenseCategoryColors.value = [];
+  revenueCategoryColors.value = [];
+  
   const availableExpenseColors = [...colorRepos];
   expenseCategorySet.forEach(() => {
     const randomIndex = Math.floor(Math.random() * availableExpenseColors.length);
@@ -400,8 +495,7 @@ const updateTransactionData = () => {
     availableRevenueColors.splice(randomIndex, 1);
   });
 
-
-  
+  // Revenue categories chart
   let revenueCategoryWithoutTime = Array.from(
     revenueCategoryData.value.reduce((acc, item) => {
       const { categoryId, categoryName, iconUrl, totalRevenue } = item;
@@ -413,15 +507,28 @@ const updateTransactionData = () => {
       return acc;
     }, new Map()).values()
   );
+  
+  // Preserve revenue categories chart animations
+  const revenueCategoriesChartSettings = preserveChartSettings(revenueCategoriesChart.value);
   revenueCategoriesChart.value.series[0].data = revenueCategoryWithoutTime.map((e) => e.totalRevenue);
   revenueCategoriesChart.value = {
     ...revenueCategoriesChart.value,
     xaxis: {
       categories: revenueCategoryWithoutTime.map(e => e.categoryName),
+      labels: {
+        formatter: function (val) {
+          return formatCurrency(val);
+        }
+      }
     },
     colors: revenueCategoryColors.value,
+    chart: {
+      ...revenueCategoriesChart.value.chart,
+      ...revenueCategoriesChartSettings.animations
+    }
   };
 
+  // Expense categories chart
   let expenseCategoryWithoutTime = Array.from(
     expenseCategoryData.value.reduce((acc, item) => {
       const { categoryId, categoryName, iconUrl, totalExpense } = item;
@@ -433,16 +540,28 @@ const updateTransactionData = () => {
       return acc;
     }, new Map()).values()
   );
+  
+  // Preserve expense categories chart animations
+  const expenseCategoriesChartSettings = preserveChartSettings(expenseCategoriesChart.value);
   expenseCategoriesChart.value.series[0].data = expenseCategoryWithoutTime.map((e) => e.totalExpense);
   expenseCategoriesChart.value = {
     ...expenseCategoriesChart.value,
     xaxis: {
       categories: expenseCategoryWithoutTime.map(e => e.categoryName),
+      labels: {
+        formatter: function (val) {
+          return formatCurrency(val);
+        }
+      }
     },
     colors: expenseCategoryColors.value,
+    chart: {
+      ...expenseCategoriesChart.value.chart,
+      ...expenseCategoriesChartSettings.animations
+    }
   };
-  console.log(expenseCategoriesChart.value);
 
+  // Expense category trends
   let expenseCategoryTrends = {};
   chartCategories.value.forEach((time) => {
     expenseCategorySet.forEach((cStr) => {
@@ -463,21 +582,23 @@ const updateTransactionData = () => {
       expenseCategoryTrends[c.categoryKey].data.push(value);
     });
   });
+  
+  // Preserve expense category trends chart animations
+  const expenseCategoryTrendsChartSettings = preserveChartSettings(expenseCategoryTrendsChart.value);
   expenseCategoryTrendsChart.value.series = Object.values(expenseCategoryTrends);
-  const expenseSeriesMetaData = Object.values(expenseCategoryTrends).map(({ name, iconUrl }) => ({
-    name,
-    iconUrl
-  }))
   expenseCategoryTrendsChart.value = {
     ...expenseCategoryTrendsChart.value,
     xaxis: {
       categories: chartCategories.value
     },
     colors: expenseCategoryColors.value,
+    chart: {
+      ...expenseCategoryTrendsChart.value.chart,
+      ...expenseCategoryTrendsChartSettings.animations
+    }
   };
 
-
-
+  // Revenue category trends
   let revenueCategoryTrends = {};
   chartCategories.value.forEach((time) => {
     revenueCategorySet.forEach((cStr) => {
@@ -498,17 +619,20 @@ const updateTransactionData = () => {
       revenueCategoryTrends[c.categoryKey].data.push(value);
     });
   });
+  
+  // Preserve revenue category trends chart animations
+  const revenueCategoryTrendsChartSettings = preserveChartSettings(revenueCategoryTrendsChart.value);
   revenueCategoryTrendsChart.value.series = Object.values(revenueCategoryTrends);
-  const revenueSeriesMetaData = Object.values(revenueCategoryTrends).map(({ name, iconUrl }) => ({
-    name,
-    iconUrl
-  }))
   revenueCategoryTrendsChart.value = {
     ...revenueCategoryTrendsChart.value,
     xaxis: {
       categories: chartCategories.value
     },
     colors: revenueCategoryColors.value,
+    chart: {
+      ...revenueCategoryTrendsChart.value.chart,
+      ...revenueCategoryTrendsChartSettings.animations
+    }
   };
 }
 
@@ -525,25 +649,25 @@ const updateTransactionData = () => {
       <!-- Income Categories -->
       <div class="bg-surface rounded-xl p-4 shadow-sm">
         <h3 class="text-lg font-medium text-text mb-4">Phân bổ thu nhập</h3>
-        <apexchart type="bar" height="350" :options="revenueCategoriesChart" :series="revenueCategoriesChart.series" />
+        <apexchart v-if="showCharts" type="bar" height="350" :options="revenueCategoriesChart" :series="revenueCategoriesChart.series" />
       </div>
 
       <!-- Expense Categories -->
       <div class="bg-surface rounded-xl p-4 shadow-sm">
         <h3 class="text-lg font-medium text-text mb-4">Phân bổ chi tiêu</h3>
-        <apexchart type="bar" height="350" :options="expenseCategoriesChart" :series="expenseCategoriesChart.series" />
+        <apexchart v-if="showCharts" type="bar" height="350" :options="expenseCategoriesChart" :series="expenseCategoriesChart.series" />
       </div>
 
       <!-- Category Trends -->
       <div class="bg-surface rounded-xl p-4 shadow-sm md:col-span-2">
         <h3 class="text-lg font-medium text-text mb-4">Xu hướng chi tiêu theo danh mục thu</h3>
-        <apexchart type="line" height="350" :options="revenueCategoryTrendsChart"
+        <apexchart v-if="showCharts" type="line" height="350" :options="revenueCategoryTrendsChart"
           :series="revenueCategoryTrendsChart.series" />
       </div>
 
       <div class="bg-surface rounded-xl p-4 shadow-sm md:col-span-2">
         <h3 class="text-lg font-medium text-text mb-4">Xu hướng chi tiêu theo danh mục chi</h3>
-        <apexchart type="line" height="350" :options="expenseCategoryTrendsChart"
+        <apexchart v-if="showCharts" type="line" height="350" :options="expenseCategoryTrendsChart"
           :series="expenseCategoryTrendsChart.series" />
       </div>
     </div>

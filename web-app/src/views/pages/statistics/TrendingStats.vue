@@ -26,10 +26,29 @@ const dailyTrendsChart = ref({
   }],
   chart: {
     type: 'line',
-    height: 350
+    height: 350,
+    animations: {
+      enabled: true,
+      easing: 'easeinout',
+      speed: 800,
+      animateGradually: {
+        enabled: true,
+        delay: 150
+      },
+      dynamicAnimation: {
+        enabled: true,
+        speed: 350
+      }
+    }
   },
   stroke: {
     curve: 'smooth'
+  },
+  markers: {
+    size: 4,
+    hover: {
+      size: 6
+    }
   },
   xaxis: {
     categories: ['01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12', '13', '14', '15', '16', '17', '18', '19', '20', '21', '22', '23', '24', '25', '26', '27', '28', '29', '30', '31']
@@ -40,12 +59,13 @@ const dailyTrendsChart = ref({
       formatter: function (val) {
         return formatCurrency(val);
       }
-    }
+    },
+    min: 0
   },
   tooltip: {
     x: {
       formatter: function (val) {
-        return 'Ngày ' + val.toString().padStart(2, '0'); // Thay đổi tiêu đề (ví dụ: "Ngày: 10")
+        return 'Ngày ' + val.toString().padStart(2, '0');
       }
     },
     y: {
@@ -76,10 +96,29 @@ const weeklyTrendsChart = ref({
   }],
   chart: {
     type: 'line',
-    height: 350
+    height: 350,
+    animations: {
+      enabled: true,
+      easing: 'easeinout',
+      speed: 800,
+      animateGradually: {
+        enabled: true,
+        delay: 150
+      },
+      dynamicAnimation: {
+        enabled: true,
+        speed: 350
+      }
+    }
   },
   stroke: {
     curve: 'smooth'
+  },
+  markers: {
+    size: 4,
+    hover: {
+      size: 6
+    }
   },
   xaxis: {
     categories: ['Thứ 2', 'Thứ 3', 'Thứ 4', 'Thứ 5', 'Thứ 6', 'Thứ 7', 'Chủ nhật']
@@ -90,7 +129,8 @@ const weeklyTrendsChart = ref({
       formatter: function (val) {
         return formatCurrency(val);
       }
-    }
+    },
+    min: 0
   },
   tooltip: {
     y: {
@@ -121,10 +161,29 @@ const monthlyTrendsChart = ref({
   }],
   chart: {
     type: 'line',
-    height: 350
+    height: 350,
+    animations: {
+      enabled: true,
+      easing: 'easeinout',
+      speed: 800,
+      animateGradually: {
+        enabled: true,
+        delay: 150
+      },
+      dynamicAnimation: {
+        enabled: true,
+        speed: 350
+      }
+    }
   },
   stroke: {
     curve: 'smooth'
+  },
+  markers: {
+    size: 4,
+    hover: {
+      size: 6
+    }
   },
   xaxis: {
     categories: ['Tháng 1', 'Tháng 2', 'Tháng 3', 'Tháng 4', 'Tháng 5', 'Tháng 6', 'Tháng 7', 'Tháng 8', 'Tháng 9', 'Tháng 10', 'Tháng 11', 'Tháng 12']
@@ -135,7 +194,8 @@ const monthlyTrendsChart = ref({
       formatter: function (val) {
         return formatCurrency(val);
       }
-    }
+    },
+    min: 0
   },
   tooltip: {
     y: {
@@ -166,10 +226,29 @@ const yearlyTrendsChart = ref({
   }],
   chart: {
     type: 'line',
-    height: 350
+    height: 350,
+    animations: {
+      enabled: true,
+      easing: 'easeinout',
+      speed: 800,
+      animateGradually: {
+        enabled: true,
+        delay: 150
+      },
+      dynamicAnimation: {
+        enabled: true,
+        speed: 350
+      }
+    }
   },
   stroke: {
     curve: 'smooth'
+  },
+  markers: {
+    size: 4,
+    hover: {
+      size: 6
+    }
   },
   xaxis: {
     categories: Array.from({ length: 5 }, (_, i) => (new Date().getFullYear() - 4 + i).toString())
@@ -180,7 +259,8 @@ const yearlyTrendsChart = ref({
       formatter: function (val) {
         return formatCurrency(val);
       }
-    }
+    },
+    min: 0
   },
   tooltip: {
     y: {
@@ -233,53 +313,46 @@ const handleApplyFilter = async () => {
 
 const updateTransactionData = () => {
   let name = transactionType.value === 'expense' ? 'Chi tiêu' : 'Doanh thu';
+  
+  // Cập nhật dữ liệu cho daily chart 
   dailyTrendsChart.value.series[0].name = name;
   dailyTrendsChart.value.series[0].data = dailyTrendsCategories.value.map((category) => {
     let dataItem = dailyTrendData.value.find((item) => category === item.dayOfMonth);
     return dataItem ? dataItem.total : 0;
   });
-  dailyTrendsChart.value = {
-    ...dailyTrendsChart.value,
-    xaxis: {
-      categories: dailyTrendsCategories.value
-    },
-  };
+  
+  // Cập nhật xaxis riêng, đảm bảo categories được gán đúng
+  dailyTrendsChart.value.xaxis.categories = [...dailyTrendsCategories.value];
 
+  // Cập nhật dữ liệu cho weekly chart
   weeklyTrendsChart.value.series[0].name = name;
   weeklyTrendsChart.value.series[0].data = weeklyTrendsCategories.value.map((category) => {
     let dataItem = weeklyTrendData.value.find((item) => category === item.dayOfWeek);
     return dataItem ? dataItem.total : 0;
   });
-  weeklyTrendsChart.value = {
-    ...weeklyTrendsChart.value,
-    xaxis: {
-      categories: weeklyTrendsCategories.value
-    },
-  };
+  
+  // Cập nhật xaxis riêng, đảm bảo categories được gán đúng
+  weeklyTrendsChart.value.xaxis.categories = [...weeklyTrendsCategories.value];
 
+  // Cập nhật dữ liệu cho monthly chart
   monthlyTrendsChart.value.series[0].name = name;
   monthlyTrendsChart.value.series[0].data = monthlyTrendsCategories.value.map((category) => {
     let dataItem = monthlyTrendData.value.find((item) => category === item.month);
     return dataItem ? dataItem.total : 0;
   });
-  monthlyTrendsChart.value = {
-    ...monthlyTrendsChart.value,
-    xaxis: {
-      categories: monthlyTrendsCategories.value
-    },
-  };
+  
+  // Cập nhật xaxis riêng, đảm bảo categories được gán đúng
+  monthlyTrendsChart.value.xaxis.categories = [...monthlyTrendsCategories.value];
 
+  // Cập nhật dữ liệu cho yearly chart
   yearlyTrendsChart.value.series[0].name = name;
   yearlyTrendsChart.value.series[0].data = yearlyTrendsCategories.value.map((category) => {
     let dataItem = yearlyTrendData.value.find((item) => category === item.year);
     return dataItem ? dataItem.total : 0;
   });
-  yearlyTrendsChart.value = {
-    ...yearlyTrendsChart.value,
-    xaxis: {
-      categories: yearlyTrendsCategories.value
-    },
-  };
+  
+  // Cập nhật xaxis riêng, đảm bảo categories được gán đúng
+  yearlyTrendsChart.value.xaxis.categories = [...yearlyTrendsCategories.value];
 }
 </script>
 
