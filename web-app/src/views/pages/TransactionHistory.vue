@@ -20,6 +20,8 @@ const filters = ref({
   timeOption: '',
   transactionType: 'all',
   account: [],
+  expenseCategory: [],
+  revenueCategory: [],
   customTimeRange: null
 })
 const transactionHistoryStore = useTransactionHistoryStore()
@@ -77,7 +79,9 @@ const handleFilterReset = async () => {
     timeOption: '',
     transactionType: 'all',
     account: [],
-    customTimeRange: null
+    customTimeRange: null,
+    expenseCategory: [],
+    revenueCategory: [],
   }
   console.log('Filters reset')
   
@@ -344,20 +348,9 @@ const formatCurrency = (amount) => {
     currency: 'VND'
   }).format(amount)
 }
-
-// Format date
-const formatDate = (date) => {
-  return new Date(date).toLocaleDateString('vi-VN')
-}
-
 // Format datetime
 const formatDateTime = (datetime) => {
   return new Date(datetime).toLocaleString('vi-VN')
-}
-
-// Get transaction date based on type
-const getTransactionDate = (transaction) => {
-  return transaction.date || ''
 }
 
 // Get category name based on transactionType
@@ -365,23 +358,9 @@ const getCategoryName = (transaction) => {
   return transaction.categoryName || 'Không có danh mục'
 }
 
-const getCategoryIcon = (transaction) => {
-  return transaction.categoryIconUrl || ''
-}
-
 const getAccountName = (transaction) => {
   return transaction.accountName || 'Không có tài khoản'
 }
-
-const getAccountIcon = (transaction) => {
-  return transaction.bucketPaymentIconUrl || ''
-}
-
-// Hiển thị biểu tượng giao dịch
-const getTransactionIcon = (transaction) => {
-  return transaction.iconUrl || ''
-}
-
 // Xác định loại giao dịch
 const getTransactionType = (type) => {
   switch (type?.toLowerCase()) {
@@ -433,6 +412,7 @@ const getTransactionTypeIcon = (type) => {
       :is-reset="true" 
       :show-expense-category="filters.transactionType === 'expense'"
       :show-revenue-category="filters.transactionType === 'revenue'"
+      :default-open="false"
       @filter-change="handleFilterChange"
       @filter-reset="handleFilterReset"
       @apply-filter="handleApplyFilter"
@@ -573,7 +553,7 @@ const getTransactionTypeIcon = (type) => {
           </button>
           
           <!-- Page numbers -->
-          <template v-for="pageNumber in paginationInfo.totalPages" :key="pageNumber">
+          <template v-for="pageNumber in paginationInfo.totalPages">
             <button 
               v-if="
                 pageNumber === 1 || 
@@ -587,6 +567,7 @@ const getTransactionTypeIcon = (type) => {
                   ? 'bg-primary text-white' 
                   : 'bg-white text-gray-700 hover:bg-gray-50 border border-gray-200'
               ]"
+              :key="pageNumber"
             >
               {{ pageNumber }}
             </button>
@@ -598,6 +579,7 @@ const getTransactionTypeIcon = (type) => {
                 (pageNumber === paginationInfo.totalPages - 1 && paginationInfo.currentPage + 2 < paginationInfo.totalPages)
               " 
               class="px-2 py-1 text-gray-500"
+              :key="`ellipsis-${pageNumber}`"
             >
               ...
             </span>
@@ -634,13 +616,14 @@ const getTransactionTypeIcon = (type) => {
     <TransactionDetailModal
       :transaction="selectedTransaction"
       :isOpen="showDetailModal"
-      :transactionType="selectedTransaction?.transactionType"
+      :transactionType="selectedTransaction?.transactionType || 'expense'"
       @close="closeDetailModal"
     />
 
     <!-- Sử dụng component DeleteTransactionModal -->
     <DeleteTransactionModal
       :transaction="selectedTransaction"
+      :transactionType="selectedTransaction?.transactionType || 'expense'"
       :isOpen="showDeleteModal"
       @close="closeTransactionModal"
       @confirm="confirmDeleteTransaction"

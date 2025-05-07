@@ -218,9 +218,9 @@ public class ReportServiceImpl implements ReportService {
         }
 
         if(transactionType.equals(TransactionType.EXPENSE.getType())) {
-            return reportExpenseRevenueRepository.getAllExpenseHistory(userId, bucketPaymentIds, startDate, endDate, pageable);
+            return reportExpenseRevenueRepository.getAllExpenseHistory(userId, bucketPaymentIds, request.getExpenseCategoriesId() , startDate, endDate, pageable);
         } else if (transactionType.equals(TransactionType.REVENUE.getType())){
-            return reportExpenseRevenueRepository.getAllRevenueHistory(userId, bucketPaymentIds, startDate, endDate, pageable);
+            return reportExpenseRevenueRepository.getAllRevenueHistory(userId, bucketPaymentIds, request.getRevenueCategoriesId(), startDate, endDate, pageable);
         } else {
             return reportExpenseRevenueRepository.getAllExpenseRevenueHistory(userId, bucketPaymentIds, startDate, endDate, pageable);
         }

@@ -4,14 +4,14 @@ import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
 import { library } from '@fortawesome/fontawesome-svg-core'
 import { ElDatePicker } from 'element-plus'
 import 'element-plus/theme-chalk/el-date-picker.css'
-import { faWallet, faBuildingColumns,faList,faChevronDown,faCalendar,faArrowUp,faArrowDown,faUtensils,faCar,faHome,faGamepad,faSearch,faCheck,faRotateLeft} from '@fortawesome/free-solid-svg-icons'
+import { faWallet, faBuildingColumns,faList,faChevronDown,faCalendar,faArrowUp,faArrowDown,faUtensils,faCar,faHome,faGamepad,faSearch,faCheck,faRotateLeft,faFilter,faAngleDown} from '@fortawesome/free-solid-svg-icons'
 import SelectDropdown from '@/views/components/SelectDropdown.vue'
 import { useDictionaryBucketPaymentStore } from '@stores/DictionaryBucketPaymentStore.js'
 import { useDictionaryExpenseStore } from '@stores/DictionaryExpenseStore.js'
 import { useDictionaryRevenueStore } from '@stores/DictionaryRevenueStore.js'
 
 
-library.add(faWallet, faBuildingColumns,faList,faChevronDown,faCalendar,faArrowUp,faArrowDown,faUtensils,faCar,faHome,faGamepad,faSearch,faCheck,faRotateLeft)
+library.add(faWallet, faBuildingColumns,faList,faChevronDown,faCalendar,faArrowUp,faArrowDown,faUtensils,faCar,faHome,faGamepad,faSearch,faCheck,faRotateLeft,faFilter,faAngleDown)
 
 const props = defineProps({
   showTimeRange: {
@@ -39,6 +39,10 @@ const props = defineProps({
     default: ''
   },
   isReset: {
+    type: Boolean,
+    default: false
+  },
+  defaultOpen: {
     type: Boolean,
     default: false
   }
@@ -94,7 +98,17 @@ const dictionaryBucketPaymentStore = useDictionaryBucketPaymentStore()
 const dictionaryExpenseStore = useDictionaryExpenseStore()
 const dictionaryRevenueStore = useDictionaryRevenueStore()
 
+// State for toggle filter options panel
+const isFilterOpen = ref(props.defaultOpen)
+
+const toggleFilter = () => {
+  isFilterOpen.value = !isFilterOpen.value
+}
+
 onMounted(async() => {
+  // Default state is closed
+  isFilterOpen.value = props.defaultOpen
+  
   if(props.isReset){
     handleReset();
   }
@@ -222,7 +236,26 @@ watch(selectedTransactionType, (newVal) => {
 
 <template>
   <div class="bg-white rounded-lg p-4 mb-6 border border-gray-100">
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+    <!-- Header và nút toggle filter -->
+    <div class="flex justify-between items-center mb-4">
+      <div class="flex items-center">
+        <font-awesome-icon :icon="['fas', 'filter']" class="mr-2 text-primary" />
+        <h3 class="font-medium text-text">Bộ lọc</h3>
+      </div>
+      <button 
+        @click="toggleFilter" 
+        class="text-text-secondary hover:text-text transition-colors"
+      >
+        <font-awesome-icon 
+          :icon="['fas', 'angle-down']" 
+          class="transition-transform" 
+          :class="{ 'rotate-180': isFilterOpen }" 
+        />
+      </button>
+    </div>
+
+    <!-- Nội dung bộ lọc - chỉ hiển thị khi isFilterOpen = true -->
+    <div v-if="isFilterOpen" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
       <!-- Time Range Filter -->
       <div v-if="showTimeRange">
         <label class="block text-sm font-medium text-text-secondary mb-1">
@@ -353,8 +386,8 @@ watch(selectedTransactionType, (newVal) => {
       </div>
     </div>
 
-    <!-- Action buttons -->
-    <div class="flex justify-end gap-2 mt-4">
+    <!-- Action buttons - chỉ hiển thị khi isFilterOpen = true -->
+    <div v-if="isFilterOpen" class="flex justify-end gap-2 mt-4">
       <button
         @click="handleReset"
         class="px-4 py-2 text-sm font-medium text-text-secondary bg-gray-100 rounded-lg hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-200"
