@@ -24,14 +24,17 @@ const filters = ref({
   revenueCategory: [],
   customTimeRange: null
 })
+
+// Add new refs to hold initial filters
+const initialFilters = ref({})
+
 const transactionHistoryStore = useTransactionHistoryStore()
-const dictionaryBucketPaymentStore = useDictionaryBucketPaymentStore()
 const expenseRegularStore = useExpenseRegularStore()
 const revenueRegularStore = useRevenueRegularStore()
+const isReset = ref(false)
 
 // Data
 const transactions = ref([])
-const accounts = ref([])
 
 // Computed properties for pagination
 const paginationInfo = computed(() => {
@@ -56,8 +59,41 @@ const deletingTransaction = ref(null)
 
 // Load data
 onMounted(async () => {
+  // Check for URL query parameters
+  const urlParams = new URLSearchParams(window.location.search)
+  const transactionType = urlParams.get('transactionType')
+  const timeOption = urlParams.get('timeOption')
+  const month = urlParams.get('month')
+
+  if(transactionType || timeOption || month) {
+    isReset.value = false
+  }else{
+    isReset.value = true
+  }
+  
+  // Apply URL parameters to filters if they exist
+  if (transactionType) {
+    filters.value.transactionType = transactionType
+    initialFilters.value.transactionType = transactionType
+  }
+  
+  if (timeOption === 'month') {
+    // In FilterOptions, the selectedTimeRange should be 'month' (id)
+    // but the emitted timeOption will be 'Theo tháng' (name)
+    initialFilters.value.timeOption = 'Theo tháng'
+    filters.value.timeOption = 'Theo tháng'
+    
+    // If month=current, set customTimeRange to current month
+    if (month === 'current') {
+      const now = new Date()
+      const currentMonth = now.getMonth() + 1 // JavaScript months are 0-indexed
+      const currentYear = now.getFullYear()
+      const monthString = `${currentYear}-${currentMonth.toString().padStart(2, '0')}` // Format YYYY-MM
+      filters.value.customTimeRange = [monthString, monthString] // Format as array for date picker
+      initialFilters.value.customTimeRange = [monthString, monthString]
+    }
+  }
   await loadData()
-  accounts.value = await dictionaryBucketPaymentStore.getMyBucketPayments()
 })
 
 const loadData = async () => {
@@ -75,6 +111,7 @@ const handleFilterChange = (filterOptions) => {
 }
 
 const handleFilterReset = async () => {
+  // Reset filters
   filters.value = {
     timeOption: '',
     transactionType: 'all',
@@ -83,7 +120,11 @@ const handleFilterReset = async () => {
     expenseCategory: [],
     revenueCategory: [],
   }
-  console.log('Filters reset')
+  
+  // Reset URL params
+  const currentPath = window.location.pathname
+  window.history.replaceState({}, '', currentPath)
+  initialFilters.value = {}
   
   transactionHistoryStore.resetPagination()
   await loadData()
@@ -407,12 +448,12 @@ const getTransactionTypeIcon = (type) => {
 <template>
   <div class="p-4">
     <!-- Filters -->
-    <FilterOptions 
-      :active-tab="'history'" 
-      :is-reset="true" 
+    <FilterOptions
+      :is-reset="isReset" 
       :show-expense-category="filters.transactionType === 'expense'"
       :show-revenue-category="filters.transactionType === 'revenue'"
       :default-open="false"
+      :initial-filters="initialFilters"
       @filter-change="handleFilterChange"
       @filter-reset="handleFilterReset"
       @apply-filter="handleApplyFilter"

@@ -45,6 +45,10 @@ const props = defineProps({
   defaultOpen: {
     type: Boolean,
     default: false
+  },
+  initialFilters: {
+    type: Object,
+    default: () => ({})
   }
 })
 
@@ -109,9 +113,38 @@ onMounted(async() => {
   // Default state is closed
   isFilterOpen.value = props.defaultOpen
   
-  if(props.isReset){
+  // Apply initial filters if provided
+  if (Object.keys(props.initialFilters).length > 0) {
+    if (props.initialFilters.timeOption) {
+      const timeRange = timeRanges.find(range => range.name === props.initialFilters.timeOption)
+      if (timeRange) {
+        selectedTimeRange.value = timeRange.id
+      }
+    }
+    
+    if (props.initialFilters.transactionType) {
+      selectedTransactionType.value = props.initialFilters.transactionType
+    }
+    
+    if (props.initialFilters.customTimeRange) {
+      customTimeRange.value = props.initialFilters.customTimeRange
+    }
+    
+    if (props.initialFilters.account) {
+      selectedAccount.value = props.initialFilters.account
+    }
+    
+    if (props.initialFilters.expenseCategory) {
+      selectedExpenseCategory.value = props.initialFilters.expenseCategory
+    }
+    
+    if (props.initialFilters.revenueCategory) {
+      selectedRevenueCategory.value = props.initialFilters.revenueCategory
+    }
+  } else if(props.isReset){
     handleReset();
   }
+  
   const allOption = { id: 'all', name: 'Tất cả danh mục', icon: 'list', color: 'text-gray-400' };
   expenseCategories.value = await dictionaryExpenseStore.getMyExpenseCategories();
   expenseCategories.value.unshift(allOption);
