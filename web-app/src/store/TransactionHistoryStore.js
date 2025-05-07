@@ -26,10 +26,14 @@ export const useTransactionHistoryStore = defineStore("transactionHistory", {
     async getAllTransactionHistory(filters){
       let response = null;
       let bucketPaymentIds = (filters.account === null || filters.account.length === 0 || filters.account[0] === "all") ? null : filters.account.join(",");
+      let expenseCategoriesId = (filters.expenseCategory === null || filters.expenseCategory.length === 0 || filters.expenseCategory[0] === "all") ? null : filters.expenseCategory.join(",");
+      let revenueCategoriesId = (filters.revenueCategory === null || filters.revenueCategory.length === 0 || filters.revenueCategory[0] === "all") ? null : filters.revenueCategory.join(",");
       let request = {
         timeOption: filters.timeOption,
         transactionType: filters.transactionType,
         bucketPaymentIds,
+        expenseCategoriesId,
+        revenueCategoriesId,
         customTimeRange: filters.customTimeRange,
       }
       await base.post(`/report/transaction-history?pageNumber=${this.pagination.pageNumber - 1}&pageSize=${this.pagination.pageSize}`, request).then((res) => {

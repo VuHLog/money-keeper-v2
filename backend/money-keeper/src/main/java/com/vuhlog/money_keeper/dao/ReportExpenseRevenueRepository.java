@@ -383,7 +383,7 @@ public interface ReportExpenseRevenueRepository extends JpaRepository<ReportExpe
             "JOIN dictionary_bucket_payment dbp ON dbp.id = er.dictionary_bucket_payment_id\n" +
             "JOIN dictionary_expense de ON de.id = er.dictionary_expense_id\n" +
             "WHERE dbp.user_id = :userId\n" +
-            "AND ( :bucketPaymentIds IS NULL OR FIND_IN_SET(er.dictionary_expense_id, :bucketPaymentIds)) \n" +
+            "AND ( :bucketPaymentIds IS NULL OR FIND_IN_SET(er.dictionary_bucket_payment_id, :bucketPaymentIds)) \n" +
             "AND ( :startDate IS NULL OR :endDate IS NULL OR (date(expense_date) BETWEEN DATE(:startDate) AND DATE(:endDate)))\n" +
             "UNION ALL\n" +
             "SELECT rr.id,'revenue' AS transactionType ,rr.amount, dr.`name` AS categoryName, dr.icon_url AS categoryIconUrl, dbp.account_name as accountName, dbp.icon_url AS bucketPaymentIconUrl, revenue_date AS date, rr.transfer_type as transferType, rr.interpretation\n" +
@@ -391,7 +391,7 @@ public interface ReportExpenseRevenueRepository extends JpaRepository<ReportExpe
             "JOIN dictionary_bucket_payment dbp ON dbp.id = rr.dictionary_bucket_payment_id\n" +
             "JOIN dictionary_revenue dr ON dr.id = rr.dictionary_revenue_id\n" +
             "WHERE dbp.user_id = :userId\n" +
-            "AND ( :bucketPaymentIds IS NULL OR FIND_IN_SET(rr.dictionary_revenue_id, :bucketPaymentIds)) \n" +
+            "AND ( :bucketPaymentIds IS NULL OR FIND_IN_SET(rr.dictionary_bucket_payment_id, :bucketPaymentIds)) \n" +
             "AND ( :startDate IS NULL OR :endDate IS NULL OR (date(revenue_date) BETWEEN DATE(:startDate) AND DATE(:endDate)))"
             , countQuery = "SELECT COUNT(*) FROM (" +
             "SELECT er.id " +
@@ -405,7 +405,7 @@ public interface ReportExpenseRevenueRepository extends JpaRepository<ReportExpe
             "FROM revenue_regular rr " +
             "JOIN dictionary_bucket_payment dbp ON dbp.id = rr.dictionary_bucket_payment_id " +
             "WHERE dbp.user_id = :userId " +
-            "AND (:bucketPaymentIds IS NULL OR FIND_IN_SET(rr.dictionary_revenue_id, :bucketPaymentIds)) " +
+            "AND (:bucketPaymentIds IS NULL OR FIND_IN_SET(rr.dictionary_bucket_payment_id, :bucketPaymentIds)) " +
             "AND (:startDate IS NULL OR :endDate IS NULL OR (date(revenue_date) BETWEEN DATE(:startDate) AND DATE(:endDate)))" +
             ") AS count_table", nativeQuery = true)
     Page<TransactionHistory> getAllExpenseRevenueHistory(
@@ -421,17 +421,20 @@ public interface ReportExpenseRevenueRepository extends JpaRepository<ReportExpe
             "JOIN dictionary_bucket_payment dbp ON dbp.id = er.dictionary_bucket_payment_id\n" +
             "JOIN dictionary_expense de ON de.id = er.dictionary_expense_id\n" +
             "WHERE dbp.user_id = :userId\n" +
-            "AND ( :bucketPaymentIds IS NULL OR FIND_IN_SET(er.dictionary_expense_id, :bucketPaymentIds)) \n" +
+            "AND ( :bucketPaymentIds IS NULL OR FIND_IN_SET(er.dictionary_bucket_payment_id, :bucketPaymentIds)) \n" +
+            "AND (:categoriesId IS NULL OR FIND_IN_SET(er.dictionary_expense_id, :categoriesId)) \n" +
             "AND ( :startDate IS NULL OR :endDate IS NULL OR (date(expense_date) BETWEEN DATE(:startDate) AND DATE(:endDate)))",
             countQuery ="SELECT count(er.id)" +
                     "FROM expense_regular er " +
                     "JOIN dictionary_bucket_payment dbp ON dbp.id = er.dictionary_bucket_payment_id " +
                     "WHERE dbp.user_id = :userId " +
-                    "AND (:bucketPaymentIds IS NULL OR FIND_IN_SET(er.dictionary_expense_id, :bucketPaymentIds)) " +
+                    "AND (:bucketPaymentIds IS NULL OR FIND_IN_SET(er.dictionary_bucket_payment_id, :bucketPaymentIds)) " +
+                    "AND (:categoriesId IS NULL OR FIND_IN_SET(er.dictionary_expense_id, :categoriesId)) \n" +
                     "AND (:startDate IS NULL OR :endDate IS NULL OR (date(expense_date) BETWEEN DATE(:startDate) AND DATE(:endDate))) ", nativeQuery = true)
     Page<TransactionHistory> getAllExpenseHistory(
             @Param("userId") String userId,
             @Param("bucketPaymentIds") String bucketPaymentIds,
+            @Param("categoriesId") String categoriesId,
             @Param("startDate") LocalDate startDate,
             @Param("endDate") LocalDate endDate,
             Pageable pageable
@@ -442,18 +445,21 @@ public interface ReportExpenseRevenueRepository extends JpaRepository<ReportExpe
             "JOIN dictionary_bucket_payment dbp ON dbp.id = rr.dictionary_bucket_payment_id\n" +
             "JOIN dictionary_revenue dr ON dr.id = rr.dictionary_revenue_id\n" +
             "WHERE dbp.user_id = :userId\n" +
-            "AND ( :bucketPaymentIds IS NULL OR FIND_IN_SET(rr.dictionary_revenue_id, :bucketPaymentIds)) \n" +
+            "AND ( :bucketPaymentIds IS NULL OR FIND_IN_SET(rr.dictionary_bucket_payment_id, :bucketPaymentIds)) \n" +
+            "AND (:categoriesId IS NULL OR FIND_IN_SET(rr.dictionary_revenue_id, :categoriesId)) \n" +
             "AND ( :startDate IS NULL OR :endDate IS NULL OR (date(revenue_date) BETWEEN DATE(:startDate) AND DATE(:endDate)))",
-            countQuery = "SELECT count(rr.id)" +
-                    "FROM revenue_regular rr " +
-                    "JOIN dictionary_bucket_payment dbp ON dbp.id = rr.dictionary_bucket_payment_id " +
-                    "WHERE dbp.user_id = :userId " +
-                    "AND (:bucketPaymentIds IS NULL OR FIND_IN_SET(rr.dictionary_revenue_id, :bucketPaymentIds)) " +
+            countQuery = "SELECT count(rr.id)\n" +
+                    "FROM revenue_regular rr \n" +
+                    "JOIN dictionary_bucket_payment dbp ON dbp.id = rr.dictionary_bucket_payment_id \n" +
+                    "WHERE dbp.user_id = :userId \n" +
+                    "AND (:bucketPaymentIds IS NULL OR FIND_IN_SET(rr.dictionary_bucket_payment_id, :bucketPaymentIds)) \n" +
+                    "AND (:categoriesId IS NULL OR FIND_IN_SET(rr.dictionary_revenue_id, :categoriesId)) \n" +
                     "AND (:startDate IS NULL OR :endDate IS NULL OR (date(revenue_date) BETWEEN DATE(:startDate) AND DATE(:endDate)))"
             ,nativeQuery = true)
     Page<TransactionHistory> getAllRevenueHistory(
             @Param("userId") String userId,
             @Param("bucketPaymentIds") String bucketPaymentIds,
+            @Param("categoriesId") String categoriesId,
             @Param("startDate") LocalDate startDate,
             @Param("endDate") LocalDate endDate,
             Pageable pageable

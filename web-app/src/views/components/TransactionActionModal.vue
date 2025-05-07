@@ -75,7 +75,7 @@ const loadDataForTransaction = async (transaction) => {
   try {
     accounts.value = await dictionaryBucketPaymentStore.getMyBucketPayments()
     
-    if (transaction.type === 'revenue') {
+    if (transaction.transactionType === 'revenue') {
       categories.value = await dictionaryRevenueStore.getMyRevenueCategoriesWithoutTransfer()
     } else {
       categories.value = await dictionaryExpenseStore.getMyExpenseCategoriesWithoutTransfer()
@@ -103,7 +103,7 @@ const populateFormData = (transaction) => {
   }
   
   // Lấy categoryId dựa trên loại giao dịch
-  if (transaction.type === 'revenue') {
+  if (transaction.transactionType === 'revenue') {
     if (transaction.dictionaryRevenueId) {
       categoryId = transaction.dictionaryRevenueId
     } else if (transaction.dictionaryRevenue?.id) {
@@ -126,10 +126,10 @@ const populateFormData = (transaction) => {
     amount: transaction.amount || 0,
     categoryId,
     accountId,
-    date: transaction.type === 'revenue' ? transaction.revenueDate : transaction.expenseDate,
+    date: transaction.transactionType === 'revenue' ? transaction.revenueDate : transaction.expenseDate,
     location: transaction.location || '',
     event: transaction.tripEvent || '',
-    person: transaction.type === 'revenue' ? 
+    person: transaction.transactionType === 'revenue' ? 
       (transaction.collectMoneyWho || '') : 
       (transaction.beneficiary || ''),
     note: transaction.interpretation || ''
@@ -228,7 +228,7 @@ const validateForm = () => {
 const modalTitle = computed(() => {
   if (!props.transaction) return 'Chỉnh sửa giao dịch';
   
-  const transactionType = props.transaction.type === 'revenue' ? 'thu' : 'chi';
+  const transactionType = props.transaction.transactionType === 'revenue' ? 'thu' : 'chi';
   return `Chỉnh sửa giao dịch ${transactionType}`;
 })
 
@@ -430,7 +430,7 @@ onUnmounted(() => {
           <!-- Date Input -->
           <div>
             <label class="text-start block text-sm font-medium text-text-secondary mb-1">
-              Ngày {{ transaction.type === 'revenue' ? 'thu' : 'chi' }} <span class="text-danger">*</span>
+              Ngày {{ transaction.transactionType === 'revenue' ? 'thu' : 'chi' }} <span class="text-danger">*</span>
             </label>
             <div class="w-full">
               <el-date-picker v-model="formData.date" type="datetime" :format="'DD/MM/YYYY HH:mm:ss'"
@@ -466,11 +466,11 @@ onUnmounted(() => {
           <!-- Person Input (Thu từ ai / Chi cho ai) -->
           <div>
             <label class="text-start block text-sm font-medium text-text-secondary mb-1">
-              {{ transaction.type === 'revenue' ? 'Thu từ ai' : 'Chi cho ai' }}
+              {{ transaction.transactionType === 'revenue' ? 'Thu từ ai' : 'Chi cho ai' }}
             </label>
             <input v-model="formData.person" type="text"
               class="w-full px-3 py-2 border border-gray-100 rounded-lg focus:outline-none focus:ring-1 focus:ring-primary/20 transition-colors"
-              :placeholder="transaction.type === 'revenue' ? 'Nhập người/tổ chức thu tiền' : 'Nhập người/tổ chức nhận tiền'" />
+              :placeholder="transaction.transactionType === 'revenue' ? 'Nhập người/tổ chức thu tiền' : 'Nhập người/tổ chức nhận tiền'" />
           </div>
 
           <!-- Description -->
