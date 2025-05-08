@@ -17,10 +17,18 @@ public class NotificationController {
     @GetMapping("")
     public ApiResponse<Page<NotificationResponse>> getAllNotifications(
             @RequestParam (name = "pageNumber", required = false, defaultValue = "0") Integer pageNumber,
-            @RequestParam (name = "pageSize", required = false, defaultValue = "5") Integer pageSize
+            @RequestParam (name = "pageSize", required = false, defaultValue = "5") Integer pageSize,
+            @RequestParam (name = "readStatus", required = false, defaultValue = "-1") Integer readStatus
     ) {
         return ApiResponse.<Page<NotificationResponse>>builder()
-                .result(notificationService.getAllNotifications(pageNumber, pageSize))
+                .result(notificationService.getAllNotifications(pageNumber, pageSize, readStatus))
+                .build();
+    }
+
+    @GetMapping("/count-read-status")
+    public ApiResponse<Long> countAllNotificationsByReadStatus(@RequestParam(name = "readStatus",defaultValue = "0") Integer readStatus) {
+        return ApiResponse.<Long>builder()
+                .result(notificationService.countAllNotificationsByReadStatus(readStatus))
                 .build();
     }
 
@@ -35,6 +43,13 @@ public class NotificationController {
     public ApiResponse<String> updateReadStatus(@PathVariable String id, @RequestBody Integer readStatus) {
         return ApiResponse.<String>builder()
                 .result(notificationService.updateReadStatus(id, readStatus))
+                .build();
+    }
+
+    @PatchMapping("/update-all-read-status")
+    public ApiResponse<String> updateAllReadStatus(@RequestBody Integer readStatus) {
+        return ApiResponse.<String>builder()
+                .result(notificationService.updateAllReadStatus(readStatus))
                 .build();
     }
 

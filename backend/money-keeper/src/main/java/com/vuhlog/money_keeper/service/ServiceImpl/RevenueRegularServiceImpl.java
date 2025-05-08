@@ -14,6 +14,7 @@ import com.vuhlog.money_keeper.exception.ErrorCode;
 import com.vuhlog.money_keeper.mapper.RevenueRegularMapper;
 import com.vuhlog.money_keeper.model.NearestTransaction;
 import com.vuhlog.money_keeper.model.PeriodOfTime;
+import com.vuhlog.money_keeper.service.NotificationService;
 import com.vuhlog.money_keeper.service.RevenueRegularService;
 import com.vuhlog.money_keeper.util.TimestampUtil;
 import lombok.RequiredArgsConstructor;
@@ -35,6 +36,7 @@ import java.util.Optional;
 @RequiredArgsConstructor
 public class RevenueRegularServiceImpl implements RevenueRegularService {
     private final UserCommon userCommon;
+    private final NotificationService notificationService;
     private final ReportExpenseRevenueRepository reportExpenseRevenueRepository;
     private final RevenueRegularRepository revenueRegularRepository;
     private final ExpenseRegularRepository expenseRegularRepository;
@@ -102,6 +104,7 @@ public class RevenueRegularServiceImpl implements RevenueRegularService {
         long balance =  getBalanceWhenCreate(dictionaryBucketPayment, revenueRegular.getRevenueDate(), request.getAmount());
         revenueRegular.setBalance(balance);
         revenueRegular = revenueRegularRepository.save(revenueRegular);
+        notificationService.revenueNotification(revenueRegular, true);
         return revenueRegularMapper.toRevenueRegularResponse(revenueRegular);
     }
 
@@ -198,6 +201,7 @@ public class RevenueRegularServiceImpl implements RevenueRegularService {
         }
 
         revenueRegular = revenueRegularRepository.save(revenueRegular);
+        notificationService.revenueNotification(revenueRegular, false);
         return revenueRegularMapper.toRevenueRegularResponse(revenueRegular);
     }
 
@@ -221,6 +225,7 @@ public class RevenueRegularServiceImpl implements RevenueRegularService {
 
         //update report
         updateTotalRevenueReportExpenseRevenue(revenueRegular.getRevenueDate(), revenueRegular.getDictionaryBucketPayment().getId(), - revenueRegular.getAmount(), revenueRegular.getDictionaryRevenue().getId(), -1);
+        notificationService.deleteRevenueNotification(revenueRegular);
     }
 
     @Transactional(rollbackFor = Exception.class)

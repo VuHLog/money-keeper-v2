@@ -108,6 +108,9 @@ public class ExpenseRegularServiceImpl implements ExpenseRegularService {
         }
         expenseRegular.setTransferType(TransferType.NORMAL.getType());
         DictionaryBucketPayment dictionaryBucketPayment = dictionaryBucketPaymentRepository.findById(request.getDictionaryBucketPaymentId()).orElseThrow(() -> new AppException(ErrorCode.BUCKET_PAYMENT_NOT_EXISTED));
+        if(dictionaryBucketPayment.getBalance() - request.getAmount() < 0){
+            throw new AppException(ErrorCode.NOT_ENOUGH_MONEY);
+        }
         expenseRegular.setDictionaryBucketPayment(dictionaryBucketPayment);
         DictionaryExpense dictionaryExpense = dictionaryExpenseRepository.findById(request.getDictionaryExpenseId()).orElseThrow(() -> new AppException(ErrorCode.BUCKET_PAYMENT_NOT_EXISTED));
         expenseRegular.setDictionaryExpense(dictionaryExpense);
@@ -138,6 +141,8 @@ public class ExpenseRegularServiceImpl implements ExpenseRegularService {
             notificationService.expenseLimitNotification(expenseLimitNotifications);
         }
 
+        notificationService.expenseNotification(expenseRegular, true);
+
         return expenseRegularMapper.toExpenseRegularResponse(expenseRegular);
     }
 
@@ -151,6 +156,9 @@ public class ExpenseRegularServiceImpl implements ExpenseRegularService {
         }
         expenseRegular.setTransferType(TransferType.TRANSFER.getType());
         DictionaryBucketPayment dictionaryBucketPayment = dictionaryBucketPaymentRepository.findById(request.getDictionaryBucketPaymentId()).orElseThrow(() -> new AppException(ErrorCode.BUCKET_PAYMENT_NOT_EXISTED));
+        if(dictionaryBucketPayment.getBalance() - request.getAmount() < 0){
+            throw new AppException(ErrorCode.NOT_ENOUGH_MONEY);
+        }
         expenseRegular.setDictionaryBucketPayment(dictionaryBucketPayment);
 
         DictionaryBucketPayment beneficiaryAccount = dictionaryBucketPaymentRepository.findById(request.getBeneficiaryAccountId()).orElseThrow(() -> new AppException(ErrorCode.BUCKET_PAYMENT_NOT_EXISTED));
@@ -189,7 +197,13 @@ public class ExpenseRegularServiceImpl implements ExpenseRegularService {
         revenueRegular.setBalance(balanceRevenue);
         revenueRegularRepository.save(revenueRegular);
 
+        //check expense limit
+        List<ExpenseLimitNotification> expenseLimitNotifications = getOverExpenseLimit();
+        if(!expenseLimitNotifications.isEmpty()) {
+            notificationService.expenseLimitNotification(expenseLimitNotifications);
+        }
 
+        notificationService.expenseTransferNotification(expenseRegular);
         return expenseRegularMapper.toExpenseRegularResponse(expenseRegular);
     }
 
@@ -283,6 +297,9 @@ public class ExpenseRegularServiceImpl implements ExpenseRegularService {
             throw new AppException(ErrorCode.DATE_LESS_THAN_TOMORROW);
         }
         DictionaryBucketPayment dictionaryBucketPayment = dictionaryBucketPaymentRepository.findById(request.getDictionaryBucketPaymentId()).orElseThrow(() -> new AppException(ErrorCode.BUCKET_PAYMENT_NOT_EXISTED));
+        if(dictionaryBucketPayment.getBalance() - (newAmount - oldAmount) < 0){
+            throw new AppException(ErrorCode.NOT_ENOUGH_MONEY);
+        }
         expenseRegular.setDictionaryBucketPayment(dictionaryBucketPayment);
         if(!expenseRegular.getDictionaryExpense().getId().equals(request.getDictionaryExpenseId())){
             DictionaryExpense dictionaryExpense = dictionaryExpenseRepository.findById(request.getDictionaryExpenseId()).orElse(null);
@@ -351,6 +368,13 @@ public class ExpenseRegularServiceImpl implements ExpenseRegularService {
         }
 
         expenseRegular = expenseRegularRepository.save(expenseRegular);
+
+        //check expense limit
+        List<ExpenseLimitNotification> expenseLimitNotifications = getOverExpenseLimit();
+        if(!expenseLimitNotifications.isEmpty()) {
+            notificationService.expenseLimitNotification(expenseLimitNotifications);
+        }
+        notificationService.expenseNotification(expenseRegular, false);
         return expenseRegularMapper.toExpenseRegularResponse(expenseRegular);
     }
 
@@ -453,6 +477,8 @@ public class ExpenseRegularServiceImpl implements ExpenseRegularService {
 
         //update report
         updateTotalExpenseForReportExpenseRevenue(expenseRegular.getExpenseDate(), expenseRegular.getDictionaryBucketPayment().getId(), - expenseRegular.getAmount(), expenseRegular.getDictionaryExpense().getId(), -1);
+
+        notificationService.deleteExpenseNotification(expenseRegular);
     }
 
     @Override

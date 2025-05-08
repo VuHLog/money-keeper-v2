@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
+import { ref, computed, onMounted, onUnmounted, watch, inject } from 'vue'
 import { useDictionaryExpenseStore } from '@/store/DictionaryExpenseStore'
 import { useDictionaryBucketPaymentStore } from '@/store/DictionaryBucketPaymentStore'
 import { formatCurrency } from '@/utils/formatters'
@@ -8,10 +8,13 @@ import 'element-plus/theme-chalk/el-date-picker.css'
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
 import { library } from '@fortawesome/fontawesome-svg-core'
 import TransactionDetailModal from '@/views/components/TransactionDetailModal.vue'
+import ToastManager from '@/views/components/ToastManager.vue'
 import Swal from 'sweetalert2'
 import Avatar from '@components/Avatar.vue'
 import { getVietnamDateTime, formatDateToVietnam } from '@/utils/DateUtil'
 import { useExpenseRegularStore } from '@/store/ExpenseRegularStore'
+import { useNotificationStore } from '@/store/NotificationStore'
+import { useAuthStore } from '@stores/AuthStore.js'
 import { faWallet, faUtensils, faShoppingBag, faCalendar, faMapMarkerAlt, faPlane, faUser, faStickyNote, faArrowDown, faReceipt, faChevronRight, faEye, faPen, faTrash, faHome, faTaxi, faTshirt, faHeartbeat, faGraduationCap } from '@fortawesome/free-solid-svg-icons'
 import DeleteTransactionModal from '@/views/components/DeleteTransactionModal.vue'
 
@@ -20,12 +23,23 @@ library.add(faWallet, faUtensils, faShoppingBag, faCalendar, faMapMarkerAlt, faP
 const dictionaryExpenseStore = useDictionaryExpenseStore()
 const dictionaryBucketPaymentStore = useDictionaryBucketPaymentStore()
 const expenseRegularStore = useExpenseRegularStore()
+const authStore = useAuthStore()
 const isEditMode = ref(false)
 const editingTransactionId = ref(null)
 const categories = ref([])
 const accounts = ref([])
 // Recent transactions
 const recentTransactions = ref([])
+const responseBodyToast = ref(null)
+const toastManagerRef = ref(null)
+
+// Sử dụng inject nếu ToastManager được cung cấp từ component cha
+// Hoặc sử dụng ref tới component ToastManager
+const addToast = (notification, duration) => {
+  if (toastManagerRef.value) {
+    toastManagerRef.value.addToast(notification, duration)
+  }
+}
 
 onMounted(async () => {
   categories.value = await dictionaryExpenseStore.getMyExpenseCategoriesWithoutTransfer()
@@ -35,7 +49,28 @@ onMounted(async () => {
 
   // add and remove event listener when component is mounted and unmounted
   document.addEventListener('mousedown', handleClickOutside)
+  
+  // Thiết lập kết nối WebSocket cho thông báo
+  if (!authStore.stompClient) {
+    await authStore.connectStompClient()
+  }
+  
+  // Đăng ký lắng nghe thông báo
+  const user = await authStore.getMyInfo()
+  if (authStore.stompClient) {
+    authStore.stompClient.subscribe(
+      "/topic/notifications/" + user.id,
+      (response) => {
+        responseBodyToast.value = JSON.parse(response.body)
+        // Thay vì sử dụng SweetAlert, sử dụng component Toast tùy chỉnh
+        if (toastManagerRef.value && responseBodyToast.value.title === 'Hạn mức chi') {
+          toastManagerRef.value.handleApiNotification(responseBodyToast.value)
+        }
+      }
+    )
+  }
 })
+
 onUnmounted(() => {
   document.removeEventListener('mousedown', handleClickOutside)
 })
@@ -177,37 +212,24 @@ const addNewTransaction = async () => {
       recentTransactions.value = recentTransactions.value.slice(0, 5)
     }
 
-    Swal.fire({
-      icon: 'success',
+    // Thông báo thành công sử dụng Toast tùy chỉnh
+    addToast({
+      type: 'success',
       title: 'Thành công!',
-      text: 'Thêm giao dịch chi thành công!',
-      toast: true,
-      position: 'bottom-end',
-      showConfirmButton: false,
-      timer: 3000,
-      timerProgressBar: true,
-      didOpen: (toast) => {
-        toast.addEventListener('mouseenter', Swal.stopTimer)
-        toast.addEventListener('mouseleave', Swal.resumeTimer)
-      }
-    })
-    //reset form after successful addition
+      content: 'Thêm giao dịch chi thành công!'
+    }, 3000)
+    
+    // Reset form after successful addition
     resetForm()
   } catch (error) {
-    Swal.fire({
-      icon: 'error',
+    if(error.response.data.code === 10002){
+        errors.value.accountId = "Tài khoản không đủ số dư";
+    }
+    addToast({
+      type: 'error',
       title: 'Lỗi!',
-      text: 'Thêm giao dịch chi thất bại!',
-      toast: true,
-      position: 'bottom-end',
-      showConfirmButton: false,
-      timer: 3000,
-      timerProgressBar: true,
-      didOpen: (toast) => {
-        toast.addEventListener('mouseenter', Swal.stopTimer)
-        toast.addEventListener('mouseleave', Swal.resumeTimer)
-      }
-    })
+      content: 'Thêm giao dịch chi thất bại!'
+    }, 3000)
   }
 }
 
@@ -312,32 +334,28 @@ const updateTransaction = async () => {
       recentTransactions.value.splice(index, 1)
       recentTransactions.value.unshift(updatedTransaction)
 
-      // show success message
-      Swal.fire({
-        icon: 'success',
+      // show success message using custom Toast
+      addToast({
+        type: 'success',
         title: 'Thành công!',
-        text: 'Cập nhật giao dịch chi thành công!',
-        toast: true,
-        position: 'bottom-end',
-        showConfirmButton: false,
-        timer: 3000,
-        timerProgressBar: true,
-        didOpen: (toast) => {
-          toast.addEventListener('mouseenter', Swal.stopTimer)
-          toast.addEventListener('mouseleave', Swal.resumeTimer)
-        }
-      })
+        content: 'Cập nhật giao dịch chi thành công!'
+      }, 3000)
 
       resetForm()
     } catch (error) {
-      console.error(error)
-      Swal.fire({
-        icon: 'error',
+      if (error.response.data.code === 8001) {
+        errors.value.date = "Không được sửa khoản chi đã quá 1 tháng";
+      }else if(error.response.data.code === 10001){
+        errors.value.date = "Ngày chi tiêu không được lớn hơn ngày hiện tại";
+      }else if(error.response.data.code === 10002){
+        errors.value.accountId = "Tài khoản không đủ số dư";
+      }
+      // show error message using custom Toast
+      addToast({
+        type: 'error',
         title: 'Lỗi!',
-        text: 'Cập nhật giao dịch chi thất bại!',
-        toast: true,
-        position: 'bottom-end',
-      })
+        content: 'Cập nhật giao dịch chi thất bại!'
+      }, 3000)
     }
   }
 }
@@ -381,38 +399,33 @@ const handleConfirmDelete = async () => {
       recentTransactions.value.splice(index, 1)
     }
 
-    Swal.fire({
-      icon: 'success',
+    // Show success message using custom Toast
+    addToast({
+      type: 'success',
       title: 'Thành công!',
-      text: 'Xóa giao dịch chi thành công!',
-      toast: true,
-      position: 'bottom-end',
-      showConfirmButton: false,
-      timer: 3000,
-      timerProgressBar: true,
-    })
+      content: 'Xóa giao dịch chi thành công!'
+    }, 3000)
 
     // Reset state
     deletingTransaction.value = null
     isDeleteModalOpen.value = false
   } catch (error) {
     console.error(error)
-    Swal.fire({
-      icon: 'error',
+    // Show error message using custom Toast
+    addToast({
+      type: 'error',
       title: 'Lỗi!',
-      text: 'Xóa giao dịch chi thất bại!',
-      toast: true,
-      position: 'bottom-end',
-      showConfirmButton: false,
-      timer: 3000,
-      timerProgressBar: true,
-    })
+      content: 'Xóa giao dịch chi thất bại!'
+    }, 3000)
   }
 }
 </script>
 
 <template>
   <div class="p-4">
+    <!-- Toast Manager Component -->
+    <ToastManager ref="toastManagerRef" />
+    
     <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
       <div class="lg:col-span-7">
         <div class="bg-surface rounded-2xl shadow-sm">
