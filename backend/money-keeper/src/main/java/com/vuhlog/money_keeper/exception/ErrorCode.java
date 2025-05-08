@@ -25,6 +25,7 @@ public enum ErrorCode {
     EXPENSE_LIMIT_NOT_EXISTED(9001, "Expense limit not existed", HttpStatus.NOT_FOUND),
     EXPENSE_LIMIT_END_DATE_INVALID(9002, "Expense limit not existed", HttpStatus.BAD_REQUEST),
     DATE_LESS_THAN_TOMORROW(10001, "Date less than date tomorrow", HttpStatus.BAD_REQUEST),
+    NOT_ENOUGH_MONEY(10002, "Not enough money", HttpStatus.BAD_REQUEST),
     NOTIFICATION_NOT_EXISTED(11001, "Notification not existed", HttpStatus.BAD_REQUEST),
     ;
     ErrorCode(int code, String message, HttpStatusCode statusCode) {

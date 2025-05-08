@@ -187,7 +187,7 @@ onMounted(() => {
         </router-link>
 
         <!-- Savings Card -->
-        <div class="bg-surface rounded-xl p-4 shadow-sm transition-all duration-300 hover:shadow-md hover:translate-y-[-5px]">
+        <div class="bg-surface rounded-xl p-4 shadow-sm">
           <div class="flex items-center justify-between">
             <div class="flex-1">
               <p class="text-text-secondary text-sm">Tiết kiệm tháng này</p>

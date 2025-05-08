@@ -1,9 +1,5 @@
 import { defineStore } from "pinia";
-import { jwtDecode } from "jwt-decode";
 import {base} from "@/apis/ApiService.js"
-import { formatDate } from "@/utils/DateUtil.js";
-import { AccountType } from "@/constants/AccountType.js";
-import { inject } from "vue";
 
 export const useNotificationStore = defineStore("notification", {
   state: () => {
@@ -12,6 +8,7 @@ export const useNotificationStore = defineStore("notification", {
         pageSize: 4,
         totalElements: 0,
         totalPages: 0,
+        readStatus: -1,
         notifications: [],
         countNewNotifications: 0,
     };
@@ -29,7 +26,7 @@ export const useNotificationStore = defineStore("notification", {
     async getNotifications() {
       let response = null;
       await base
-        .get("/notification?pageNumber=" + (this.pageNumber - 1) + "&pageSize=" + this.pageSize)
+        .get("/notification?pageNumber=" + (this.pageNumber - 1) + "&pageSize=" + this.pageSize + "&readStatus=" + this.readStatus)
         .then((res) => {
             response = res.result;
             this.totalPages = response.totalPages;
@@ -42,34 +39,51 @@ export const useNotificationStore = defineStore("notification", {
           console.log(err);
         });
     },
-    showToastNotify(responseBody, swal) {
-      const Toast = swal.mixin({
-        toast: true,
-        position: "bottom-end",
-        showConfirmButton: false,
-        width: 360,
-        timer: 2000,
-        timerProgressBar: false,
-        didOpen: (toast) => {
-          toast.onmouseenter = swal.stopTimer;
-          toast.onmouseleave = swal.resumeTimer;
-        },
-      });
-      if (
-          responseBody.type === "expense limit"
-      ) {
-        Toast.fire({
-          html:   `<a href="http://localhost:5173/${responseBody.href}" class="d-flex align-center text-decoration-none">
-                    <v-avatar class="mr-2">
-                      <img class="icon-size" src="https://res.cloudinary.com/cloud1412/image/upload/v1745068565/logo_mpkmjj.png" />
-                    </v-avatar>
-                    <div>
-                      <h5 class="text-primary text-16 mb-2">${responseBody.title}</h5>
-                      <p class="text-14 text-grey-darken-4">${responseBody.content}</p>
-                    </div>
-                  </a>`,
+    async countNotificationByReadStatus(readStatus=0) {
+      let response = null;
+      await base
+        .get("/notification/count-read-status?readStatus=" + readStatus)
+        .then((res) => {
+          response = res.result;
+          this.countNewNotifications = response;
         });
-      }
-    }
+      return response;
+    },
+    async updateReadStatus(id, readStatus) {
+      let response = null;
+      await base
+        .patch("/notification/" + id + "/read-status" , readStatus)
+        .then((res) => {
+          response = res.result;
+          this.notifications.find(n => n.id === id).readStatus = readStatus;
+        });
+      return response;
+    },
+    async updateAllReadStatus(readStatus) {
+      let response = null;
+      await base
+        .patch("/notification/update-all-read-status" , readStatus)
+        .then((res) => {
+          response = res.result;
+          this.notifications.forEach(notification => {
+            notification.readStatus = readStatus;
+          });
+        });
+      return response;
+    },
+    async deleteNotification(id) {
+      let response = null;
+      await base
+        .delete("/notification/" + id)
+        .then((res) => {
+          response = res.result;
+          this.notifications = this.notifications.filter(n => n.id !== id);
+        });
+      return response;
+    },
+    resetPagination() {
+      this.pageNumber = 1;
+      this.pageSize = 4;
+    },
   },
 });

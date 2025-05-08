@@ -14,7 +14,10 @@ import { useDictionaryBucketPaymentStore } from '@/store/DictionaryBucketPayment
 import { useExpenseRegularStore } from '@/store/ExpenseRegularStore'
 import { useRevenueRegularStore } from '@/store/RevenueRegularStore'
 import Avatar from '@/views/components/Avatar.vue'
-import Swal from 'sweetalert2'
+import ToastManager from '@/views/components/ToastManager.vue'
+
+// Reference to ToastManager component
+const toastManagerRef = ref(null)
 
 const filters = ref({
   timeOption: '',
@@ -167,16 +170,14 @@ const openDetailModal = async (transaction) => {
   } catch (error) {
     console.error('Lỗi khi tải chi tiết giao dịch:', error);
     
-    // Hiển thị thông báo lỗi
-    Swal.fire({
-      icon: 'warning',
-      title: 'Cảnh báo',
-      text: 'Không thể tải đầy đủ chi tiết giao dịch',
-      toast: true,
-      position: 'bottom-end',
-      showConfirmButton: false,
-      timer: 3000
-    });
+    // Hiển thị thông báo lỗi với ToastManager
+    if (toastManagerRef.value) {
+      toastManagerRef.value.addToast({
+        type: 'error',
+        title: 'Cảnh báo',
+        content: 'Không thể tải đầy đủ chi tiết giao dịch'
+      })
+    }
   }
 }
 
@@ -241,16 +242,14 @@ const handleEditTransaction = async (transaction) => {
     modalMode.value = 'edit';
     showActionModal.value = true;
     
-    // Hiển thị thông báo cảnh báo
-    Swal.fire({
-      icon: 'warning',
-      title: 'Cảnh báo',
-      text: 'Không thể tải đầy đủ chi tiết giao dịch để chỉnh sửa',
-      toast: true,
-      position: 'bottom-end',
-      showConfirmButton: false,
-      timer: 3000
-    });
+    // Hiển thị thông báo lỗi với ToastManager
+    if (toastManagerRef.value) {
+      toastManagerRef.value.addToast({
+        type: 'error',
+        title: 'Cảnh báo',
+        content: 'Không thể tải đầy đủ chi tiết giao dịch để chỉnh sửa'
+      })
+    }
   }
 }
 
@@ -279,16 +278,14 @@ const handleDeleteTransaction = async (transaction) => {
   } catch (error) {
     console.error('Lỗi khi tải chi tiết giao dịch để xóa:', error);
     
-    // Vẫn hiển thị modal với dữ liệu ban đầu nếu có lỗi
-    Swal.fire({
-      icon: 'warning',
-      title: 'Cảnh báo',
-      text: 'Không thể tải đầy đủ chi tiết giao dịch',
-      toast: true,
-      position: 'bottom-end',
-      showConfirmButton: false,
-      timer: 3000
-    });
+    // Hiển thị thông báo lỗi với ToastManager
+    if (toastManagerRef.value) {
+      toastManagerRef.value.addToast({
+        type: 'error',
+        title: 'Cảnh báo',
+        content: 'Không thể tải đầy đủ chi tiết giao dịch'
+      })
+    }
   }
 }
 
@@ -306,17 +303,14 @@ const confirmDeleteTransaction = async () => {
     // Cập nhật lại dữ liệu
     await loadData();
     
-    // Hiển thị thông báo thành công
-    Swal.fire({
-      icon: 'success',
-      title: 'Thành công!',
-      text: 'Xóa giao dịch thành công!',
-      toast: true,
-      position: 'bottom-end',
-      showConfirmButton: false,
-      timer: 3000,
-      timerProgressBar: true
-    });
+    // Hiển thị thông báo thành công với ToastManager
+    if (toastManagerRef.value) {
+      toastManagerRef.value.addToast({
+        type: 'success',
+        title: 'Thành công!',
+        content: 'Xóa giao dịch thành công!'
+      })
+    }
     
     // Đóng modal
     showDeleteModal.value = false;
@@ -325,16 +319,14 @@ const confirmDeleteTransaction = async () => {
   } catch (error) {
     console.error('Lỗi khi xóa giao dịch:', error);
     
-    Swal.fire({
-      icon: 'error',
-      title: 'Lỗi!',
-      text: 'Xóa giao dịch thất bại!',
-      toast: true,
-      position: 'bottom-end',
-      showConfirmButton: false,
-      timer: 3000,
-      timerProgressBar: true
-    });
+    // Hiển thị thông báo lỗi với ToastManager
+    if (toastManagerRef.value) {
+      toastManagerRef.value.addToast({
+        type: 'error',
+        title: 'Lỗi!',
+        content: 'Xóa giao dịch thất bại!'
+      })
+    }
   }
 }
 
@@ -343,7 +335,7 @@ const handleSaveTransaction = async (transaction) => {
     // Xử lý lưu thông tin giao dịch đã chỉnh sửa
     console.log('Lưu giao dịch:', transaction)
 
-    // TODO: Gọi API cập nhật giao dịch từ store
+    // Gọi API cập nhật giao dịch từ store
     if(transaction.transactionType === 'expense') {
       await expenseRegularStore.updateExpenseRegular(transaction.id, transaction)
     } else if (transaction.transactionType === 'revenue') {
@@ -353,32 +345,27 @@ const handleSaveTransaction = async (transaction) => {
     // Cập nhật lại dữ liệu
     await loadData()
     
-    // Hiển thị thông báo thành công
-    Swal.fire({
-      icon: 'success',
-      title: 'Thành công!',
-      text: 'Cập nhật giao dịch thành công!',
-      toast: true,
-      position: 'bottom-end',
-      showConfirmButton: false,
-      timer: 3000,
-      timerProgressBar: true
-    })
+    // Hiển thị thông báo thành công với ToastManager
+    if (toastManagerRef.value) {
+      toastManagerRef.value.addToast({
+        type: 'success',
+        title: 'Thành công!',
+        content: 'Cập nhật giao dịch thành công!'
+      })
+    }
     
     // Đóng modal
     closeTransactionModal()
   } catch (error) {
     console.error(error)
-    Swal.fire({
-      icon: 'error',
-      title: 'Lỗi!',
-      text: 'Cập nhật giao dịch thất bại!',
-      toast: true,
-      position: 'bottom-end',
-      showConfirmButton: false,
-      timer: 3000,
-      timerProgressBar: true
-    })
+    // Hiển thị thông báo lỗi với ToastManager
+    if (toastManagerRef.value) {
+      toastManagerRef.value.addToast({
+        type: 'error',
+        title: 'Lỗi!',
+        content: 'Cập nhật giao dịch thất bại!'
+      })
+    }
   }
 }
 
@@ -447,6 +434,9 @@ const getTransactionTypeIcon = (type) => {
 
 <template>
   <div class="p-4">
+    <!-- Add ToastManager component -->
+    <ToastManager ref="toastManagerRef" />
+    
     <!-- Filters -->
     <FilterOptions
       :is-reset="isReset" 

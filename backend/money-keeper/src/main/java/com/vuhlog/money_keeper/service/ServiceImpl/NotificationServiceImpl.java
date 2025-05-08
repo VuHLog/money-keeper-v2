@@ -5,22 +5,29 @@ import com.vuhlog.money_keeper.dao.NotificationRepository;
 import com.vuhlog.money_keeper.dto.request.NotificationRequest;
 import com.vuhlog.money_keeper.dto.response.NotificationResponse;
 import com.vuhlog.money_keeper.dto.response.responseinterface.ExpenseLimitNotification;
+import com.vuhlog.money_keeper.entity.ExpenseRegular;
 import com.vuhlog.money_keeper.entity.Notification;
+import com.vuhlog.money_keeper.entity.RevenueRegular;
 import com.vuhlog.money_keeper.entity.Users;
 import com.vuhlog.money_keeper.exception.AppException;
 import com.vuhlog.money_keeper.exception.ErrorCode;
 import com.vuhlog.money_keeper.mapper.NotificationMapper;
 import com.vuhlog.money_keeper.service.NotificationService;
+import com.vuhlog.money_keeper.service.ReportService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
+import java.text.NumberFormat;
 import java.util.List;
+import java.util.Locale;
 import java.util.stream.Collectors;
 
 @Service
@@ -31,12 +38,22 @@ public class NotificationServiceImpl implements NotificationService {
     private final NotificationRepository notificationRepository;
     private final NotificationMapper notificationMapper;
     private final SimpMessagingTemplate messagingTemplate;
+    private final ReportService reportService;
 
     @Override
-    public Page<NotificationResponse> getAllNotifications(Integer pageNumber, Integer pageSize) {
+    public Page<NotificationResponse> getAllNotifications(Integer pageNumber, Integer pageSize, Integer readStatus) {
+        Specification<Notification> specs = Specification.where(null);
+        if(readStatus == 1 || readStatus == 0) {
+            specs = specs.and((root, query, criteriaBuilder) -> criteriaBuilder.equal(root.get("readStatus"), readStatus));
+        }
         Sort sortable = Sort.by("createdAt").descending();
         Pageable pageable = PageRequest.of(pageNumber, pageSize, sortable);
-        return notificationRepository.findAll(pageable).map(notificationMapper::toNotificationResponse);
+        return notificationRepository.findAll(specs, pageable).map(notificationMapper::toNotificationResponse);
+    }
+
+    @Override
+    public Long countAllNotificationsByReadStatus(Integer readStatus) {
+        return notificationRepository.countAllByReadStatusAndUser_Id(readStatus, userCommon.getMyUserInfo().getId());
     }
 
     @Override
@@ -53,7 +70,7 @@ public class NotificationServiceImpl implements NotificationService {
         Users user = userCommon.getMyUserInfo();
         Notification notification = Notification.builder()
                 .title("Hạn mức chi")
-                .content("Hạn mức: <strong class='text-green-accent-4'>" + nameJoin + "</strong> đã bội chi. Bạn hãy điều chỉnh thói quen chi tiêu nhé!")
+                .content("Hạn mức chi : <strong class='text-primary'>" + nameJoin + "</strong> đã bội chi. Bạn hãy điều chỉnh thói quen chi tiêu nhé!")
                 .type("expense limit")
                 .readStatus(0)
                 .iconUrl("https://res.cloudinary.com/cloud1412/image/upload/v1745068565/logo_mpkmjj.png")
@@ -72,9 +89,140 @@ public class NotificationServiceImpl implements NotificationService {
     }
 
     @Override
+    public NotificationResponse expenseNotification(ExpenseRegular expenseRegular,Boolean isCreate) {
+        Users user = userCommon.getMyUserInfo();
+        Notification notification = Notification.builder()
+                .title(isCreate?"Thêm mới chi tiêu":"Điều chỉnh chi tiêu")
+                .content("Tài khoản <strong class='text-primary'>" + expenseRegular.getDictionaryBucketPayment().getAccountName() + "</strong> đã chi số tiền là " + "<span class='text-danger'>" + formatCurrency(expenseRegular.getAmount()) + "</span>")
+                .type("expense")
+                .readStatus(0)
+                .iconUrl("https://res.cloudinary.com/cloud1412/image/upload/v1745068565/logo_mpkmjj.png")
+                .user(user)
+                .href("/expense")
+                .build();
+
+        NotificationResponse notificationResponse = null;
+        try {
+            notificationResponse = notificationMapper.toNotificationResponse(notificationRepository.save(notification));
+            messagingTemplate.convertAndSend("/topic/notifications/" + user.getId(), notificationResponse);
+        } catch (Exception e) {
+            log.error("WebSocket gửi thất bại: {}", e.getMessage());
+        }
+        return notificationResponse;
+    }
+
+    @Override
+    public NotificationResponse deleteExpenseNotification(ExpenseRegular expenseRegular) {
+        Users user = userCommon.getMyUserInfo();
+        Notification notification = Notification.builder()
+                .title("Xóa khoản chi tiêu")
+                .content("Tài khoản <strong class='text-primary'>" + expenseRegular.getDictionaryBucketPayment().getAccountName() + "</strong> đã xóa khoản chi số tiền là " + "<span class='text-danger'>" + formatCurrency(expenseRegular.getAmount()) + "</span>")
+                .type("expense")
+                .readStatus(0)
+                .iconUrl("https://res.cloudinary.com/cloud1412/image/upload/v1745068565/logo_mpkmjj.png")
+                .user(user)
+                .href("/expense")
+                .build();
+
+        NotificationResponse notificationResponse = null;
+        try {
+            notificationResponse = notificationMapper.toNotificationResponse(notificationRepository.save(notification));
+            messagingTemplate.convertAndSend("/topic/notifications/" + user.getId(), notificationResponse);
+        } catch (Exception e) {
+            log.error("WebSocket gửi thất bại: {}", e.getMessage());
+        }
+        return notificationResponse;
+    }
+
+    @Override
+    public NotificationResponse expenseTransferNotification(ExpenseRegular expenseRegular) {
+        Users user = userCommon.getMyUserInfo();
+        Notification notification = Notification.builder()
+                .title("Chuyển khoản")
+                .content("Tài khoản <strong class='text-primary'>" + expenseRegular.getDictionaryBucketPayment().getAccountName() + "</strong>" + "tới tài khoản " + "<strong class='text-danger'>" + expenseRegular.getBeneficiaryAccount().getAccountName() + "</strong> với số tiền là " + "<span class='text-error'>" + formatCurrency(expenseRegular.getAmount()) + "</span>")
+                .type("expense")
+                .readStatus(0)
+                .iconUrl("https://res.cloudinary.com/cloud1412/image/upload/v1745068565/logo_mpkmjj.png")
+                .user(user)
+                .href("/expense")
+                .build();
+
+        NotificationResponse notificationResponse = null;
+        try {
+            notificationResponse = notificationMapper.toNotificationResponse(notificationRepository.save(notification));
+            messagingTemplate.convertAndSend("/topic/notifications/" + user.getId(), notificationResponse);
+        } catch (Exception e) {
+            log.error("WebSocket gửi thất bại: {}", e.getMessage());
+        }
+        return notificationResponse;
+    }
+
+    @Override
+    public NotificationResponse revenueNotification(RevenueRegular revenueRegular, Boolean isCreate) {
+        Users user = userCommon.getMyUserInfo();
+        Notification notification = Notification.builder()
+                .title(isCreate?"Thu nhập":"Điều chỉnh thu nhập")
+                .content( "Tài khoản <strong class='text-primary'>" + revenueRegular.getDictionaryBucketPayment().getAccountName() + "</strong> đã nhận số tiền là " + "<span class='text-success'>" + formatCurrency(revenueRegular.getAmount()) + "</span>")
+                .type("revenue")
+                .readStatus(0)
+                .iconUrl("https://res.cloudinary.com/cloud1412/image/upload/v1745068565/logo_mpkmjj.png")
+                .user(user)
+                .href("/revenue")
+                .build();
+
+        NotificationResponse notificationResponse = null;
+        try {
+            notificationResponse = notificationMapper.toNotificationResponse(notificationRepository.save(notification));
+            messagingTemplate.convertAndSend("/topic/notifications/" + user.getId(), notificationResponse);
+        } catch (Exception e) {
+            log.error("WebSocket gửi thất bại: {}", e.getMessage());
+        }
+        return notificationResponse;
+    }
+
+    @Override
+    public NotificationResponse deleteRevenueNotification(RevenueRegular revenueRegular) {
+        Users user = userCommon.getMyUserInfo();
+        Notification notification = Notification.builder()
+                .title("Xóa khoản thu nhập")
+                .content("Tài khoản <strong class='text-primary'>" + revenueRegular.getDictionaryBucketPayment().getAccountName() + "</strong> đã xóa khoản thu số tiền là " + "<span class='text-success'>" + formatCurrency(revenueRegular.getAmount()) + "</span>")
+                .type("revenue")
+                .readStatus(0)
+                .iconUrl("https://res.cloudinary.com/cloud1412/image/upload/v1745068565/logo_mpkmjj.png")
+                .user(user)
+                .href("/revenue")
+                .build();
+
+        NotificationResponse notificationResponse = null;
+        try {
+            notificationResponse = notificationMapper.toNotificationResponse(notificationRepository.save(notification));
+            messagingTemplate.convertAndSend("/topic/notifications/" + user.getId(), notificationResponse);
+        } catch (Exception e) {
+            log.error("WebSocket gửi thất bại: {}", e.getMessage());
+        }
+        return notificationResponse;
+    }
+
+    public static String formatCurrency(long amount) {
+        Locale vietnamLocale = new Locale("vi", "VN");
+        NumberFormat currencyFormatter = NumberFormat.getCurrencyInstance(vietnamLocale);
+        currencyFormatter.setMinimumFractionDigits(0);
+        currencyFormatter.setMaximumFractionDigits(0);
+        return currencyFormatter.format(amount);
+    }
+
+    @Override
     public String updateReadStatus(String id, Integer readStatus) {
         Notification notification = notificationRepository.findById(id).orElseThrow(() -> new AppException(ErrorCode.NOTIFICATION_NOT_EXISTED));
         notification.setReadStatus(readStatus);
+        notificationRepository.save(notification);
+        return "update read status successfully";
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public String updateAllReadStatus(Integer readStatus) {
+        notificationRepository.updateAllReadStatus(readStatus, userCommon.getMyUserInfo().getId());
         return "update read status successfully";
     }
 

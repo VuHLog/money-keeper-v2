@@ -8,12 +8,12 @@ import 'element-plus/theme-chalk/el-date-picker.css'
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
 import { library } from '@fortawesome/fontawesome-svg-core'
 import TransactionDetailModal from '@/views/components/TransactionDetailModal.vue'
-import Swal from 'sweetalert2'
 import Avatar from '@components/Avatar.vue'
 import { getVietnamDateTime, formatDateToVietnam } from '@/utils/DateUtil'
 import { useRevenueRegularStore } from '@/store/RevenueRegularStore'
 import { faWallet, faGift, faChartLine, faCalendar, faMapMarkerAlt, faPlane, faUser, faStickyNote, faArrowUp, faReceipt, faChevronRight, faEye, faPen, faTrash } from '@fortawesome/free-solid-svg-icons'
 import DeleteTransactionModal from '@/views/components/DeleteTransactionModal.vue'
+import ToastManager from '@/views/components/ToastManager.vue'
 library.add(faWallet, faGift, faChartLine, faCalendar, faMapMarkerAlt, faPlane, faUser, faStickyNote, faArrowUp, faReceipt, faChevronRight, faEye, faPen, faTrash)
 
 const dictionaryRevenueStore = useDictionaryRevenueStore()
@@ -25,6 +25,9 @@ const categories = ref([])
 const accounts = ref([])
 // Recent transactions
 const recentTransactions = ref([])
+
+// Reference to ToastManager component
+const toastManagerRef = ref(null)
 
 onMounted(async () => {
   categories.value = await dictionaryRevenueStore.getMyRevenueCategoriesWithoutTransfer()
@@ -175,37 +178,26 @@ const addNewTransaction = async () => {
       recentTransactions.value = recentTransactions.value.slice(0, 5)
     }
 
-    Swal.fire({
-      icon: 'success',
-      title: 'Thành công!',
-      text: 'Thêm giao dịch thu thành công!',
-      toast: true,
-      position: 'bottom-end',
-      showConfirmButton: false,
-      timer: 3000,
-      timerProgressBar: true,
-      didOpen: (toast) => {
-        toast.addEventListener('mouseenter', Swal.stopTimer)
-        toast.addEventListener('mouseleave', Swal.resumeTimer)
-      }
-    })
+    // Use the toast manager directly
+    if (toastManagerRef.value) {
+      toastManagerRef.value.addToast({
+        type: 'success',
+        title: 'Thành công!',
+        content: 'Thêm giao dịch thu thành công!'
+      })
+    }
+    
     //reset form after successful addition
     resetForm()
   } catch (error) {
-    Swal.fire({
-      icon: 'error',
-      title: 'Lỗi!',
-      text: 'Thêm giao dịch thu thất bại!',
-      toast: true,
-      position: 'bottom-end',
-      showConfirmButton: false,
-      timer: 3000,
-      timerProgressBar: true,
-      didOpen: (toast) => {
-        toast.addEventListener('mouseenter', Swal.stopTimer)
-        toast.addEventListener('mouseleave', Swal.resumeTimer)
-      }
-    })
+    // Show error toast
+    if (toastManagerRef.value) {
+      toastManagerRef.value.addToast({
+        type: 'error',
+        title: 'Lỗi!',
+        content: 'Thêm giao dịch thu thất bại!'
+      })
+    }
   }
 }
 
@@ -310,32 +302,26 @@ const updateTransaction = async () => {
       recentTransactions.value.splice(index, 1)
       recentTransactions.value.unshift(updatedTransaction)
 
-      // show success message
-      Swal.fire({
-        icon: 'success',
-        title: 'Thành công!',
-        text: 'Cập nhật giao dịch thu thành công!',
-        toast: true,
-        position: 'bottom-end',
-        showConfirmButton: false,
-        timer: 3000,
-        timerProgressBar: true,
-        didOpen: (toast) => {
-          toast.addEventListener('mouseenter', Swal.stopTimer)
-          toast.addEventListener('mouseleave', Swal.resumeTimer)
-        }
-      })
+      // show success message using the toast manager
+      if (toastManagerRef.value) {
+        toastManagerRef.value.addToast({
+          type: 'success',
+          title: 'Thành công!',
+          content: 'Cập nhật giao dịch thu thành công!'
+        })
+      }
 
       resetForm()
     } catch (error) {
       console.error(error)
-      Swal.fire({
-        icon: 'error',
-        title: 'Lỗi!',
-        text: 'Cập nhật giao dịch thu thất bại!',
-        toast: true,
-        position: 'bottom-end',
-      })
+      // Show error toast
+      if (toastManagerRef.value) {
+        toastManagerRef.value.addToast({
+          type: 'error',
+          title: 'Lỗi!',
+          content: 'Cập nhật giao dịch thu thất bại!'
+        })
+      }
     }
   }
 }
@@ -379,38 +365,37 @@ const handleConfirmDelete = async () => {
       recentTransactions.value.splice(index, 1)
     }
 
-    Swal.fire({
-      icon: 'success',
-      title: 'Thành công!',
-      text: 'Xóa giao dịch thu thành công!',
-      toast: true,
-      position: 'bottom-end',
-      showConfirmButton: false,
-      timer: 3000,
-      timerProgressBar: true,
-    })
+    // Show success toast
+    if (toastManagerRef.value) {
+      toastManagerRef.value.addToast({
+        type: 'success',
+        title: 'Thành công!',
+        content: 'Xóa giao dịch thu thành công!'
+      })
+    }
 
     // Reset state
     deletingTransaction.value = null
     isDeleteModalOpen.value = false
   } catch (error) {
     console.error(error)
-    Swal.fire({
-      icon: 'error',
-      title: 'Lỗi!',
-      text: 'Xóa giao dịch thu thất bại!',
-      toast: true,
-      position: 'bottom-end',
-      showConfirmButton: false,
-      timer: 3000,
-      timerProgressBar: true,
-    })
+    // Show error toast
+    if (toastManagerRef.value) {
+      toastManagerRef.value.addToast({
+        type: 'error',
+        title: 'Lỗi!',
+        content: 'Xóa giao dịch thu thất bại!'
+      })
+    }
   }
 }
 </script>
 
 <template>
   <div class="p-4">
+    <!-- Add ToastManager component -->
+    <ToastManager ref="toastManagerRef" />
+    
     <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
       <div class="lg:col-span-7">
         <div class="bg-surface rounded-2xl shadow-sm">

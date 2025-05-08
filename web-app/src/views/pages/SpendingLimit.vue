@@ -12,7 +12,7 @@ import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
 import { library } from '@fortawesome/fontawesome-svg-core'
 import Avatar from '@/views/components/Avatar.vue'
 import { faPlus, faEdit, faTrash, faUtensils, faCar, faHome, faGamepad, faInfoCircle, faCoffee } from '@fortawesome/free-solid-svg-icons'
-import Swal from 'sweetalert2'
+import ToastManager from '@/views/components/ToastManager.vue'
 
 library.add(faPlus, faEdit, faTrash, faUtensils, faCar, faHome, faGamepad, faInfoCircle, faCoffee)
 
@@ -22,6 +22,9 @@ const dictionaryExpenseStore = useDictionaryExpenseStore()
 const spendingLimits = ref([])
 const categories = ref([])
 const accounts = ref([])
+
+// Reference to ToastManager component
+const toastManagerRef = ref(null)
 
 // Computed properties for pagination
 const paginationInfo = computed(() => {
@@ -111,21 +114,14 @@ const handleConfirmDelete = () => {
     expenseLimitStore.deleteExpenseLimit(limitToDelete.value.id)
     spendingLimits.value.splice(index, 1)
 
-    // Hiển thị thông báo thành công
-    Swal.fire({
-      icon: 'success',
-      title: 'Thành công!',
-      text: 'Xóa hạn mức chi thành công!',
-      toast: true,
-      position: 'bottom-end',
-      showConfirmButton: false,
-      timer: 3000,
-      timerProgressBar: true,
-      didOpen: (toast) => {
-        toast.addEventListener('mouseenter', Swal.stopTimer)
-        toast.addEventListener('mouseleave', Swal.resumeTimer)
-      }
-    })
+    // Show success message with ToastManager
+    if (toastManagerRef.value) {
+      toastManagerRef.value.addToast({
+        type: 'success',
+        title: 'Thành công!',
+        content: 'Xóa hạn mức chi thành công!'
+      })
+    }
   }
 
   // Đóng modal và reset state
@@ -141,12 +137,14 @@ const handleAddLimit = async (formData) => {
   // Đóng modal
   showAddModal.value = false
 
-  // Hiển thị thông báo thành công
-  Swal.fire({
-    title: "Thành công",
-    text: "Bạn đã thêm hạn mức chi thành công!",
-    icon: "success",
-  });
+  // Show success message with ToastManager
+  if (toastManagerRef.value) {
+    toastManagerRef.value.addToast({
+      type: 'success',
+      title: 'Thành công!',
+      content: 'Thêm hạn mức chi thành công!'
+    })
+  }
 }
 
 const handleEditLimit = (formData) => {
@@ -161,12 +159,14 @@ const handleEditLimit = (formData) => {
     showEditModal.value = false
     selectedLimit.value = null
 
-    // Hiển thị thông báo thành công
-    Swal.fire({
-      title: "Thành công",
-      text: "Bạn đã cập nhật hạn mức chi thành công!",
-      icon: "success",
-    });
+    // Show success message with ToastManager
+    if (toastManagerRef.value) {
+      toastManagerRef.value.addToast({
+        type: 'success',
+        title: 'Thành công!',
+        content: 'Cập nhật hạn mức chi thành công!'
+      })
+    }
   }
 }
 
@@ -263,6 +263,9 @@ const style = `
 
 <template>
   <div class="p-4">
+    <!-- Add ToastManager component -->
+    <ToastManager ref="toastManagerRef" />
+    
     <!-- Filter Options -->
     <FilterOptions :show-time-range="false" :show-revenue-category="false" @filter-change="handleFilterChange" @filter-reset="handleFilterReset"
       @apply-filter="handleApplyFilter" />
@@ -428,7 +431,7 @@ const style = `
           </button>
 
           <!-- Page numbers -->
-          <template v-for="pageNumber in paginationInfo.totalPages" :key="pageNumber">
+          <div v-for="pageNumber in paginationInfo.totalPages" :key="pageNumber">
             <button v-if="
               pageNumber === 1 ||
               pageNumber === paginationInfo.totalPages ||
@@ -448,7 +451,7 @@ const style = `
             " class="px-2 py-1 text-gray-500">
               ...
             </span>
-          </template>
+          </div>
 
           <!-- Next button -->
           <button @click="handlePageChange(paginationInfo.currentPage + 1)"
