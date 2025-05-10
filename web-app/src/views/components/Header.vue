@@ -400,10 +400,10 @@ onUnmounted(() => {
             <!-- Notifications Dropdown -->
             <div 
               v-if="isNotificationsOpen"
-              class="absolute right-0 mt-2 w-[calc(100vw-2rem)] sm:w-80 max-w-sm bg-white rounded-lg shadow-lg overflow-hidden z-50"
+              class="absolute right-0 mt-2 w-[calc(100vw-2rem)] sm:w-80 md:w-96 max-w-sm bg-white rounded-lg shadow-lg overflow-hidden z-50"
             >
               <!-- Header -->
-              <div class="px-4 py-3 bg-gray-50 border-b border-gray-100">
+              <div class="px-3 sm:px-4 py-2 sm:py-3 bg-gray-50 border-b border-gray-100">
                 <div class="flex justify-between items-center mb-2">
                   <h3 class="text-sm font-semibold text-text">Thông báo</h3>
                   <button 
@@ -419,7 +419,7 @@ onUnmounted(() => {
                 <div class="flex border-b">
                   <button 
                     @click.stop="switchNotificationTab('all')"
-                    class="flex-1 py-2 text-center text-sm font-medium transition-colors duration-200"
+                    class="flex-1 py-1.5 sm:py-2 text-center text-sm font-medium transition-colors duration-200"
                     :class="activeNotificationTab === 'all' 
                       ? 'text-primary border-b-2 border-primary' 
                       : 'text-text-secondary hover:text-primary'"
@@ -428,7 +428,7 @@ onUnmounted(() => {
                   </button>
                   <button 
                     @click.stop="switchNotificationTab('unread')"
-                    class="flex-1 py-2 text-center text-sm font-medium transition-colors duration-200 relative"
+                    class="flex-1 py-1.5 sm:py-2 text-center text-sm font-medium transition-colors duration-200 relative"
                     :class="activeNotificationTab === 'unread' 
                       ? 'text-primary border-b-2 border-primary' 
                       : 'text-text-secondary hover:text-primary'"
@@ -450,7 +450,7 @@ onUnmounted(() => {
                   v-for="notification in filteredNotifications" 
                   :key="notification.id"
                   :class="[
-                    'p-4 hover:bg-gray-100 transition-colors duration-200 cursor-pointer relative',
+                    'p-3 sm:p-4 hover:bg-gray-100 transition-colors duration-200 cursor-pointer relative',
                     notification.readStatus === 1 ? 'border-b' : '',
                     getNotificationBgColor(notification.type, notification.readStatus === 1)
                   ]"
@@ -458,39 +458,39 @@ onUnmounted(() => {
                   @mouseenter="handleMouseEnter(notification.id)"
                   @mouseleave="handleMouseLeave"
                 >
-                  <div class="flex items-start space-x-3">
+                  <div class="flex items-start space-x-2 sm:space-x-3">
                     <div class="flex-shrink-0">
-                      <div class="w-8 h-8 rounded-full flex items-center justify-center" 
+                      <div class="w-7 h-7 sm:w-8 sm:h-8 rounded-full flex items-center justify-center" 
                            :class="[getNotificationColor(notification.type), 'bg-opacity-20', getNotificationBgColor(notification.type, true)]">
                         <FontAwesomeIcon 
                           :icon="getNotificationIcon(notification.type || 'info')"
-                          :class="[getNotificationColor(notification.type), 'text-lg']"
+                          :class="[getNotificationColor(notification.type), 'text-base sm:text-lg']"
                         />
                       </div>
                     </div>
                     <div class="flex-1 min-w-0">
                       <div class="flex items-center justify-between">
-                        <p class="text-sm font-medium text-text mr-2">
+                        <p class="text-sm font-medium text-text mr-2 line-clamp-1">
                           {{ notification.title }}
                         </p>
                         <span v-if="notification.readStatus === 0" 
-                              class="text-xs px-1.5 py-0.5 rounded" 
+                              class="text-xs px-1.5 py-0.5 rounded whitespace-nowrap" 
                               :class="[getNotificationColor(notification.type), 'bg-opacity-20']">
                           Chưa đọc
                         </span>
                       </div>
-                      <p class="text-sm text-text-secondary mt-0.5 multiline-truncate" style="max-width: 200px;" v-html="notification.content">
+                      <p class="text-sm text-text-secondary mt-0.5 multiline-truncate" v-html="notification.content">
                       </p>
                       <p class="text-xs text-text-secondary mt-1">
                         {{ notification.createdAt || getTimeAgo(notification.time) }}
                       </p>
                     </div>
                     <div v-if="notification.readStatus === 0" class="ml-auto">
-                      <div class="w-2.5 h-2.5 rounded-full" :class="[getNotificationColor(notification.type)]"></div>
+                      <div class="w-2 h-2 sm:w-2.5 sm:h-2.5 rounded-full" :class="[getNotificationColor(notification.type)]"></div>
                     </div>
                   </div>
                   
-                  <!-- Notification Options - Cải thiện hiển thị -->
+                  <!-- Notification Options -->
                   <div v-if="hoveredNotificationId === notification.id"
                        class="absolute top-1 right-1 p-1.5 flex space-x-2 bg-white shadow-md rounded-lg z-50"
                        @click.stop>
@@ -507,12 +507,12 @@ onUnmounted(() => {
                   </div>
                 </div>
                 
-                <!-- Empty state for each tab -->
-                <div v-if="filteredNotifications.length === 0" class="flex flex-col items-center justify-center py-8 px-4 text-center">
-                  <div class="w-12 h-12 rounded-full bg-gray-100 flex items-center justify-center mb-2">
-                    <FontAwesomeIcon :icon="['fas', 'bell']" class="text-gray-400 text-xl" />
+                <!-- Empty state -->
+                <div v-if="filteredNotifications.length === 0" class="flex flex-col items-center justify-center py-6 sm:py-8 px-4 text-center">
+                  <div class="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-gray-100 flex items-center justify-center mb-2">
+                    <FontAwesomeIcon :icon="['fas', 'bell']" class="text-gray-400 text-lg sm:text-xl" />
                   </div>
-                  <p class="text-text-secondary">
+                  <p class="text-sm text-text-secondary">
                     {{ activeNotificationTab === 'unread' 
                       ? 'Không có thông báo chưa đọc' 
                       : 'Không có thông báo nào' }}
@@ -521,7 +521,7 @@ onUnmounted(() => {
               </div>
 
               <!-- Footer -->
-              <div class="px-4 py-3 bg-gray-50 border-t border-gray-100 text-center">
+              <div class="px-3 sm:px-4 py-2 sm:py-3 bg-gray-50 border-t border-gray-100 text-center">
                 <button 
                   v-if="notificationStore.pageNumber < notificationStore.totalPages"
                   class="text-sm text-primary hover:text-primary/80"
@@ -657,7 +657,7 @@ header {
 }
 
 .scrollable-list {
-  max-height: 520px; 
+  max-height: min(calc(100vh - 200px), 460px);
   overflow-y: auto;
   max-width: 360px;
 }
@@ -667,5 +667,11 @@ header {
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
+}
+
+@media (max-width: 640px) {
+  .scrollable-list {
+    max-width: 100%;
+  }
 }
 </style> 
