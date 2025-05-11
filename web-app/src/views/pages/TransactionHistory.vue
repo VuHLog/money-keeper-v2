@@ -443,8 +443,7 @@ const getTransactionTypeIcon = (type) => {
 
 // Export Excel
 const exportExcel = async () => {
-  let response = await transactionHistoryStore.exportExcel(filters.value)
-  console.log(response)
+  await transactionHistoryStore.exportExcel(excelFilters.value)
 }
 </script>
 

@@ -99,7 +99,7 @@ public class ReportController {
     }
 
     @PostMapping("transaction-history/export-excel")
-    public ResponseEntity<Object> getAllTransactionHistory(
+    public ResponseEntity<InputStreamResource> getAllTransactionHistory(
             @RequestBody ReportFilterOptionsRequest request) throws IOException {
         String headerKey = "Content-Disposition";
         String headerValue = "attachment; filename=transaction-history.xls";
@@ -108,7 +108,7 @@ public class ReportController {
         List<TransactionHistory> transactionHistories = reportService.getAllTransactionHistoryNoPaging(request);
 
         TransactionHistoryExcelExporter exporter = new TransactionHistoryExcelExporter(transactionHistories);
-        ByteArrayInputStream in = exporter.export();
+        ByteArrayInputStream in = exporter.export(request);
         return ResponseEntity.ok()
                 .headers(headers)
                 .contentType(MediaType.parseMediaType(
