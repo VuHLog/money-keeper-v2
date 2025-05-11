@@ -24,7 +24,7 @@ public class Bank {
     @Column(nullable = false)
     private String bin;
 
-    @Column(nullable = false, name = "shortName")
+    @Column(nullable = false, name = "short_name")
     private String shortName;
 
     private String logo;

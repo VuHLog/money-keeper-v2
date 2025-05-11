@@ -26,4 +26,6 @@ public interface ReportService {
     TotalExpenseRevenue getTotalExpenseRevenueThisMonth();
 
     Page<TransactionHistory> getAllTransactionHistory(String field, Integer pageNumber, Integer pageSize, String sort, ReportFilterOptionsRequest request);
+
+    List<TransactionHistory> getAllTransactionHistoryNoPaging(ReportFilterOptionsRequest request);
 }

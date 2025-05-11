@@ -136,6 +136,27 @@ const getCategoryName = computed(() => {
               </div>
             </div>
 
+            <!-- Nhận từ ai/Chi cho ai (nếu có) -->
+            <div v-if="transaction.beneficiaryAccount || transaction.senderAccount" class="flex items-start">
+              <div class="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0 mr-3">
+                <font-awesome-icon :icon="['fas', 'user']" class="text-primary" />
+              </div>
+              <div>
+                <p class="text-sm text-text-secondary">{{ isExpense ? 'Tài khoản thụ hưởng' : 'Tài khoản gửi' }}</p>
+                <p class="font-medium">{{ isExpense ? transaction.beneficiaryAccount.accountName : transaction.senderAccount.accountName }}</p>
+              </div>
+            </div>
+
+            <div v-if="transaction.beneficiary || transaction.collectMoneyWho" class="flex items-start">
+              <div class="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0 mr-3">
+                <font-awesome-icon :icon="['fas', 'user']" class="text-primary" />
+              </div>
+              <div>
+                <p class="text-sm text-text-secondary">{{ isExpense ? 'Chi cho' : 'Nhận từ ' }}</p>
+                <p class="font-medium">{{ isExpense ? transaction.beneficiary : transaction.collectMoneyWho}}</p>
+              </div>
+            </div>
+
             <!-- Ngày tháng -->
             <div class="flex items-start">
               <div class="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0 mr-3">
@@ -166,38 +187,6 @@ const getCategoryName = computed(() => {
               <div>
                 <p class="text-sm text-text-secondary">Chuyến đi/Sự kiện</p>
                 <p class="font-medium">{{ transaction.tripEvent }}</p>
-              </div>
-            </div>
-
-            <!-- Nhận từ ai/Chi cho ai (nếu có) -->
-            <div v-if="transaction.beneficiaryAccount || transaction.senderAccount" class="flex items-start">
-              <div class="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0 mr-3">
-                <font-awesome-icon :icon="['fas', 'user']" class="text-primary" />
-              </div>
-              <div>
-                <p class="text-sm text-text-secondary">{{ isExpense ? 'Chi cho tài khoản' : 'Nhận từ tài khoản' }}</p>
-                <p class="font-medium">{{ isExpense ? transaction.beneficiaryAccount.accountName : transaction.senderAccount.accountName }}</p>
-              </div>
-            </div>
-
-            <div v-if="transaction.beneficiary || transaction.collectMoneyWho" class="flex items-start">
-              <div class="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0 mr-3">
-                <font-awesome-icon :icon="['fas', 'user']" class="text-primary" />
-              </div>
-              <div>
-                <p class="text-sm text-text-secondary">{{ isExpense ? 'Chi cho' : 'Nhận từ ' }}</p>
-                <p class="font-medium">{{ isExpense ? transaction.beneficiary : transaction.collectMoneyWho}}</p>
-              </div>
-            </div>
-
-          
-            <div v-if="transaction.benecificary || transaction.collectMoneyWho" class="flex items-start">
-              <div class="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0 mr-3">
-                <font-awesome-icon :icon="['fas', 'user']" class="text-primary" />
-              </div>
-              <div>
-                <p class="text-sm text-text-secondary">{{ isExpense ? 'Chi cho' : 'Nhận từ ' }}</p>
-                <p class="font-medium">{{ isExpense ? transaction.benecificary : transaction.collectMoneyWho}}</p>
               </div>
             </div>
 

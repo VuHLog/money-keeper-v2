@@ -3,11 +3,18 @@ package com.vuhlog.money_keeper.controller;
 import com.vuhlog.money_keeper.dto.request.ReportFilterOptionsRequest;
 import com.vuhlog.money_keeper.dto.response.ApiResponse;
 import com.vuhlog.money_keeper.dto.response.responseinterface.report.*;
+import com.vuhlog.money_keeper.excel.TransactionHistoryExcelExporter;
 import com.vuhlog.money_keeper.service.ReportService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.core.io.InputStreamResource;
 import org.springframework.data.domain.Page;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
 import java.util.List;
 
 @RestController
@@ -89,5 +96,23 @@ public class ReportController {
         return ApiResponse.<Page<TransactionHistory>>builder()
                 .result(reportService.getAllTransactionHistory(field, pageNumber, pageSize, sort, request))
                 .build();
+    }
+
+    @PostMapping("transaction-history/export-excel")
+    public ResponseEntity<Object> getAllTransactionHistory(
+            @RequestBody ReportFilterOptionsRequest request) throws IOException {
+        String headerKey = "Content-Disposition";
+        String headerValue = "attachment; filename=transaction-history.xls";
+        HttpHeaders headers = new HttpHeaders();
+        headers.add(headerKey, headerValue);
+        List<TransactionHistory> transactionHistories = reportService.getAllTransactionHistoryNoPaging(request);
+
+        TransactionHistoryExcelExporter exporter = new TransactionHistoryExcelExporter(transactionHistories);
+        ByteArrayInputStream in = exporter.export();
+        return ResponseEntity.ok()
+                .headers(headers)
+                .contentType(MediaType.parseMediaType(
+                        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"))
+                .body(new InputStreamResource(in));
     }
 }

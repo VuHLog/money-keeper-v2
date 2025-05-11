@@ -76,7 +76,7 @@ const selectedTimeRange = ref('month')
 const selectedAccount = ref(['all'])
 const selectedExpenseCategory = ref(['all'])
 const selectedRevenueCategory = ref(['all'])
-const selectedTransactionType = ref('expense')
+const selectedTransactionType = ref('')
 const customTimeRange = ref([new Date().toISOString().slice(0, 7), new Date().toISOString().slice(0, 7)])
 
 // Store original values for reset
