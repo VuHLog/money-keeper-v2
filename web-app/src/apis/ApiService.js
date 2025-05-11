@@ -3,7 +3,7 @@ import { useAuthStore } from "@/store/AuthStore.js";
 import { useLayoutStore } from "@/store/LayoutStore.js";
 
 // Tạo một instance của axios với các default config
-const instance = axios.create({
+export const instance = axios.create({
   baseURL: "http://localhost:8080/api",
 
   headers: {

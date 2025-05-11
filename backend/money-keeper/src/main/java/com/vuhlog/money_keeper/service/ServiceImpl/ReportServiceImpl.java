@@ -200,7 +200,7 @@ public class ReportServiceImpl implements ReportService {
         LocalDate startDate = null;
         LocalDate endDate = null;
         Sort sortable = Sort.by("date").descending();
-        Pageable pageable = PageRequest.of(pageNumber, pageSize, sortable);
+        Pageable pageable = PageRequest.of(pageNumber, pageSize);
 
         if(timeOption.equals(ReportTimeOptionType.MONTH.getType())){
             YearMonth startMonth = YearMonth.parse(start);
@@ -223,6 +223,45 @@ public class ReportServiceImpl implements ReportService {
             return reportExpenseRevenueRepository.getAllRevenueHistory(userId, bucketPaymentIds, request.getRevenueCategoriesId(), startDate, endDate, pageable);
         } else {
             return reportExpenseRevenueRepository.getAllExpenseRevenueHistory(userId, bucketPaymentIds, startDate, endDate, pageable);
+        }
+    }
+
+    @Override
+    public List<TransactionHistory> getAllTransactionHistoryNoPaging(ReportFilterOptionsRequest request) {
+        String userId = userCommon.getMyUserInfo().getId();
+        String timeOption = request.getTimeOption();
+        String transactionType = request.getTransactionType();
+        String bucketPaymentIds = request.getBucketPaymentIds();
+        String start = null;
+        String end = null;
+        if(request.getCustomTimeRange() != null && request.getCustomTimeRange().size() > 0){
+            start = request.getCustomTimeRange().get(0);
+            end = request.getCustomTimeRange().get(1);
+        }
+        LocalDate startDate = null;
+        LocalDate endDate = null;
+
+        if(timeOption.equals(ReportTimeOptionType.MONTH.getType())){
+            YearMonth startMonth = YearMonth.parse(start);
+            YearMonth endMonth = YearMonth.parse(end);
+            startDate = startMonth.atDay(1);
+            endDate = endMonth.atEndOfMonth();
+        }else if (timeOption.equals(ReportTimeOptionType.YEAR.getType())){
+            int startYear = Integer.parseInt(start);
+            int endYear = Integer.parseInt(end);
+            startDate = LocalDate.of(startYear, 1, 1);
+            endDate = LocalDate.of(endYear, 12, 31);
+        } else if (timeOption.equals(ReportTimeOptionType.OPTIONAL.getType())) {
+            startDate = LocalDate.parse(start);
+            endDate = LocalDate.parse(end);
+        }
+
+        if(transactionType.equals(TransactionType.EXPENSE.getType())) {
+            return reportExpenseRevenueRepository.getAllExpenseHistoryNoPaging(userId, bucketPaymentIds, request.getExpenseCategoriesId() , startDate, endDate);
+        } else if (transactionType.equals(TransactionType.REVENUE.getType())){
+            return reportExpenseRevenueRepository.getAllRevenueHistoryNoPaging(userId, bucketPaymentIds, request.getRevenueCategoriesId(), startDate, endDate);
+        } else {
+            return reportExpenseRevenueRepository.getAllExpenseRevenueHistoryNoPaging(userId, bucketPaymentIds, startDate, endDate);
         }
     }
 }

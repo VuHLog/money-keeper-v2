@@ -6,9 +6,9 @@ import TransactionDetailModal from '@components/TransactionDetailModal.vue'
 import DeleteTransactionModal from '@components/DeleteTransactionModal.vue'
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
 import { library } from '@fortawesome/fontawesome-svg-core'
-import { faArrowUp, faArrowDown, faEye, faWallet, faBuildingColumns, faList, faLocationDot, faCalendarDays, faEdit, faTrash, faChevronLeft, faChevronRight } from '@fortawesome/free-solid-svg-icons'
+import { faArrowUp, faArrowDown, faEye, faWallet, faBuildingColumns, faList, faLocationDot, faCalendarDays, faEdit, faTrash, faChevronLeft, faChevronRight, faFileExcel } from '@fortawesome/free-solid-svg-icons'
 
-library.add(faArrowUp, faArrowDown, faEye, faWallet, faBuildingColumns, faList, faLocationDot, faCalendarDays, faEdit, faTrash, faChevronLeft, faChevronRight)
+library.add(faArrowUp, faArrowDown, faEye, faWallet, faBuildingColumns, faList, faLocationDot, faCalendarDays, faEdit, faTrash, faChevronLeft, faChevronRight, faFileExcel)
 import { useTransactionHistoryStore } from '@stores/TransactionHistoryStore'
 import { useDictionaryBucketPaymentStore } from '@/store/DictionaryBucketPaymentStore'
 import { useExpenseRegularStore } from '@/store/ExpenseRegularStore'
@@ -20,6 +20,15 @@ import ToastManager from '@/views/components/ToastManager.vue'
 const toastManagerRef = ref(null)
 
 const filters = ref({
+  timeOption: '',
+  transactionType: 'all',
+  account: [],
+  expenseCategory: [],
+  revenueCategory: [],
+  customTimeRange: null
+})
+
+const excelFilters = ref({
   timeOption: '',
   transactionType: 'all',
   account: [],
@@ -134,6 +143,7 @@ const handleFilterReset = async () => {
 }
 
 const handleApplyFilter = async () => {
+  excelFilters.value = filters.value
   transactionHistoryStore.resetPagination()
   await loadData()
 }
@@ -430,12 +440,30 @@ const getTransactionTypeIcon = (type) => {
       return 'question'
   }
 }
+
+// Export Excel
+const exportExcel = async () => {
+  let response = await transactionHistoryStore.exportExcel(filters.value)
+  console.log(response)
+}
 </script>
 
 <template>
   <div class="p-4">
     <!-- Add ToastManager component -->
     <ToastManager ref="toastManagerRef" />
+    
+    <!-- Header section with filters and export button -->
+    <div class="flex justify-end items-center mb-4">
+      <!-- Export Excel button -->
+      <button
+        class="flex items-center space-x-2 px-4 py-2 bg-success text-white rounded-lg hover:bg-success/90 transition-colors duration-200"
+        @click="exportExcel"
+      >
+        <font-awesome-icon :icon="['fas', 'file-excel']" />
+        <span>Xuất Excel</span>
+      </button>
+    </div>
     
     <!-- Filters -->
     <FilterOptions

@@ -20,4 +20,20 @@ public interface TransactionHistory {
     String getTransferType();
 
     String getInterpretation();
+
+    String getTripEvent();
+
+    String getLocation();
+
+    String getBeneficiary();
+
+    String getBeneficiaryAccountName();
+
+    String getBeneficiaryAccountIconUrl();
+
+    String getCollectMoneyWho();
+
+    String getSenderAccountName();
+
+    String getSenderAccountIconUrl();
 }
