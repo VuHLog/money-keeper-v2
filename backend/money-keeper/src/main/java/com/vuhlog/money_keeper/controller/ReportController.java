@@ -3,7 +3,7 @@ package com.vuhlog.money_keeper.controller;
 import com.vuhlog.money_keeper.dto.request.ReportFilterOptionsRequest;
 import com.vuhlog.money_keeper.dto.response.ApiResponse;
 import com.vuhlog.money_keeper.dto.response.responseinterface.report.*;
-import com.vuhlog.money_keeper.excel.TransactionHistoryExcelExporter;
+import com.vuhlog.money_keeper.excel.*;
 import com.vuhlog.money_keeper.service.ReportService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.core.io.InputStreamResource;
@@ -30,11 +30,65 @@ public class ReportController {
                 .build();
     }
 
+    @PostMapping("transaction-type/export-excel")
+    public ResponseEntity<InputStreamResource> exportExcelForTransactionType(
+            @RequestBody ReportFilterOptionsRequest request) throws IOException {
+        String headerKey = "Content-Disposition";
+        String headerValue = "attachment; filename=transaction-type.xls";
+        HttpHeaders headers = new HttpHeaders();
+        headers.add(headerKey, headerValue);
+        List<ReportTransactionTypeReponse> transactionHistories = reportService.getReportForTransactionType(request);
+
+        TransactionTypeExcelExporter exporter = new TransactionTypeExcelExporter(transactionHistories);
+        ByteArrayInputStream in = exporter.export(request);
+        return ResponseEntity.ok()
+                .headers(headers)
+                .contentType(MediaType.parseMediaType(
+                        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"))
+                .body(new InputStreamResource(in));
+    }
+
     @PostMapping("expense-category")
     public ApiResponse<List<ReportExpenseCategory>> getReportExpenseCategory(@RequestBody ReportFilterOptionsRequest request) {
         return ApiResponse.<List<ReportExpenseCategory>>builder()
                 .result(reportService.getReportExpenseCategory(request))
                 .build();
+    }
+
+    @PostMapping("expense-category/export-excel")
+    public ResponseEntity<InputStreamResource> exportExpenseCategory(
+            @RequestBody ReportFilterOptionsRequest request) throws IOException {
+        String headerKey = "Content-Disposition";
+        String headerValue = "attachment; filename=expense-category.xls";
+        HttpHeaders headers = new HttpHeaders();
+        headers.add(headerKey, headerValue);
+        List<ReportExpenseCategory> reportExpenseCategories = reportService.getReportExpenseCategory(request);
+
+        ExpenseCategoryExcelExporter exporter = new ExpenseCategoryExcelExporter(reportExpenseCategories);
+        ByteArrayInputStream in = exporter.export(request);
+        return ResponseEntity.ok()
+                .headers(headers)
+                .contentType(MediaType.parseMediaType(
+                        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"))
+                .body(new InputStreamResource(in));
+    }
+
+    @PostMapping("expense-category-trending/export-excel")
+    public ResponseEntity<InputStreamResource> exportExpenseCategoryTrending(
+            @RequestBody ReportFilterOptionsRequest request) throws IOException {
+        String headerKey = "Content-Disposition";
+        String headerValue = "attachment; filename=expense-category-trending.xls";
+        HttpHeaders headers = new HttpHeaders();
+        headers.add(headerKey, headerValue);
+        List<ReportExpenseCategory> reportExpenseCategories = reportService.getReportExpenseCategory(request);
+
+        ExpenseCategoryTrendingExcelExporter exporter = new ExpenseCategoryTrendingExcelExporter(reportExpenseCategories);
+        ByteArrayInputStream in = exporter.export(request);
+        return ResponseEntity.ok()
+                .headers(headers)
+                .contentType(MediaType.parseMediaType(
+                        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"))
+                .body(new InputStreamResource(in));
     }
 
     @PostMapping("revenue-category")
@@ -44,6 +98,42 @@ public class ReportController {
                 .build();
     }
 
+    @PostMapping("revenue-category/export-excel")
+    public ResponseEntity<InputStreamResource> exportRevenueCategory(
+            @RequestBody ReportFilterOptionsRequest request) throws IOException {
+        String headerKey = "Content-Disposition";
+        String headerValue = "attachment; filename=revenue-category.xls";
+        HttpHeaders headers = new HttpHeaders();
+        headers.add(headerKey, headerValue);
+        List<ReportRevenueCategory> reportRevenueCategories = reportService.getReportRevenueCategory(request);
+
+        RevenueCategoryExcelExporter exporter = new RevenueCategoryExcelExporter(reportRevenueCategories);
+        ByteArrayInputStream in = exporter.export(request);
+        return ResponseEntity.ok()
+                .headers(headers)
+                .contentType(MediaType.parseMediaType(
+                        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"))
+                .body(new InputStreamResource(in));
+    }
+
+    @PostMapping("revenue-category-trending/export-excel")
+    public ResponseEntity<InputStreamResource> exportRevenueCategoryTrending(
+            @RequestBody ReportFilterOptionsRequest request) throws IOException {
+        String headerKey = "Content-Disposition";
+        String headerValue = "attachment; filename=revenue-category-trending.xls";
+        HttpHeaders headers = new HttpHeaders();
+        headers.add(headerKey, headerValue);
+        List<ReportRevenueCategory> reportRevenueCategories = reportService.getReportRevenueCategory(request);
+
+        RevenueCategoryTrendingExcelExporter exporter = new RevenueCategoryTrendingExcelExporter(reportRevenueCategories);
+        ByteArrayInputStream in = exporter.export(request);
+        return ResponseEntity.ok()
+                .headers(headers)
+                .contentType(MediaType.parseMediaType(
+                        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"))
+                .body(new InputStreamResource(in));
+    }
+
     @PostMapping("daily-trend")
     public ApiResponse<List<ReportDailyTrend>> getReportDailyTrend(@RequestBody ReportFilterOptionsRequest request) {
         return ApiResponse.<List<ReportDailyTrend>>builder()
@@ -51,11 +141,46 @@ public class ReportController {
                 .build();
     }
 
+    @PostMapping("daily-trend/export-excel")
+    public ResponseEntity<InputStreamResource> exportReportDailyTrend(@RequestBody ReportFilterOptionsRequest request) throws IOException {
+        String headerKey = "Content-Disposition";
+        String headerValue = "attachment; filename=daily-trend.xls";
+        HttpHeaders headers = new HttpHeaders();
+        headers.add(headerKey, headerValue);
+        List<ReportDailyTrend> reportDailyTrend = reportService.getReportDailyTrend(request);
+
+        DailyTrendExcelExporter exporter = new DailyTrendExcelExporter(reportDailyTrend);
+        ByteArrayInputStream in = exporter.export(request);
+        return ResponseEntity.ok()
+                .headers(headers)
+                .contentType(MediaType.parseMediaType(
+                        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"))
+                .body(new InputStreamResource(in));
+    }
+
+
     @PostMapping("weekly-trend")
     public ApiResponse<List<ReportWeeklyTrend>> getReportWeeklyTrend(@RequestBody ReportFilterOptionsRequest request) {
         return ApiResponse.<List<ReportWeeklyTrend>>builder()
                 .result(reportService.getReportWeeklyTrend(request))
                 .build();
+    }
+
+    @PostMapping("weekly-trend/export-excel")
+    public ResponseEntity<InputStreamResource> exportReportWeeklyTrend(@RequestBody ReportFilterOptionsRequest request) throws IOException {
+        String headerKey = "Content-Disposition";
+        String headerValue = "attachment; filename=weekly-trend.xls";
+        HttpHeaders headers = new HttpHeaders();
+        headers.add(headerKey, headerValue);
+        List<ReportWeeklyTrend> reportWeeklyTrend = reportService.getReportWeeklyTrend(request);
+
+        WeeklyTrendExcelExporter exporter = new WeeklyTrendExcelExporter(reportWeeklyTrend);
+        ByteArrayInputStream in = exporter.export(request);
+        return ResponseEntity.ok()
+                .headers(headers)
+                .contentType(MediaType.parseMediaType(
+                        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"))
+                .body(new InputStreamResource(in));
     }
 
     @PostMapping("monthly-trend")
@@ -65,11 +190,45 @@ public class ReportController {
                 .build();
     }
 
+    @PostMapping("monthly-trend/export-excel")
+    public ResponseEntity<InputStreamResource> exportReportMonthlyTrend(@RequestBody ReportFilterOptionsRequest request) throws IOException {
+        String headerKey = "Content-Disposition";
+        String headerValue = "attachment; filename=monthly-trend.xls";
+        HttpHeaders headers = new HttpHeaders();
+        headers.add(headerKey, headerValue);
+        List<ReportMonthlyTrend> reportMonthlyTrend = reportService.getReportMonthlyTrend(request);
+
+        MonthlyTrendExcelExporter exporter = new MonthlyTrendExcelExporter(reportMonthlyTrend);
+        ByteArrayInputStream in = exporter.export(request);
+        return ResponseEntity.ok()
+                .headers(headers)
+                .contentType(MediaType.parseMediaType(
+                        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"))
+                .body(new InputStreamResource(in));
+    }
+
     @PostMapping("yearly-trend")
     public ApiResponse<List<ReportYearlyTrend>> getReportYearlyTrend(@RequestBody ReportFilterOptionsRequest request) {
         return ApiResponse.<List<ReportYearlyTrend>>builder()
                 .result(reportService.getReportYearlyTrend(request))
                 .build();
+    }
+
+    @PostMapping("yearly-trend/export-excel")
+    public ResponseEntity<InputStreamResource> exportReportYearlyTrend(@RequestBody ReportFilterOptionsRequest request) throws IOException {
+        String headerKey = "Content-Disposition";
+        String headerValue = "attachment; filename=yearly-trend.xls";
+        HttpHeaders headers = new HttpHeaders();
+        headers.add(headerKey, headerValue);
+        List<ReportYearlyTrend> reportYearlyTrend = reportService.getReportYearlyTrend(request);
+
+        YearlyTrendExcelExporter exporter = new YearlyTrendExcelExporter(reportYearlyTrend);
+        ByteArrayInputStream in = exporter.export(request);
+        return ResponseEntity.ok()
+                .headers(headers)
+                .contentType(MediaType.parseMediaType(
+                        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"))
+                .body(new InputStreamResource(in));
     }
 
     @PostMapping("bucket-payment-balance")
@@ -99,7 +258,7 @@ public class ReportController {
     }
 
     @PostMapping("transaction-history/export-excel")
-    public ResponseEntity<InputStreamResource> getAllTransactionHistory(
+    public ResponseEntity<InputStreamResource> exportTransactionHistoryExcel(
             @RequestBody ReportFilterOptionsRequest request) throws IOException {
         String headerKey = "Content-Disposition";
         String headerValue = "attachment; filename=transaction-history.xls";
