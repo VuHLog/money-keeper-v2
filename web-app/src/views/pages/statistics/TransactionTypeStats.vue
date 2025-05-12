@@ -8,6 +8,7 @@ import { formatCurrency, formatReverseStringDate } from '@/utils/formatters'
 
 const reportStore = useReportStore()
 const filters = ref();
+const excelFilters = ref();
 const data = ref([]);
 const totalExpense = ref(0);
 const totalIncome = ref(0);
@@ -317,6 +318,8 @@ onMounted(async () => {
         account : [],
         customTimeRange: [currentDate.toISOString().slice(0, 7), currentDate.toISOString().slice(0, 7)],
   }
+
+  excelFilters.value = filters.value;
   
   // Lấy dữ liệu trước
   await getData();
@@ -433,7 +436,7 @@ const handleFilterChange = (filterOptions) => {
 const handleApplyFilter = async () => {
   // Ẩn biểu đồ trước khi cập nhật
   showCharts.value = false;
-  
+  excelFilters.value = filters.value;
   await getData();
   
   // Cập nhật dữ liệu cho biểu đồ
@@ -444,10 +447,25 @@ const handleApplyFilter = async () => {
     showCharts.value = true;
   }, 100);
 }
+
+const exportExcel = async () => {
+  await reportStore.exportExcelForTransactionType(excelFilters.value)
+}
 </script>
 
 <template>
   <div>
+    <!-- Header section with filters and export button -->
+    <div class="flex justify-end items-center mb-4">
+      <!-- Export Excel button -->
+      <button
+        class="flex items-center space-x-2 px-4 py-2 bg-success text-white rounded-lg hover:bg-success/90 transition-colors duration-200"
+        @click="exportExcel"
+      >
+        <font-awesome-icon :icon="['fas', 'file-excel']" />
+        <span>Xuất Excel</span>
+      </button>
+    </div>
     <!-- Filter Options -->
     <FilterOptions
       :show-time-range="true"

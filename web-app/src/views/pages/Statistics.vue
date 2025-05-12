@@ -8,7 +8,7 @@ import AccountStats from './statistics/AccountStats.vue'
 const activeTab = ref('transaction')
 
 const tabs = [
-  { id: 'transaction', name: 'Loại giao dịch' },
+  { id: 'transaction', name: 'Thời gian' },
   { id: 'category', name: 'Danh mục' },
   { id: 'trend', name: 'Xu hướng' },
   { id: 'account', name: 'Tài khoản' },

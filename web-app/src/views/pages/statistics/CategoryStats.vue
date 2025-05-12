@@ -3,7 +3,7 @@ import { ref, onMounted, watch, computed } from 'vue'
 import { useReportStore } from '@stores/ReportStore'
 import VueApexCharts from 'vue3-apexcharts'
 import FilterOptions from '@components/FilterOptions.vue'
-import { formatCurrency } from '@/utils/formatters'
+import { formatCurrency, formatReverseStringDate } from '@/utils/formatters'
 import Avatar from "@components/Avatar.vue"
 import { colorRepos } from '@constants/ColorRepos'
 
@@ -12,6 +12,7 @@ const reportStore = useReportStore()
 const expenseCategoryData = ref([])
 const revenueCategoryData = ref([])
 const filters = ref();
+const excelFilters = ref();
 const expenseCategoryColors = ref([]);
 const revenueCategoryColors = ref([]);
 
@@ -399,6 +400,7 @@ onMounted(async () => {
     revenueCategory: [],
     customTimeRange: [currentDate.toISOString().slice(0, 7), currentDate.toISOString().slice(0, 7)],
   }
+  excelFilters.value = filters.value;
   await getData();
   updateTransactionData();
   
@@ -441,7 +443,7 @@ const handleFilterChange = (filterOptions) => {
 const handleApplyFilter = async () => {
   // Hide charts before updating data
   showCharts.value = false;
-  
+  excelFilters.value = filters.value;
   await getData();
   updateTransactionData();
   
@@ -636,6 +638,22 @@ const updateTransactionData = () => {
   };
 }
 
+const exportExpenseCategoryExcel = async () => {
+  await reportStore.exportExcelForExpenseCategory(excelFilters.value);
+}
+
+const exportExpenseCategoryTrendingExcel = async () => {
+  await reportStore.exportExcelForExpenseCategoryTrending(excelFilters.value);
+}
+
+const exportRevenueCategoryExcel = async () => {
+  await reportStore.exportExcelForRevenueCategory(excelFilters.value);
+}
+
+const exportRevenueCategoryTrendingExcel = async () => {
+  await reportStore.exportExcelForRevenueCategoryTrending(excelFilters.value);
+}
+
 </script>
 
 <template>
@@ -648,25 +666,73 @@ const updateTransactionData = () => {
     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
       <!-- Income Categories -->
       <div class="bg-surface rounded-xl p-4 shadow-sm">
-        <h3 class="text-lg font-medium text-text mb-4">Phân bổ thu nhập</h3>
+        <div class="flex justify-between items-center mb-4">
+          <h3 class="text-lg font-medium text-text">Phân bổ thu nhập</h3>
+          <div class="flex justify-end items-center">
+            <!-- Export Excel button -->
+            <button
+              class="flex items-center space-x-2 px-4 py-2 bg-success text-white rounded-lg hover:bg-success/90 transition-colors duration-200"
+              @click="exportRevenueCategoryExcel"
+            >
+              <font-awesome-icon :icon="['fas', 'file-excel']" />
+              <span>Xuất Excel</span>
+            </button>
+          </div>
+        </div>
         <apexchart v-if="showCharts" type="bar" height="350" :options="revenueCategoriesChart" :series="revenueCategoriesChart.series" />
       </div>
 
       <!-- Expense Categories -->
       <div class="bg-surface rounded-xl p-4 shadow-sm">
-        <h3 class="text-lg font-medium text-text mb-4">Phân bổ chi tiêu</h3>
+        <div class="flex justify-between items-center mb-4">
+          <h3 class="text-lg font-medium text-text">Phân bổ chi tiêu</h3>
+          <div class="flex justify-end items-center">
+            <!-- Export Excel button -->
+            <button
+              class="flex items-center space-x-2 px-4 py-2 bg-success text-white rounded-lg hover:bg-success/90 transition-colors duration-200"
+              @click="exportExpenseCategoryExcel"
+            >
+              <font-awesome-icon :icon="['fas', 'file-excel']" />
+              <span>Xuất Excel</span>
+            </button>
+          </div>
+        </div>
         <apexchart v-if="showCharts" type="bar" height="350" :options="expenseCategoriesChart" :series="expenseCategoriesChart.series" />
       </div>
 
       <!-- Category Trends -->
       <div class="bg-surface rounded-xl p-4 shadow-sm md:col-span-2">
-        <h3 class="text-lg font-medium text-text mb-4">Xu hướng chi tiêu theo danh mục thu</h3>
+        <div class="flex justify-between items-center mb-4">
+          <h3 class="text-lg font-medium text-text mb-4">Xu hướng thu nhập theo danh mục thu</h3>
+          <div class="flex justify-end items-center">
+            <!-- Export Excel button -->
+            <button
+              class="flex items-center space-x-2 px-4 py-2 bg-success text-white rounded-lg hover:bg-success/90 transition-colors duration-200"
+              @click="exportRevenueCategoryTrendingExcel"
+            >
+              <font-awesome-icon :icon="['fas', 'file-excel']" />
+              <span>Xuất Excel</span>
+            </button>
+          </div>
+        </div>
         <apexchart v-if="showCharts" type="line" height="350" :options="revenueCategoryTrendsChart"
           :series="revenueCategoryTrendsChart.series" />
       </div>
 
       <div class="bg-surface rounded-xl p-4 shadow-sm md:col-span-2">
-        <h3 class="text-lg font-medium text-text mb-4">Xu hướng chi tiêu theo danh mục chi</h3>
+        <div class="flex justify-between items-center mb-4">
+          <h3 class="text-lg font-medium text-text mb-4">Xu hướng chi tiêu theo danh mục chi</h3>
+          <div class="flex justify-end items-center">
+            <!-- Export Excel button -->
+            <button
+              class="flex items-center space-x-2 px-4 py-2 bg-success text-white rounded-lg hover:bg-success/90 transition-colors duration-200"
+              @click="exportExpenseCategoryTrendingExcel"
+            >
+              <font-awesome-icon :icon="['fas', 'file-excel']" />
+              <span>Xuất Excel</span>
+            </button>
+          </div>
+        </div>
         <apexchart v-if="showCharts" type="line" height="350" :options="expenseCategoryTrendsChart"
           :series="expenseCategoryTrendsChart.series" />
       </div>

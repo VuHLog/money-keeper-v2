@@ -75,7 +75,7 @@ export const useTransactionHistoryStore = defineStore("transactionHistory", {
         });
         const link = document.createElement('a');
         link.href = window.URL.createObjectURL(blob);
-        link.download = 'Lịch sử giao dịch' + (filters.timeOption?' ' + filters.timeOption.toLowerCase() : '') + '.xlsx';
+        link.download = 'Lịch sử giao dịch' + (filters.timeOption && filters.timeOption !== 'Tùy chọn' ? ' ' + filters.timeOption.toLowerCase() : '') + '.xlsx';
         document.body.appendChild(link);
         link.click();
         link.remove();

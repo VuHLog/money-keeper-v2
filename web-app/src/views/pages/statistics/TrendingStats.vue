@@ -12,6 +12,7 @@ const weeklyTrendData = ref([])
 const monthlyTrendData = ref([])
 const yearlyTrendData = ref([])
 const filters = ref();
+const excelFilters = ref();
 const transactionType = ref('expense')
 const dailyTrendsCategories = ref(['01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12', '13', '14', '15', '16', '17', '18', '19', '20', '21', '22', '23', '24', '25', '26', '27', '28', '29', '30', '31'])
 const weeklyTrendsCategories = ref(['Thứ 2', 'Thứ 3', 'Thứ 4', 'Thứ 5', 'Thứ 6', 'Thứ 7', 'Chủ nhật'])
@@ -289,6 +290,7 @@ onMounted(async () => {
     account: [],
     transactionType: 'expense',
   }
+  excelFilters.value = filters.value;
   await getData();
   updateTransactionData();
 })
@@ -307,6 +309,7 @@ const handleFilterChange = (filterOptions) => {
 
 const handleApplyFilter = async () => {
   transactionType.value = filters.value.transactionType;
+  excelFilters.value = filters.value;
   await getData();
   updateTransactionData();
 }
@@ -354,6 +357,22 @@ const updateTransactionData = () => {
   // Cập nhật xaxis riêng, đảm bảo categories được gán đúng
   yearlyTrendsChart.value.xaxis.categories = [...yearlyTrendsCategories.value];
 }
+
+const exportExcelForDailyTrend = async () => {
+  await reportStore.exportExcelForDailyTrend(excelFilters.value);
+}
+
+const exportExcelForWeeklyTrend = async () => {
+  await reportStore.exportExcelForWeeklyTrend(excelFilters.value);
+}
+
+const exportExcelForMonthlyTrend = async () => {
+  await reportStore.exportExcelForMonthlyTrend(excelFilters.value);
+}
+
+const exportExcelForYearlyTrend = async () => {
+  await reportStore.exportExcelForYearlyTrend(excelFilters.value);
+}
 </script>
 
 <template>
@@ -373,7 +392,19 @@ const updateTransactionData = () => {
     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
       <!-- Daily Trends -->
       <div class="bg-surface rounded-xl p-4 shadow-sm">
-        <h3 class="text-lg font-medium text-text mb-4">Xu hướng {{ transactionType === 'expense' ? 'chi tiêu' : 'thu nhập' }} theo ngày</h3>
+      <div class="flex justify-between items-center mb-4">
+        <h3 class="text-lg font-medium text-text">Xu hướng {{ transactionType === 'expense' ? 'chi tiêu' : 'thu nhập' }} theo ngày</h3>
+        <div class="flex justify-end items-center">
+          <!-- Export Excel button -->
+          <button
+            class="flex items-center space-x-2 px-4 py-2 bg-success text-white rounded-lg hover:bg-success/90 transition-colors duration-200"
+            @click="exportExcelForDailyTrend"
+          >
+            <font-awesome-icon :icon="['fas', 'file-excel']" />
+            <span>Xuất Excel</span>
+          </button>
+        </div>
+      </div>
         <apexchart
           type="line"
           height="350"
@@ -384,7 +415,19 @@ const updateTransactionData = () => {
 
       <!-- Weekly Trends -->
       <div class="bg-surface rounded-xl p-4 shadow-sm">
-        <h3 class="text-lg font-medium text-text mb-4">Xu hướng {{ transactionType === 'expense' ? 'chi tiêu' : 'thu nhập' }} theo tuần</h3>
+        <div class="flex justify-between items-center mb-4">
+          <h3 class="text-lg font-medium text-text">Xu hướng {{ transactionType === 'expense' ? 'chi tiêu' : 'thu nhập' }} theo tuần</h3>
+          <div class="flex justify-end items-center">
+            <!-- Export Excel button -->
+            <button
+              class="flex items-center space-x-2 px-4 py-2 bg-success text-white rounded-lg hover:bg-success/90 transition-colors duration-200"
+              @click="exportExcelForWeeklyTrend"
+            >
+              <font-awesome-icon :icon="['fas', 'file-excel']" />
+              <span>Xuất Excel</span>
+            </button>
+          </div>
+        </div>
         <apexchart
           type="line"
           height="350"
@@ -395,7 +438,19 @@ const updateTransactionData = () => {
 
       <!-- Monthly Trends -->
       <div class="bg-surface rounded-xl p-4 shadow-sm">
-        <h3 class="text-lg font-medium text-text mb-4">Xu hướng {{ transactionType === 'expense' ? 'chi tiêu' : 'thu nhập' }} theo tháng</h3>
+        <div class="flex justify-between items-center mb-4">
+          <h3 class="text-lg font-medium text-text">Xu hướng {{ transactionType === 'expense' ? 'chi tiêu' : 'thu nhập' }} theo tháng</h3>
+          <div class="flex justify-end items-center">
+            <!-- Export Excel button -->
+            <button
+              class="flex items-center space-x-2 px-4 py-2 bg-success text-white rounded-lg hover:bg-success/90 transition-colors duration-200"
+              @click="exportExcelForMonthlyTrend"
+            >
+              <font-awesome-icon :icon="['fas', 'file-excel']" />
+              <span>Xuất Excel</span>
+            </button>
+          </div>
+        </div>
         <apexchart
           type="line"
           height="350"
@@ -406,7 +461,19 @@ const updateTransactionData = () => {
 
       <!-- Yearly Trends -->
       <div class="bg-surface rounded-xl p-4 shadow-sm">
-        <h3 class="text-lg font-medium text-text mb-4">Xu hướng {{ transactionType === 'expense' ? 'chi tiêu' : 'thu nhập' }} 5 năm gần nhất</h3>
+        <div class="flex justify-between items-center mb-4">
+          <h3 class="text-lg font-medium text-text">Xu hướng {{ transactionType === 'expense' ? 'chi tiêu' : 'thu nhập' }} 5 năm gần nhất</h3>
+          <div class="flex justify-end items-center">
+            <!-- Export Excel button -->
+            <button
+              class="flex items-center space-x-2 px-4 py-2 bg-success text-white rounded-lg hover:bg-success/90 transition-colors duration-200"
+              @click="exportExcelForYearlyTrend"
+            >
+              <font-awesome-icon :icon="['fas', 'file-excel']" />
+              <span>Xuất Excel</span>
+            </button>
+          </div>
+        </div>
         <apexchart
           type="line"
           height="350"
