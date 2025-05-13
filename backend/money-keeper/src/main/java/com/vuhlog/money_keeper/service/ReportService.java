@@ -23,6 +23,8 @@ public interface ReportService {
 
     List<ReportBucketPaymentTypeBalance> getReportBucketPaymentTypeBalance();
 
+    List<AccountBalanceFluctuation> getAccountBalanceFluctuation(ReportFilterOptionsRequest request);
+
     TotalExpenseRevenue getTotalExpenseRevenueThisMonth();
 
     Page<TransactionHistory> getAllTransactionHistory(String field, Integer pageNumber, Integer pageSize, String sort, ReportFilterOptionsRequest request);

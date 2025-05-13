@@ -231,6 +231,13 @@ public class ReportController {
                 .body(new InputStreamResource(in));
     }
 
+    @PostMapping("account-balance-fluctuation")
+    public ApiResponse<List<AccountBalanceFluctuation>> getAccountBalanceFluctuation(@RequestBody ReportFilterOptionsRequest request) {
+        return ApiResponse.<List<AccountBalanceFluctuation>>builder()
+                .result(reportService.getAccountBalanceFluctuation(request))
+                .build();
+    }
+
     @PostMapping("bucket-payment-balance")
     public ApiResponse<List<ReportBucketPaymentBalance>> getReportBucketPaymentBalance() {
         return ApiResponse.<List<ReportBucketPaymentBalance>>builder()

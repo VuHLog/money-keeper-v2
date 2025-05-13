@@ -3,7 +3,7 @@ import { ref, onMounted, watch, computed } from 'vue'
 import { useReportStore } from '@stores/ReportStore'
 import VueApexCharts from 'vue3-apexcharts'
 import FilterOptions from '@components/FilterOptions.vue'
-import { formatCurrency } from '@/utils/formatters'
+import { formatCurrency, formatReverseStringDate } from '@/utils/formatters'
 import { colorRepos } from '@constants/ColorRepos'
 import Avatar from '@components/Avatar.vue'
 
@@ -12,19 +12,69 @@ const accountBalanceData = ref([])
 const accountBalanceColors = ref([])
 const accountTypeBalanceData = ref([])
 const accountTypeBalanceColors = ref([])
+const accountBalanceFluctuationData = ref([])
 const filters = ref();
 // Add showCharts variable to control chart visibility
 const showCharts = ref(false);
 
+// Chart categories based on time filters
+const chartCategories = computed(() => generateCategories());
 
-// Sample data - Replace with actual data from your API
-const transactionData = ref({
-  accountTransactions: {
-    'Ví tiền mặt': [1000000, 2000000, 3000000, 4000000, 5000000],
-    'Ngân hàng A': [5000000, 6000000, 7000000, 8000000, 10000000],
-    'Ngân hàng B': [2000000, 2500000, 3000000, 4000000, 5000000]
-  },
-})
+// Generate categories based on timeOption and customTimeRange
+const generateCategories = () => {
+  if (!filters.value || !filters.value.customTimeRange || filters.value.customTimeRange.length < 2) {
+    return ['Tháng 01', 'Tháng 02', 'Tháng 03', 'Tháng 04', 'Tháng 05', 'Tháng 06',
+      'Tháng 07', 'Tháng 08', 'Tháng 09', 'Tháng 10', 'Tháng 11', 'Tháng 12'];
+  }
+
+  const startDate = new Date(filters.value.customTimeRange[0]);
+  const endDate = new Date(filters.value.customTimeRange[1]);
+  const categories = [];
+
+  // Based on timeOption
+  if (filters.value.timeOption === "Tùy chọn") {
+    // For dates, we generate daily categories
+    const currentDate = new Date(startDate);
+    while (currentDate <= endDate) {
+      const day = String(currentDate.getDate()).padStart(2, '0');
+      const month = String(currentDate.getMonth() + 1).padStart(2, '0');
+      categories.push(`${day}/${month}/${currentDate.getFullYear()}`);
+      currentDate.setDate(currentDate.getDate() + 1);
+    }
+  } else if (filters.value.timeOption === "Theo tháng") {
+    // For months, generate monthly categories
+    const currentDate = new Date(startDate);
+    currentDate.setDate(1); // Start from the first day of month
+
+    while (currentDate <= endDate ||
+      (currentDate.getMonth() <= endDate.getMonth() && currentDate.getFullYear() <= endDate.getFullYear())) {
+      const month = String(currentDate.getMonth() + 1).padStart(2, '0');
+      categories.push(`${month}/${currentDate.getFullYear()}`);
+      currentDate.setMonth(currentDate.getMonth() + 1);
+    }
+  } else if (filters.value.timeOption === "Theo năm") {
+    // For years, generate yearly categories
+    const startYear = startDate.getFullYear();
+    const endYear = endDate.getFullYear();
+
+    for (let year = startYear; year <= endYear; year++) {
+      categories.push(`${year}`);
+    }
+  } else {
+    // Default case for custom ranges
+    const currentDate = new Date(startDate);
+    currentDate.setDate(1); // Start from the first day of month
+
+    while (currentDate <= endDate ||
+      (currentDate.getMonth() <= endDate.getMonth() && currentDate.getFullYear() <= endDate.getFullYear())) {
+      const month = String(currentDate.getMonth() + 1).padStart(2, '0');
+      categories.push(`Tháng ${month}-${currentDate.getFullYear()}`);
+      currentDate.setMonth(currentDate.getMonth() + 1);
+    }
+  }
+
+  return categories;
+};
 
 // Chart options
 const accountBalancesChart = ref({
@@ -64,10 +114,7 @@ const accountBalancesChart = ref({
 })
 
 const accountTransactionsChart = ref({
-  series: Object.entries(transactionData.value.accountTransactions).map(([name, data]) => ({
-    name,
-    data
-  })),
+  series: [],
   chart: {
     type: 'line',
     height: 350,
@@ -96,7 +143,7 @@ const accountTransactionsChart = ref({
     }
   },
   xaxis: {
-    categories: ['Tháng 1', 'Tháng 2', 'Tháng 3', 'Tháng 4', 'Tháng 5']
+    categories: []
   },
   yaxis: {
     labels: {
@@ -114,7 +161,7 @@ const accountTransactionsChart = ref({
       }
     }
   },
-  colors: ['#3B82F6', '#10B981', '#F59E0B'],
+  colors: [],
 })
 
 const accountTypesChart = ref({
@@ -153,11 +200,24 @@ const accountTypesChart = ref({
   },
 })
 
+watch(chartCategories, (newCategories) => {
+  accountTransactionsChart.value.xaxis = { categories: newCategories };
+}, { deep: true });
+
 onMounted(async () => {
-  // filters.value = {
-  //   account: [],
-  //   transactionType: 'expense',
-  // }
+  let currentDate = new Date();
+  // Tạo đúng ngày 1 tháng 1 năm hiện tại
+  let startDate = new Date(currentDate.getFullYear() + '-01-01');
+  
+  filters.value = {
+    timeOption: "Theo tháng",
+    account: [],
+    customTimeRange: [
+      startDate.toISOString().slice(0, 7), 
+      currentDate.toISOString().slice(0, 7)
+    ],
+  }
+
   await getData();
   updateTransactionData();
   
@@ -170,6 +230,15 @@ onMounted(async () => {
 const getData = async () => {
   accountBalanceData.value = await reportStore.getReportBucketPaymentBalance();
   accountTypeBalanceData.value = await reportStore.getReportBucketPaymentTypeBalance();
+  accountBalanceFluctuationData.value = await reportStore.getAccountBalanceFluctuation(filters.value);
+  
+  // Định dạng dữ liệu thời gian nếu cần
+  accountBalanceFluctuationData.value = accountBalanceFluctuationData.value.map(item => {
+    return {
+      ...item,
+      time: filters.value.timeOption === "Tùy chọn" ? formatReverseStringDate(item.time).replace(/-/g, "/") : item.time.replace(/-/g, "/"),
+    }
+  });
 }
 
 const handleFilterChange = (filterOptions) => {
@@ -277,14 +346,71 @@ const updateTransactionData = () => {
     }
   };
   
+  // Xử lý dữ liệu biến động số dư tài khoản
+  // Lấy danh sách các tài khoản
+  let accountSet = new Set(
+    accountBalanceFluctuationData.value.map(item =>
+      JSON.stringify({
+        accountKey: `${item.bucketPaymentId}_${item.accountName}`,
+        bucketPaymentId: item.bucketPaymentId,
+        accountName: item.accountName
+      })
+    )
+  );
+  
+  let accountTransactions = {};
+
+  // Khởi tạo giá trị đầu tiên cho mỗi tài khoản
+  accountSet.forEach((aStr) => {
+    const a = JSON.parse(aStr);
+    accountTransactions[a.accountKey] = {
+      name: a.accountName,
+      data: [],
+      lastValue: 0
+    };
+  });
+  
+  chartCategories.value.forEach((time, timeIndex) => {
+    accountSet.forEach((aStr) => {
+      const a = JSON.parse(aStr);
+      let dataItem = accountBalanceFluctuationData.value.find((item) =>
+        time === item.time && a.bucketPaymentId === item.bucketPaymentId
+      );
+      
+      if (dataItem) {
+        accountTransactions[a.accountKey].lastValue = dataItem.balanceAfterTransaction;
+      }
+      
+      accountTransactions[a.accountKey].data.push(accountTransactions[a.accountKey].lastValue);
+    });
+  });
+  
+  // Loại bỏ thuộc tính lastValue trước khi gán vào biểu đồ
+  Object.keys(accountTransactions).forEach(key => {
+    delete accountTransactions[key].lastValue;
+  });
+  
   // Preserve account transactions chart animations
   const accountTransactionsChartSettings = preserveChartSettings(accountTransactionsChart.value);
+  
+  let accountTransactionsColors = [];
+  const availableTransactionColors = [...colorRepos];
+  
+  Object.keys(accountTransactions).forEach(() => {
+    const randomIndex = Math.floor(Math.random() * availableTransactionColors.length);
+    const selectedColor = availableTransactionColors[randomIndex];
+    accountTransactionsColors.push(selectedColor);
+    availableTransactionColors.splice(randomIndex, 1);
+  });
+  
+  // Cập nhật biểu đồ
   accountTransactionsChart.value = {
     ...accountTransactionsChart.value,
-    series: Object.entries(transactionData.value.accountTransactions).map(([name, data]) => ({
-      name,
-      data
-    })),
+    series: Object.values(accountTransactions),
+    xaxis: {
+      categories: chartCategories.value
+    },
+    colors: accountTransactionsColors,
     chart: {
       ...accountTransactionsChart.value.chart,
       ...accountTransactionsChartSettings.animations

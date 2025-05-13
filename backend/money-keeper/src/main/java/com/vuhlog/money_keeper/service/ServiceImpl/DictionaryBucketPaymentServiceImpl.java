@@ -56,6 +56,7 @@ public class DictionaryBucketPaymentServiceImpl implements DictionaryBucketPayme
             dictionaryBucketPayment.setBank(bankRepository.findById(request.getBankId()).orElseThrow(() -> new AppException(ErrorCode.BANK_NOT_EXISTED)));
         }
         dictionaryBucketPayment.setUser(usersRepository.findById(userId).orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED)));
+        dictionaryBucketPayment.setInitialBalance(request.getBalance());
         return dictionaryBucketPaymentMapper.toDictionaryBucketResponse(dictionaryBucketPaymentRepository.save(dictionaryBucketPayment));
     }
 

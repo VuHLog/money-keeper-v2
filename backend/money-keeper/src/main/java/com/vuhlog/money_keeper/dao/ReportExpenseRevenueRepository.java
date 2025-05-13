@@ -377,6 +377,384 @@ public interface ReportExpenseRevenueRepository extends JpaRepository<ReportExpe
             @Param("userId") String userId
     );
 
+    @Query(value = "WITH last_expense AS (\n" +
+            "    SELECT\n" +
+            "        expense_date AS date_key,\n" +
+            "        dictionary_bucket_payment_id,\n" +
+            "        dbp.account_name,\n" +
+            "        e1.balance,\n" +
+            "        dbp.balance AS currentBalance\n" +
+            "    FROM expense_regular e1\n" +
+            "    JOIN dictionary_bucket_payment dbp ON dbp.id = e1.dictionary_bucket_payment_id\n" +
+            "    WHERE dbp.user_id = :userId\n" +
+            "    \tAND expense_date BETWEEN :startDate AND :endDate\n" +
+            "      AND expense_date = (\n" +
+            "          SELECT MAX(expense_date)\n" +
+            "          FROM expense_regular e2\n" +
+            "          WHERE DATE(e1.expense_date) = DATE(e2.expense_date)\n" +
+            "            AND e1.dictionary_bucket_payment_id = e2.dictionary_bucket_payment_id\n" +
+            "      )\n" +
+            "),\n" +
+            "last_revenue AS (\n" +
+            "    SELECT\n" +
+            "        revenue_date AS date_key,\n" +
+            "        dictionary_bucket_payment_id,\n" +
+            "        dbp.account_name,\n" +
+            "        r1.balance,\n" +
+            "        dbp.balance AS currentBalance\n" +
+            "    FROM revenue_regular r1\n" +
+            "    JOIN dictionary_bucket_payment dbp ON dbp.id = r1.dictionary_bucket_payment_id\n" +
+            "    WHERE dbp.user_id = :userId\n" +
+            "    \tAND revenue_date BETWEEN :startDate AND :endDate\n" +
+            "      AND revenue_date = (\n" +
+            "          SELECT MAX(revenue_date)\n" +
+            "          FROM revenue_regular r2\n" +
+            "          WHERE DATE(r1.revenue_date) = DATE(r2.revenue_date)\n" +
+            "            AND r1.dictionary_bucket_payment_id = r2.dictionary_bucket_payment_id\n" +
+            "      )\n" +
+            "),\n" +
+            "combined AS (\n" +
+            "    SELECT * FROM last_expense\n" +
+            "    UNION ALL\n" +
+            "    SELECT * FROM last_revenue\n" +
+            ")\n" +
+            "SELECT\n" +
+            "    date(date_key) AS time,\n" +
+            "    dictionary_bucket_payment_id AS bucketPaymentId,\n" +
+            "    account_name AS accountName,\n" +
+            "    balance AS balanceAfterTransaction,\n" +
+            "    currentBalance\n" +
+            "FROM combined c1\n" +
+            "WHERE date_key = (\n" +
+            "    SELECT MAX(date_key)\n" +
+            "    FROM combined c2\n" +
+            "    WHERE DATE(c1.date_key) = DATE(c2.date_key)\n" +
+            "      AND c1.dictionary_bucket_payment_id = c2.dictionary_bucket_payment_id\n" +
+            ")\n" +
+            "ORDER BY DATE(date_key), account_name;", nativeQuery = true)
+    List<AccountBalanceFluctuation> getAccountBalanceFluctuationByOptional(
+            @Param("userId") String userId,
+            @Param("startDate") LocalDate startDate,
+            @Param("endDate") LocalDate endDate
+    );
+
+    @Query(value = "WITH nearest_expense AS (\n" +
+            "    SELECT\n" +
+            "        expense_date AS date_key,\n" +
+            "        dictionary_bucket_payment_id,\n" +
+            "        dbp.account_name,\n" +
+            "        e1.balance,\n" +
+            "        dbp.balance AS currentBalance\n" +
+            "    FROM expense_regular e1\n" +
+            "    JOIN dictionary_bucket_payment dbp ON dbp.id = e1.dictionary_bucket_payment_id\n" +
+            "    WHERE dbp.user_id = :userId\n" +
+            "\t \tAND date(expense_date) < :date\n" +
+            "\t   AND expense_date = (\n" +
+            "\t       SELECT MAX(expense_date)\n" +
+            "\t       FROM expense_regular e2 \n" +
+            "\t       WHERE DATE(e2.expense_date) < :date\n" +
+            "\t         AND e1.dictionary_bucket_payment_id = e2.dictionary_bucket_payment_id\n" +
+            "\t   )\n" +
+            "),\n" +
+            "nearest_revenue AS (\n" +
+            "    SELECT\n" +
+            "        revenue_date AS date_key,\n" +
+            "        dictionary_bucket_payment_id,\n" +
+            "        dbp.account_name,\n" +
+            "        r1.balance,\n" +
+            "        dbp.balance AS currentBalance\n" +
+            "    FROM revenue_regular r1\n" +
+            "    JOIN dictionary_bucket_payment dbp ON dbp.id = r1.dictionary_bucket_payment_id\n" +
+            "    WHERE dbp.user_id = :userId\n" +
+            "\t \tAND date(revenue_date) < :date\n" +
+            "\t   AND revenue_date = (\n" +
+            "\t       SELECT MAX(revenue_date)\n" +
+            "\t       FROM revenue_regular r2 \n" +
+            "\t       WHERE DATE(r2.revenue_date) < :date\n" +
+            "\t         AND r1.dictionary_bucket_payment_id = r2.dictionary_bucket_payment_id\n" +
+            "\t   )\n" +
+            "    \t\n" +
+            "),\n" +
+            "combined AS (\n" +
+            "    SELECT * FROM nearest_expense\n" +
+            "    UNION ALL\n" +
+            "    SELECT * FROM nearest_revenue\n" +
+            ")\n" +
+            "SELECT\n" +
+            "    date(date_key) AS time,\n" +
+            "    dictionary_bucket_payment_id AS bucketPaymentId,\n" +
+            "    account_name AS accountName,\n" +
+            "    balance AS balanceAfterTransaction,\n" +
+            "    currentBalance\n" +
+            "FROM combined c1\n" +
+            "WHERE date_key = (\n" +
+            "    SELECT MAX(date_key)\n" +
+            "    FROM combined c2\n" +
+            "    WHERE DATE(c1.date_key) = DATE(c2.date_key)\n" +
+            "      AND c1.dictionary_bucket_payment_id = c2.dictionary_bucket_payment_id\n" +
+            ")\n" +
+            "ORDER BY DATE(date_key), account_name;", nativeQuery = true)
+    List<AccountBalanceFluctuation> getNearestAccountBalanceFluctuationByOptional(
+            @Param("userId") String userId,
+            @Param("date") LocalDate date
+    );
+
+    @Query(value = "WITH last_expense AS (\n" +
+            "    SELECT\n" +
+            "        expense_date AS date_key,\n" +
+            "        dictionary_bucket_payment_id,\n" +
+            "        dbp.account_name,\n" +
+            "        e1.balance,\n" +
+            "        dbp.balance AS currentBalance\n" +
+            "    FROM expense_regular e1\n" +
+            "    JOIN dictionary_bucket_payment dbp ON dbp.id = e1.dictionary_bucket_payment_id\n" +
+            "    WHERE dbp.user_id = :userId\n" +
+            "    \tAND expense_date BETWEEN :startMonth AND :endMonth\n" +
+            "      AND expense_date = (\n" +
+            "          SELECT MAX(expense_date)\n" +
+            "          FROM expense_regular e2\n" +
+            "          WHERE month(e1.expense_date) = month(e2.expense_date)\n" +
+            "          \tAND year(e1.expense_date) = year(e2.expense_date)\n" +
+            "            AND e1.dictionary_bucket_payment_id = e2.dictionary_bucket_payment_id\n" +
+            "      )\n" +
+            "),\n" +
+            "last_revenue AS (\n" +
+            "    SELECT\n" +
+            "        revenue_date AS date_key,\n" +
+            "        dictionary_bucket_payment_id,\n" +
+            "        dbp.account_name,\n" +
+            "        r1.balance,\n" +
+            "        dbp.balance AS currentBalance\n" +
+            "    FROM revenue_regular r1\n" +
+            "    JOIN dictionary_bucket_payment dbp ON dbp.id = r1.dictionary_bucket_payment_id\n" +
+            "    WHERE dbp.user_id = :userId\n" +
+            "    \tAND revenue_date BETWEEN :startMonth AND :endMonth\n" +
+            "      AND revenue_date = (\n" +
+            "          SELECT MAX(revenue_date)\n" +
+            "          FROM revenue_regular r2\n" +
+            "          WHERE month(r1.revenue_date) = month(r2.revenue_date)\n" +
+            "          \tAND year(r1.revenue_date) = year(r2.revenue_date)\n" +
+            "            AND r1.dictionary_bucket_payment_id = r2.dictionary_bucket_payment_id\n" +
+            "      )\n" +
+            "),\n" +
+            "combined AS (\n" +
+            "    SELECT * FROM last_expense\n" +
+            "    UNION ALL\n" +
+            "    SELECT * FROM last_revenue\n" +
+            ")\n" +
+            "SELECT\n" +
+            "    CONCAT(LPAD(MONTH(date_key), 2, '0'), '/', YEAR(date_key)) AS time,\n" +
+            "    dictionary_bucket_payment_id AS bucketPaymentId,\n" +
+            "    account_name AS accountName,\n" +
+            "    balance AS balanceAfterTransaction,\n" +
+            "    currentBalance\n" +
+            "FROM combined c1\n" +
+            "WHERE date_key = (\n" +
+            "    SELECT MAX(date_key)\n" +
+            "    FROM combined c2\n" +
+            "    WHERE month(c1.date_key) = month(c2.date_key)\n" +
+            "         AND year(c1.date_key) = year(c2.date_key)\n" +
+            "      AND c1.dictionary_bucket_payment_id = c2.dictionary_bucket_payment_id\n" +
+            ")\n" +
+            "ORDER BY YEAR(date_key), month(date_key), account_name;", nativeQuery = true)
+    List<AccountBalanceFluctuation> getAccountBalanceFluctuationByMonth(
+            @Param("userId") String userId,
+            @Param("startMonth") LocalDate startMonth,
+            @Param("endMonth") LocalDate endMonth
+    );
+
+    @Query(value = "WITH nearest_expense AS (\n" +
+            "    SELECT\n" +
+            "        expense_date AS date_key,\n" +
+            "        dictionary_bucket_payment_id,\n" +
+            "        dbp.account_name,\n" +
+            "        e1.balance,\n" +
+            "        dbp.balance AS currentBalance,\n" +
+            "        'expense' AS type\n" +
+            "    FROM expense_regular e1\n" +
+            "    JOIN dictionary_bucket_payment dbp ON dbp.id = e1.dictionary_bucket_payment_id\n" +
+            "    WHERE dbp.user_id = :userId\n" +
+            "    \tAND MONTH(expense_date) < MONTH(:month)\n" +
+            "    \tAND year(expense_date) <= year(:month)\n" +
+            "      AND expense_date = (\n" +
+            "          SELECT MAX(expense_date)\n" +
+            "          FROM expense_regular e2\n" +
+            "          WHERE month(e2.expense_date) < MONTH(:month)\n" +
+            "          \tAND year(e2.expense_date) <= year(:month)\n" +
+            "            AND e1.dictionary_bucket_payment_id = e2.dictionary_bucket_payment_id\n" +
+            "      )\n" +
+            "),\n" +
+            "nearest_revenue AS (\n" +
+            "    SELECT\n" +
+            "        revenue_date AS date_key,\n" +
+            "        dictionary_bucket_payment_id,\n" +
+            "        dbp.account_name,\n" +
+            "        r1.balance,\n" +
+            "        dbp.balance AS currentBalance,\n" +
+            "        'revenue' AS type\n" +
+            "    FROM revenue_regular r1\n" +
+            "    JOIN dictionary_bucket_payment dbp ON dbp.id = r1.dictionary_bucket_payment_id\n" +
+            "    WHERE dbp.user_id = :userId\n" +
+            "    \tAND MONTH(revenue_date) < MONTH(:month)\n" +
+            "    \tAND year(revenue_date) <= year(:month)\n" +
+            "      AND revenue_date = (\n" +
+            "          SELECT MAX(revenue_date)\n" +
+            "          FROM revenue_regular r2\n" +
+            "          WHERE month(r2.revenue_date) < MONTH(:month)\n" +
+            "          \tAND year(r2.revenue_date) <= year(:month)\n" +
+            "            AND r1.dictionary_bucket_payment_id = r2.dictionary_bucket_payment_id\n" +
+            "      )\n" +
+            "),\n" +
+            "combined AS (\n" +
+            "    SELECT * FROM nearest_expense\n" +
+            "    UNION ALL\n" +
+            "    SELECT * FROM nearest_revenue\n" +
+            ")\n" +
+            "SELECT\n" +
+            "    CONCAT(LPAD(MONTH(date_key), 2, '0'), '/', YEAR(date_key)) AS time,\n" +
+            "    dictionary_bucket_payment_id AS bucketPaymentId,\n" +
+            "    account_name AS accountName,\n" +
+            "    balance AS balanceAfterTransaction,\n" +
+            "    currentBalance,\n" +
+            "    type\n" +
+            "FROM combined c1\n" +
+            "WHERE date_key = (\n" +
+            "    SELECT MAX(date_key)\n" +
+            "    FROM combined c2\n" +
+            "    WHERE month(c1.date_key) = month(c2.date_key)\n" +
+            "         AND year(c1.date_key) = year(c2.date_key)\n" +
+            "      AND c1.dictionary_bucket_payment_id = c2.dictionary_bucket_payment_id\n" +
+            ")\n" +
+            "ORDER BY YEAR(date_key), month(date_key), account_name;", nativeQuery = true)
+    List<AccountBalanceFluctuation> getNearestAccountBalanceFluctuationByMonth(
+            @Param("userId") String userId,
+            @Param("month") LocalDate month
+    );
+
+    @Query(value = "WITH last_expense AS (\n" +
+            "    SELECT\n" +
+            "        expense_date AS date_key,\n" +
+            "        dictionary_bucket_payment_id,\n" +
+            "        dbp.account_name,\n" +
+            "        e1.balance,\n" +
+            "        dbp.balance AS currentBalance\n" +
+            "    FROM expense_regular e1\n" +
+            "    JOIN dictionary_bucket_payment dbp ON dbp.id = e1.dictionary_bucket_payment_id\n" +
+            "    WHERE dbp.user_id = :userId\n" +
+            "    \tAND Year(expense_date) BETWEEN :startYear AND :endYear\n" +
+            "      AND expense_date = (\n" +
+            "          SELECT MAX(expense_date)\n" +
+            "          FROM expense_regular e2\n" +
+            "          WHERE year(e1.expense_date) = year(e2.expense_date)\n" +
+            "            AND e1.dictionary_bucket_payment_id = e2.dictionary_bucket_payment_id\n" +
+            "      )\n" +
+            "),\n" +
+            "last_revenue AS (\n" +
+            "    SELECT\n" +
+            "        revenue_date AS date_key,\n" +
+            "        dictionary_bucket_payment_id,\n" +
+            "        dbp.account_name,\n" +
+            "        r1.balance,\n" +
+            "        dbp.balance AS currentBalance\n" +
+            "    FROM revenue_regular r1\n" +
+            "    JOIN dictionary_bucket_payment dbp ON dbp.id = r1.dictionary_bucket_payment_id\n" +
+            "    WHERE dbp.user_id = :userId\n" +
+            "    \tAND year(revenue_date) BETWEEN :startYear AND :endYear\n" +
+            "      AND revenue_date = (\n" +
+            "          SELECT MAX(revenue_date)\n" +
+            "          FROM revenue_regular r2\n" +
+            "          WHERE year(r1.revenue_date) = year(r2.revenue_date)\n" +
+            "            AND r1.dictionary_bucket_payment_id = r2.dictionary_bucket_payment_id\n" +
+            "      )\n" +
+            "),\n" +
+            "combined AS (\n" +
+            "    SELECT * FROM last_expense\n" +
+            "    UNION ALL\n" +
+            "    SELECT * FROM last_revenue\n" +
+            ")\n" +
+            "SELECT\n" +
+            "    year(date_key) AS time,\n" +
+            "    dictionary_bucket_payment_id AS bucketPaymentId,\n" +
+            "    account_name AS accountName,\n" +
+            "    balance AS balanceAfterTransaction,\n" +
+            "    currentBalance\n" +
+            "FROM combined c1\n" +
+            "WHERE date_key = (\n" +
+            "    SELECT MAX(date_key)\n" +
+            "    FROM combined c2\n" +
+            "    WHERE year(c1.date_key) = year(c2.date_key)\n" +
+            "      AND c1.dictionary_bucket_payment_id = c2.dictionary_bucket_payment_id\n" +
+            ")\n" +
+            "ORDER BY year(date_key), account_name;", nativeQuery = true)
+    List<AccountBalanceFluctuation> getAccountBalanceFluctuationByYear(
+            @Param("userId") String userId,
+            @Param("startYear") int startYear,
+            @Param("endYear") int endYear
+    );
+
+    @Query(value = "WITH nearest_expense AS (\n" +
+            "    SELECT\n" +
+            "        expense_date AS date_key,\n" +
+            "        dictionary_bucket_payment_id,\n" +
+            "        dbp.account_name,\n" +
+            "        e1.balance,\n" +
+            "        dbp.balance AS currentBalance,\n" +
+            "        'expense' AS type\n" +
+            "    FROM expense_regular e1\n" +
+            "    JOIN dictionary_bucket_payment dbp ON dbp.id = e1.dictionary_bucket_payment_id\n" +
+            "    WHERE dbp.user_id = :userId\n" +
+            "    \tAND Year(expense_date) < :year\n" +
+            "      AND expense_date = (\n" +
+            "          SELECT MAX(expense_date)\n" +
+            "          FROM expense_regular e2\n" +
+            "          WHERE YEAR(e2.expense_date) < :year\n" +
+            "            AND e1.dictionary_bucket_payment_id = e2.dictionary_bucket_payment_id\n" +
+            "      )\n" +
+            "),\n" +
+            "nearest_revenue AS (\n" +
+            "    SELECT\n" +
+            "        revenue_date AS date_key,\n" +
+            "        dictionary_bucket_payment_id,\n" +
+            "        dbp.account_name,\n" +
+            "        r1.balance,\n" +
+            "        dbp.balance AS currentBalance,\n" +
+            "        'revenue' AS type\n" +
+            "    FROM revenue_regular r1\n" +
+            "    JOIN dictionary_bucket_payment dbp ON dbp.id = r1.dictionary_bucket_payment_id\n" +
+            "    WHERE dbp.user_id = :userId\n" +
+            "    \tAND Year(revenue_date) < :year\n" +
+            "      AND revenue_date = (\n" +
+            "          SELECT MAX(revenue_date)\n" +
+            "          FROM revenue_regular r2\n" +
+            "          WHERE YEAR(r2.revenue_date) < :year\n" +
+            "            AND r1.dictionary_bucket_payment_id = r2.dictionary_bucket_payment_id\n" +
+            "      )\n" +
+            "),\n" +
+            "combined AS (\n" +
+            "    SELECT * FROM nearest_expense\n" +
+            "    UNION ALL\n" +
+            "    SELECT * FROM nearest_revenue\n" +
+            ")\n" +
+            "SELECT\n" +
+            "    year(date_key) AS time,\n" +
+            "    dictionary_bucket_payment_id AS bucketPaymentId,\n" +
+            "    account_name AS accountName,\n" +
+            "    balance AS balanceAfterTransaction,\n" +
+            "    currentBalance,\n" +
+            "    type\n" +
+            "FROM combined c1\n" +
+            "WHERE date_key = (\n" +
+            "    SELECT MAX(date_key)\n" +
+            "    FROM combined c2\n" +
+            "    WHERE year(c1.date_key) = year(c2.date_key)\n" +
+            "      AND c1.dictionary_bucket_payment_id = c2.dictionary_bucket_payment_id\n" +
+            ")\n" +
+            "ORDER BY year(date_key), account_name;", nativeQuery = true)
+    List<AccountBalanceFluctuation> getNearestAccountBalanceFluctuationByYear(
+            @Param("userId") String userId,
+            @Param("year") int year
+    );
+
 //    TRANSACTION HISTORY
     @Query(value = "SELECT * from (" +
             "SELECT er.id,'expense' AS transactionType ,er.amount, de.`name` AS categoryName, de.icon_url AS categoryIconUrl, dbp.account_name as accountName, dbp.icon_url AS bucketPaymentIconUrl, expense_date AS date, er.transfer_type as transferType, er.interpretation, er.trip_event as tripEvent, er.location as location, er.beneficiary as beneficiary, dbp1.account_name as beneficiaryAccountName, dbp1.icon_url AS beneficiaryAccountIconUrl, null as collectMoneyWho, null as senderAccountName, null as senderAccountIconUrl \n" +
