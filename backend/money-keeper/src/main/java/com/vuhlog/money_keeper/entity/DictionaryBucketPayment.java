@@ -18,6 +18,7 @@ public class DictionaryBucketPayment {
     @GeneratedValue(strategy = GenerationType.UUID)
     private String id;
     private Long balance; // so du ban dau
+    private Long initialBalance;
     private Long creditLimit; // han muc tin dung
     private String accountName;
     private String accountType;

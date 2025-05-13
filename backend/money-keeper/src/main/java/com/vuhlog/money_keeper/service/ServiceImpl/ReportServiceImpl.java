@@ -3,12 +3,15 @@ package com.vuhlog.money_keeper.service.ServiceImpl;
 import com.vuhlog.money_keeper.common.UserCommon;
 import com.vuhlog.money_keeper.constants.ReportTimeOptionType;
 import com.vuhlog.money_keeper.constants.TransactionType;
+import com.vuhlog.money_keeper.dao.DictionaryBucketPaymentRepository;
 import com.vuhlog.money_keeper.dao.ExpenseRegularRepository;
 import com.vuhlog.money_keeper.dao.ReportExpenseRevenueRepository;
 import com.vuhlog.money_keeper.dao.RevenueRegularRepository;
+import com.vuhlog.money_keeper.dao.specification.DictionaryBucketPaymentSpecification;
 import com.vuhlog.money_keeper.dto.request.ReportFilterOptionsRequest;
 import com.vuhlog.money_keeper.dto.response.responseinterface.dashboard.TotalExpenseRevenue;
 import com.vuhlog.money_keeper.dto.response.responseinterface.report.*;
+import com.vuhlog.money_keeper.entity.DictionaryBucketPayment;
 import com.vuhlog.money_keeper.mapper.ReportExpenseRevenueMapper;
 import com.vuhlog.money_keeper.service.ReportService;
 import jakarta.persistence.EntityManager;
@@ -18,10 +21,12 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
 import java.time.YearMonth;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -31,6 +36,7 @@ public class ReportServiceImpl implements ReportService {
     private final UserCommon userCommon;
     private final ExpenseRegularRepository expenseRegularRepository;
     private final RevenueRegularRepository revenueRegularRepository;
+    private final DictionaryBucketPaymentRepository dictionaryBucketPaymentRepository;
     private final ReportExpenseRevenueRepository reportExpenseRevenueRepository;
     private final ReportExpenseRevenueMapper reportExpenseRevenueMapper;
 
@@ -178,6 +184,214 @@ public class ReportServiceImpl implements ReportService {
     public List<ReportBucketPaymentTypeBalance> getReportBucketPaymentTypeBalance() {
         String userId = userCommon.getMyUserInfo().getId();
         return reportExpenseRevenueRepository.getReportBucketPaymentTypeBalance(userId);
+    }
+
+    @Override
+    public List<AccountBalanceFluctuation> getAccountBalanceFluctuation(ReportFilterOptionsRequest request) {
+        String timeOption = request.getTimeOption();
+        String userId = userCommon.getMyUserInfo().getId();
+        List<AccountBalanceFluctuation> response = new ArrayList<>();
+        List<DictionaryBucketPayment> bucketPayments = new ArrayList<>();
+        Specification<DictionaryBucketPayment> specs = Specification.where(null);
+        specs = specs.and(DictionaryBucketPaymentSpecification.filterByUserId(userId));
+        bucketPayments = dictionaryBucketPaymentRepository.findAll(specs);
+        String start = request.getCustomTimeRange().get(0);
+        String end = request.getCustomTimeRange().get(1);
+        if(timeOption.equals(ReportTimeOptionType.MONTH.getType())){
+            YearMonth startMonth = YearMonth.parse(start);
+            YearMonth endMonth = YearMonth.parse(end);
+            response = reportExpenseRevenueRepository.getAccountBalanceFluctuationByMonth(userId, startMonth.atDay(1), endMonth.atEndOfMonth());
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("MM/yyyy");
+            String startMonthStr = startMonth.format(formatter);
+            List<AccountBalanceFluctuation> initial = new ArrayList<>();
+            initial = reportExpenseRevenueRepository.getNearestAccountBalanceFluctuationByMonth(userId, startMonth.atDay(1));
+            
+            // Kiểm tra và thêm dữ liệu cho tháng bắt đầu nếu chưa có
+            for (DictionaryBucketPayment bucketPayment : bucketPayments) {
+                boolean hasDataForStartMonth = false;
+                
+                // Kiểm tra xem đã có dữ liệu cho tháng bắt đầu và tài khoản này chưa
+                for (AccountBalanceFluctuation item : response) {
+                    if (item.getTime().equals(startMonthStr) && 
+                        item.getBucketPaymentId().equals(bucketPayment.getId())) {
+                        hasDataForStartMonth = true;
+                        break;
+                    }
+                }
+                
+                // Nếu chưa có dữ liệu cho tháng bắt đầu, thêm dữ liệu từ initial hoặc initialBalance
+                if (!hasDataForStartMonth) {
+                    final String bucketPaymentId = bucketPayment.getId();
+                    Long balanceValue = bucketPayment.getInitialBalance();
+                    
+                    // Tìm giá trị trong initial (nếu có)
+                    for (AccountBalanceFluctuation initialItem : initial) {
+                        if (initialItem.getBucketPaymentId().equals(bucketPaymentId)) {
+                            balanceValue = initialItem.getBalanceAfterTransaction();
+                            break;
+                        }
+                    }
+                    
+                    // Thêm dữ liệu vào response
+                    Long finalBalanceValue = balanceValue;
+                    response.add(0, new AccountBalanceFluctuation() {
+                        @Override
+                        public String getTime() {
+                            return startMonthStr;
+                        }
+                        
+                        @Override
+                        public String getBucketPaymentId() {
+                            return bucketPaymentId;
+                        }
+                        
+                        @Override
+                        public String getAccountName() {
+                            return bucketPayment.getAccountName();
+                        }
+                        
+                        @Override
+                        public Long getBalanceAfterTransaction() {
+                            return finalBalanceValue;
+                        }
+                        
+                        @Override
+                        public Long getCurrentBalance() {
+                            return bucketPayment.getBalance();
+                        }
+                    });
+                }
+            }
+        }else if (timeOption.equals(ReportTimeOptionType.YEAR.getType())){
+            int startYear = Integer.parseInt(start);
+            int endYear = Integer.parseInt(end);
+            response = reportExpenseRevenueRepository.getAccountBalanceFluctuationByYear(userId, startYear, endYear);
+            String startYearStr = String.valueOf(startYear);
+            List<AccountBalanceFluctuation> initial = new ArrayList<>();
+            initial = reportExpenseRevenueRepository.getNearestAccountBalanceFluctuationByYear(userId, startYear);
+            
+            // Kiểm tra và thêm dữ liệu cho năm bắt đầu nếu chưa có
+            for (DictionaryBucketPayment bucketPayment : bucketPayments) {
+                boolean hasDataForStartYear = false;
+                
+                // Kiểm tra xem đã có dữ liệu cho năm bắt đầu và tài khoản này chưa
+                for (AccountBalanceFluctuation item : response) {
+                    if (item.getTime().equals(startYearStr) && 
+                        item.getBucketPaymentId().equals(bucketPayment.getId())) {
+                        hasDataForStartYear = true;
+                        break;
+                    }
+                }
+                
+                // Nếu chưa có dữ liệu cho năm bắt đầu, thêm dữ liệu từ initial hoặc initialBalance
+                if (!hasDataForStartYear) {
+                    final String bucketPaymentId = bucketPayment.getId();
+                    Long balanceValue = bucketPayment.getInitialBalance();
+                    
+                    // Tìm giá trị trong initial (nếu có)
+                    for (AccountBalanceFluctuation initialItem : initial) {
+                        if (initialItem.getBucketPaymentId().equals(bucketPaymentId)) {
+                            balanceValue = initialItem.getBalanceAfterTransaction();
+                            break;
+                        }
+                    }
+                    
+                    // Thêm dữ liệu vào response
+                    Long finalBalanceValue = balanceValue;
+                    response.add(0, new AccountBalanceFluctuation() {
+                        @Override
+                        public String getTime() {
+                            return startYearStr;
+                        }
+                        
+                        @Override
+                        public String getBucketPaymentId() {
+                            return bucketPaymentId;
+                        }
+                        
+                        @Override
+                        public String getAccountName() {
+                            return bucketPayment.getAccountName();
+                        }
+                        
+                        @Override
+                        public Long getBalanceAfterTransaction() {
+                            return finalBalanceValue;
+                        }
+                        
+                        @Override
+                        public Long getCurrentBalance() {
+                            return bucketPayment.getBalance();
+                        }
+                    });
+                }
+            }
+        } else if (timeOption.equals(ReportTimeOptionType.OPTIONAL.getType())) {
+            LocalDate startDate = LocalDate.parse(start);
+            LocalDate endDate = LocalDate.parse(end);
+            response = reportExpenseRevenueRepository.getAccountBalanceFluctuationByOptional(userId, startDate, endDate);
+            String startDateStr = startDate.toString();
+            List<AccountBalanceFluctuation> initial = new ArrayList<>();
+            initial = reportExpenseRevenueRepository.getNearestAccountBalanceFluctuationByOptional(userId, startDate);
+            
+            // Kiểm tra và thêm dữ liệu cho ngày bắt đầu nếu chưa có
+            for (DictionaryBucketPayment bucketPayment : bucketPayments) {
+                boolean hasDataForStartDate = false;
+                
+                // Kiểm tra xem đã có dữ liệu cho ngày bắt đầu và tài khoản này chưa
+                for (AccountBalanceFluctuation item : response) {
+                    if (item.getTime().equals(startDateStr) && 
+                        item.getBucketPaymentId().equals(bucketPayment.getId())) {
+                        hasDataForStartDate = true;
+                        break;
+                    }
+                }
+                
+                // Nếu chưa có dữ liệu cho ngày bắt đầu, thêm dữ liệu từ initial hoặc initialBalance
+                if (!hasDataForStartDate) {
+                    final String bucketPaymentId = bucketPayment.getId();
+                    Long balanceValue = bucketPayment.getInitialBalance();
+                    
+                    // Tìm giá trị trong initial (nếu có)
+                    for (AccountBalanceFluctuation initialItem : initial) {
+                        if (initialItem.getBucketPaymentId().equals(bucketPaymentId)) {
+                            balanceValue = initialItem.getBalanceAfterTransaction();
+                            break;
+                        }
+                    }
+                    
+                    // Thêm dữ liệu vào response
+                    Long finalBalanceValue = balanceValue;
+                    response.add(0, new AccountBalanceFluctuation() {
+                        @Override
+                        public String getTime() {
+                            return startDateStr;
+                        }
+                        
+                        @Override
+                        public String getBucketPaymentId() {
+                            return bucketPaymentId;
+                        }
+                        
+                        @Override
+                        public String getAccountName() {
+                            return bucketPayment.getAccountName();
+                        }
+                        
+                        @Override
+                        public Long getBalanceAfterTransaction() {
+                            return finalBalanceValue;
+                        }
+                        
+                        @Override
+                        public Long getCurrentBalance() {
+                            return bucketPayment.getBalance();
+                        }
+                    });
+                }
+            }
+        }
+        return response;
     }
 
     @Override

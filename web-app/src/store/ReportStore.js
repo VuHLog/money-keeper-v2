@@ -395,10 +395,14 @@ export const useReportStore = defineStore("report", {
         });
       return response;
     },
-    async getReportBucketPaymentTypeBalance() {
+    async getAccountBalanceFluctuation(filters) {
       let response = null;
+      let request = {
+        timeOption: filters.timeOption,
+        customTimeRange: filters.customTimeRange,
+      }
       await base
-        .post("/report/bucket-payment-type-balance")
+        .post("/report/account-balance-fluctuation", request)
         .then((res) => {
           response = res.result;
         })
