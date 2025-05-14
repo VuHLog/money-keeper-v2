@@ -11,6 +11,7 @@ import com.vuhlog.money_keeper.dao.UsersRepository;
 import com.vuhlog.money_keeper.dao.httpClient.OutBoundUserClient;
 import com.vuhlog.money_keeper.dao.httpClient.OutboundIdentityClient;
 import com.vuhlog.money_keeper.dto.request.*;
+import com.vuhlog.money_keeper.dto.response.AuthenticationOAuthResponse;
 import com.vuhlog.money_keeper.dto.response.AuthenticationResponse;
 import com.vuhlog.money_keeper.dto.response.IntrospectResponse;
 import com.vuhlog.money_keeper.entity.InvalidatedToken;
@@ -31,6 +32,7 @@ import java.text.ParseException;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicReference;
 
 @Service
 @Slf4j
@@ -115,7 +117,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     }
 
     @Override
-    public AuthenticationResponse outboundAuthenticate(String code) {
+    public AuthenticationOAuthResponse outboundAuthenticate(String code) {
         var response = outboundIdentityClient.exchangeToken(ExchangeTokenRequest.builder()
                 .code(code)
                 .clientId(CLIENT_ID)
@@ -128,7 +130,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 
         var userInfo = outBoundUserClient.getUserInfo("json", response.getAccessToken());
         log.info("USER INFO {}", userInfo);
-
+        AtomicReference<String> newUserId = new AtomicReference<>();
         var user = usersRepository.findByUsername(userInfo.getEmail()).orElseGet(
                 () -> {
                     Users newUser = Users.builder()
@@ -145,15 +147,18 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                     userRole.setUser(newUser);
                     userRoles.add(userRole);
                     newUser.setUser_roles(userRoles);
-                    return usersRepository.save(newUser);
+                    newUser = usersRepository.save(newUser);
+                    newUserId.set(newUser.getId());
+                    return newUser;
                 }
         );
 
         var token = generateToken(user);
 
-        return AuthenticationResponse.builder()
+        return AuthenticationOAuthResponse.builder()
                 .token(token)
                 .authenticated(true)
+                .newUserId(newUserId.get())
                 .build();
 
     }

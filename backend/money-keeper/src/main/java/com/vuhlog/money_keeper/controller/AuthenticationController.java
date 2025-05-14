@@ -6,12 +6,15 @@ import com.vuhlog.money_keeper.dto.request.IntrospectRequest;
 import com.vuhlog.money_keeper.dto.request.LogoutRequest;
 import com.vuhlog.money_keeper.dto.request.RefreshRequest;
 import com.vuhlog.money_keeper.dto.response.ApiResponse;
+import com.vuhlog.money_keeper.dto.response.AuthenticationOAuthResponse;
 import com.vuhlog.money_keeper.dto.response.AuthenticationResponse;
 import com.vuhlog.money_keeper.dto.response.IntrospectResponse;
 import com.vuhlog.money_keeper.service.AuthenticationService;
+import com.vuhlog.money_keeper.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
+import java.io.IOException;
 import java.text.ParseException;
 import java.util.Map;
 
@@ -21,6 +24,9 @@ public class AuthenticationController {
 
     @Autowired
     private AuthenticationService authenticationService;
+
+    @Autowired
+    private UserService userService;
 
     @PostMapping("/token")
     public ApiResponse<AuthenticationResponse> authenticate(@RequestBody AuthenticationRequest request){
@@ -32,11 +38,14 @@ public class AuthenticationController {
     }
 
     @PostMapping("/outbound/authentication")
-    ApiResponse<AuthenticationResponse> outboundAuthenticate(
+    ApiResponse<AuthenticationOAuthResponse> outboundAuthenticate(
             @RequestParam("code") String code
-    ){
-        var result = authenticationService.outboundAuthenticate(code);
-        return ApiResponse.<AuthenticationResponse>builder().result(result).build();
+    ) throws IOException {
+        AuthenticationOAuthResponse result = authenticationService.outboundAuthenticate(code);
+        if(result.getNewUserId() != null && !result.getNewUserId().isEmpty()){
+            userService.executeSqlScriptForUser(result.getNewUserId());
+        }
+        return ApiResponse.<AuthenticationOAuthResponse>builder().result(result).build();
     }
 
     @PostMapping("/introspect")
