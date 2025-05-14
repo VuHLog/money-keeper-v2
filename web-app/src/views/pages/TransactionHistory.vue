@@ -509,11 +509,17 @@ const exportExcel = async () => {
             <tr v-for="transaction in transactions" :key="transaction.id">
               <td class="px-6 py-4 whitespace-nowrap">
                 <div class="flex items-center">
-                  <font-awesome-icon 
-                    :icon="['fas', getTransactionTypeIcon(transaction.transactionType)]"
-                    :class="getTransactionTypeClass(transaction.transactionType)"
-                    class="mr-2"
-                  />
+                  <div :class="[
+                    'p-2 rounded-lg flex-shrink-0 mr-2 flex items-center justify-center',
+                    transaction.transactionType === 'expense' ? 'bg-danger/10' : 
+                    transaction.transactionType === 'revenue' ? 'bg-success/10' : 
+                    'bg-primary/10'
+                  ]">
+                    <font-awesome-icon 
+                      :icon="['fas', getTransactionTypeIcon(transaction.transactionType)]"
+                      :class="getTransactionTypeClass(transaction.transactionType)"
+                    />
+                  </div>
                   <span :class="getTransactionTypeClass(transaction.transactionType)">
                     {{ getTransactionType(transaction.transactionType) }}
                   </span>

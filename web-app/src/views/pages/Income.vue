@@ -32,6 +32,7 @@ const toastManagerRef = ref(null)
 onMounted(async () => {
   categories.value = await dictionaryRevenueStore.getMyRevenueCategoriesWithoutTransfer()
   accounts.value = await dictionaryBucketPaymentStore.getMyBucketPayments();
+  revenueRegularStore.pagination.pageSize = 4
   recentTransactions.value = await revenueRegularStore.getAllRevenueRegularPagination()
 
   // add and remove event listener when component is mounted and unmounted
@@ -170,13 +171,8 @@ const addNewTransaction = async () => {
   try {
     const response = await revenueRegularStore.createRevenueRegular(newTransaction)
 
-    //add new transaction to the top of the recent transactions list
-    recentTransactions.value.unshift(response)
+    recentTransactions.value = await revenueRegularStore.getAllRevenueRegularPagination()
 
-    //display only 5 recent transactions
-    if (recentTransactions.value.length > 5) {
-      recentTransactions.value = recentTransactions.value.slice(0, 5)
-    }
 
     // Use the toast manager directly
     if (toastManagerRef.value) {
@@ -298,9 +294,7 @@ const updateTransaction = async () => {
 
       await revenueRegularStore.updateRevenueRegular(editingTransactionId.value, updatedTransaction);
 
-      // delete the old transaction and add the updated transaction to the top of the array
-      recentTransactions.value.splice(index, 1)
-      recentTransactions.value.unshift(updatedTransaction)
+      recentTransactions.value = await revenueRegularStore.getAllRevenueRegularPagination()
 
       // show success message using the toast manager
       if (toastManagerRef.value) {
@@ -359,11 +353,7 @@ const handleConfirmDelete = async () => {
   try {
     await revenueRegularStore.deleteRevenueRegular(deletingTransaction.value.id)
     
-    // Remove from local list
-    const index = recentTransactions.value.findIndex(t => t.id === deletingTransaction.value.id)
-    if (index !== -1) {
-      recentTransactions.value.splice(index, 1)
-    }
+    recentTransactions.value = await revenueRegularStore.getAllRevenueRegularPagination()
 
     // Show success toast
     if (toastManagerRef.value) {
@@ -610,12 +600,11 @@ const handleConfirmDelete = async () => {
                           size="m" class="mr-2" />
                         {{ transaction.dictionaryRevenue.name }}
                       </p>
-                      <div class="flex items-center text-sm text-text-secondary">
+                      <div class="flex flex-col justify-center text-sm text-text-secondary">
                         <span>{{ transaction.transferType === 'transfer' ? 'Nhận ' +
                           transaction.dictionaryRevenue.name.toLowerCase() + ' từ ' +
                           transaction.senderAccount.accountName :
                           transaction.dictionaryRevenue.name }}</span>
-                        <span class="mx-1">•</span>
                         <span>{{ formatDateToVietnam(transaction.revenueDate) }}</span>
                       </div>
                     </div>
@@ -662,7 +651,7 @@ const handleConfirmDelete = async () => {
 
           <!-- show all button -->
           <div class="mt-4 pt-4 border-t border-gray-100">
-            <router-link to="/history"
+            <router-link to="/transaction-history?transactionType=revenue"
               class="text-primary hover:text-primary/80 flex items-center justify-center space-x-1">
               <span>Xem tất cả</span>
               <font-awesome-icon :icon="['fas', 'chevron-right']" class="text-sm" />
