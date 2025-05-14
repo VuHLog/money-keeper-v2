@@ -29,6 +29,7 @@ const newAccount = ref({
   name: '',
   type: 'cash',
   balance: '',
+  initialBalance: '',
   description: '',
   bankId: '',
   creditLimit: ''
@@ -36,7 +37,6 @@ const newAccount = ref({
 
 const errors = ref({
   name: '',
-  balance: '',
   bankId: '',
   creditLimit: ''
 })
@@ -99,6 +99,7 @@ onMounted(async () => {
       accountName: props.account.accountName,
       accountType: props.account.accountType,
       balance: props.account.balance,
+      initialBalance: props.account.initialBalance,
       interpretation: props.account.interpretation || '',
       bankId: props.account.bank?.id || '',
       creditLimit: props.account.creditLimit || '',
@@ -134,6 +135,7 @@ watch(() => props.account, (newVal) => {
       accountName: newVal.accountName,
       accountType: newVal.accountType,
       balance: newVal.balance,
+      initialBalance: newVal.initialBalance,
       interpretation: newVal.interpretation || '',
       bankId: newVal.bank?.id || '',
       creditLimit: newVal.creditLimit || '',
@@ -167,13 +169,13 @@ const formattedCreditLimit = computed({
 
 const formattedBalance = computed({
   get: () => {
-    if (!newAccount.value.balance) return ''
-    return formatCurrency(Number(newAccount.value.balance))
+    if (!newAccount.value.initialBalance) return ''
+    return formatCurrency(Number(newAccount.value.initialBalance))
   },
   set: (value) => {
     // Chỉ lấy số từ chuỗi đã format
     const numericValue = value.replace(/[^\d]/g, '')
-    newAccount.value.balance = numericValue ? Number(numericValue) : ''
+    newAccount.value.initialBalance = numericValue ? Number(numericValue) : ''
   }
 })
 
@@ -187,7 +189,6 @@ const hasChanges = computed(() => {
   const basicFieldsChanged = 
     editingAccount.value.accountName !== newAccount.value.accountName.trim() ||
     editingAccount.value.accountType !== newAccount.value.accountType ||
-    editingAccount.value.balance !== Number(newAccount.value.balance) ||
     editingAccount.value.interpretation !== newAccount.value.interpretation.trim() ||
     editingAccount.value.iconUrl !== newAccount.value.iconUrl
 
@@ -205,7 +206,6 @@ const validateForm = () => {
   errors.value = {
     accountName: '',
     accountType: '',
-    balance: '',
     interpretation: '',
     iconUrl: '',
     bankId: '',
@@ -220,13 +220,6 @@ const validateForm = () => {
     errors.value.name = 'Tên tài khoản phải có ít nhất 3 ký tự'
     isValid = false
   }
-
-  // Validate balance
-  if (newAccount.value.balance === '') {
-    errors.value.balance = 'Vui lòng nhập số dư ban đầu'
-    isValid = false
-  }
-
   // Validate bank selection
   if (showBankField.value && !newAccount.value.bankId) {
     errors.value.bankId = 'Vui lòng chọn ngân hàng'
@@ -261,6 +254,7 @@ const resetAndClose = () => {
     accountName: '',
     accountType: 'cash',
     balance: '',
+    initialBalance: '',
     interpretation: '',
     bankId: '',
     creditLimit: '',
@@ -268,7 +262,6 @@ const resetAndClose = () => {
   }
   errors.value = {
     accountName: '',
-    balance: '',
     bankId: '',
     creditLimit: ''
   }
@@ -293,6 +286,7 @@ const handleUpdate = async () => {
       accountName: newAccount.value.accountName.trim(),
       accountType: newAccount.value.accountType,
       balance: Number(newAccount.value.balance),
+      initialBalance: Number(newAccount.value.initialBalance),
       interpretation: newAccount.value.interpretation.trim(),
       iconUrl: newAccount.value.iconUrl,
       bankId: showBankField.value ? newAccount.value.bankId : undefined,
@@ -304,6 +298,7 @@ const handleUpdate = async () => {
       accountName: newAccount.value.accountName.trim(),
       accountType: newAccount.value.accountType,
       balance: Number(newAccount.value.balance),
+      initialBalance: Number(newAccount.value.initialBalance),
       interpretation: newAccount.value.interpretation.trim(),
       iconUrl: newAccount.value.iconUrl,
       bankId: showBankField.value ? newAccount.value.bankId : undefined,
@@ -422,14 +417,16 @@ onUnmounted(() => {
               <input 
                 v-model="formattedBalance"
                 type="text"
-                class="w-full px-3 py-2 border border-gray-100 rounded-lg focus:outline-none focus:ring-1 focus:ring-primary/20 transition-colors"
+                disabled
+                class="w-full px-3 py-2 border border-gray-100 rounded-lg focus:outline-none focus:ring-1 focus:ring-primary/20 transition-colors cursor-not-allowed bg-gray-100"
                 :class="[
-
-                  errors.balance ? 'border-danger/50 focus:border-danger focus:ring-danger/20' : 'border-gray-100 focus:border-primary/50',
-                  formattedBalance ? 'bg-white' : 'bg-gray-50'
+                  errors.balance ? 'border-danger/50 focus:border-danger focus:ring-danger/20' : 'border-gray-100 focus:border-primary/50'
                 ]"
                 placeholder="0 ₫"
               />
+              <p class="mt-1 text-xs text-gray-500 italic">
+                Số dư ban đầu không thể thay đổi sau khi tài khoản đã được tạo
+              </p>
               <p v-if="errors.balance" class="mt-1 text-sm text-danger">
                 {{ errors.balance }}
               </p>
