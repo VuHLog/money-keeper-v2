@@ -4,6 +4,7 @@ import { useRoute, useRouter } from "vue-router";
 import { useAuthStore } from "@stores/AuthStore.js";
 import TokenService from "@/service/TokenService.js";
 import { OAuthConfig } from "@/config/OAuthConfig.js";
+import logoFull from '@/assets/img/logo/logo.png';
 
 const { proxy } = getCurrentInstance();
 
@@ -88,13 +89,18 @@ function handleForgotPassword() {
     class="min-h-screen w-full flex items-center justify-center bg-gradient-to-br from-blue-400 via-blue-500 to-purple-600">
     <!-- Form đăng nhập -->
     <div class="w-full max-w-md bg-white rounded-lg shadow-xl overflow-hidden">
-      <!-- Tiêu đề -->
-      <div class="p-6 pb-0">
-        <h1 class="text-3xl font-bold text-center text-gray-800">Quản lý chi tiêu</h1>
+      <!-- Logo và Tiêu đề -->
+      <div class="p-6 pb-2 flex flex-col items-center">
+        <div class="mb-4 flex justify-center">
+          <img src="@/assets/img/logo/logo.png" alt="Money Keeper Logo" class="h-16 w-auto" />
+        </div>
+        <div class="mt-2 mb-4">
+          <span class="text-3xl font-semibold text-transparent bg-clip-text bg-gradient-to-r from-indigo-500 to-cyan-500">Sổ thu chi</span>
+        </div>
       </div>
 
       <!-- Form nhập thông tin -->
-      <div class="p-6">
+      <div class="px-6 pb-6">
         <form method="POST" @submit.prevent="signIn()">
           <!-- Username field -->
           <div class="mb-6">

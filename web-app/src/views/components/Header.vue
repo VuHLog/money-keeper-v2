@@ -364,11 +364,11 @@ onUnmounted(() => {
         <!-- Right side -->
         <div class="flex items-center space-x-2 sm:space-x-4">
           <div class="hidden sm:flex space-x-2">
-            <button class="bg-success text-white px-4 py-2 rounded-lg flex items-center space-x-2 hover:bg-success/90" @click="router.push('/income')">
+            <button class="action-button bg-success hover:bg-success/90" @click="router.push('/income')">
               <font-awesome-icon :icon="['fas', 'plus']" />
               <span>Ghi Thu</span>
             </button>
-            <button class="bg-danger text-white px-4 py-2 rounded-lg flex items-center space-x-2 hover:bg-danger/90" @click="router.push('/expense')">
+            <button class="action-button bg-danger hover:bg-danger/90" @click="router.push('/expense')">
               <font-awesome-icon :icon="['fas', 'minus']" />
               <span>Ghi Chi</span>
             </button>
@@ -675,5 +675,40 @@ header {
   .scrollable-list {
     max-width: 100%;
   }
+}
+
+/* Simple hover expanding button */
+.action-button {
+  height: 36px;
+  width: 36px;
+  border-radius: 0.5rem;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+  overflow: hidden;
+  position: relative;
+}
+
+.action-button span {
+  position: absolute;
+  left: 36px;
+  opacity: 0;
+  white-space: nowrap;
+  transition: all 0.3s ease;
+}
+
+.action-button:hover {
+  width: auto;
+  padding: 0 0.75rem 0 0.75rem;
+  justify-content: flex-start;
+}
+
+.action-button:hover span {
+  opacity: 1;
+  position: relative;
+  left: 0;
+  margin-left: 6px;
 }
 </style> 
