@@ -243,7 +243,7 @@ public class WeeklyTrendExcelExporter {
         Cell titleCell = titleRow.createCell(0);
         titleCell.setCellValue("BÁO CÁO XU HƯỚNG " + this.transactionType.toUpperCase() + " THEO TUẦN");
         titleCell.setCellStyle(titleStyle);
-        sheet.addMergedRegion(new CellRangeAddress(0, 0, 0, 13));
+        sheet.addMergedRegion(new CellRangeAddress(0, 0, 0, 4));
         sheet.createRow(1);
     }
 

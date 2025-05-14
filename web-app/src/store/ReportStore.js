@@ -383,6 +383,25 @@ export const useReportStore = defineStore("report", {
         });
       return response;
     },
+    async exportExcelForBucketPaymentBalance(){
+      let response = null;
+      try {
+        response = await instance.post(`/report/bucket-payment-balance/export-excel`,{} ,{
+          responseType: 'blob',
+        });
+        const blob = new Blob([response.data], {
+          type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        });
+        const link = document.createElement('a');
+        link.href = window.URL.createObjectURL(blob);
+        link.download = 'Báo cáo số dư tài khoản.xlsx';
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+      } catch (error) {
+        return Promise.reject(error);
+      }
+    },
     async getReportBucketPaymentTypeBalance() {
       let response = null;
       await base
@@ -394,6 +413,25 @@ export const useReportStore = defineStore("report", {
           console.log(err);
         });
       return response;
+    },
+    async exportExcelForBucketPaymentTypeBalance(){
+      let response = null;
+      try {
+        response = await instance.post(`/report/bucket-payment-type-balance/export-excel`,{} ,{
+          responseType: 'blob',
+        });
+        const blob = new Blob([response.data], {
+          type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        });
+        const link = document.createElement('a');
+        link.href = window.URL.createObjectURL(blob);
+        link.download = 'Báo cáo loại tài khoản.xlsx';
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+      } catch (error) {
+        return Promise.reject(error);
+      }
     },
     async getAccountBalanceFluctuation(filters) {
       let response = null;
@@ -410,6 +448,29 @@ export const useReportStore = defineStore("report", {
           console.log(err);
         });
       return response;
+    },
+    async exportExcelForAccountBalanceFluctuation(filters){
+      let response = null;
+      let request = {
+        timeOption: filters.timeOption,
+        customTimeRange: filters.customTimeRange,
+      }
+      try {
+        response = await instance.post(`/report/account-balance-fluctuation/export-excel`,request, {
+          responseType: 'blob',
+        });
+        const blob = new Blob([response.data], {
+          type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        });
+        const link = document.createElement('a');
+        link.href = window.URL.createObjectURL(blob);
+        link.download = 'Báo cáo biến động số dư tài khoản ' + (filters.timeOption && filters.timeOption !== 'Tùy chọn' ?' ' + filters.timeOption.toLowerCase() : '') + '.xlsx';
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+      } catch (error) {
+        return Promise.reject(error);
+      }
     },
   },
 });

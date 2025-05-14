@@ -209,7 +209,7 @@ public class ExpenseCategoryExcelExporter {
         DataFormat format = workbook.createDataFormat();
         totalAmountStyle.setDataFormat(format.getFormat("#,##0 [$₫-vi-VN]"));
 
-        double totalExpense = 0;
+        Long totalExpense = 0L;
         for (ReportExpenseCategory category : data) {
             totalExpense += category.getTotalExpense();
         }
@@ -248,7 +248,7 @@ public class ExpenseCategoryExcelExporter {
         Cell titleCell = titleRow.createCell(0);
         titleCell.setCellValue("BÁO CÁO DANH MỤC CHI TIÊU");
         titleCell.setCellStyle(titleStyle);
-        sheet.addMergedRegion(new CellRangeAddress(0, 0, 0, 2));
+        sheet.addMergedRegion(new CellRangeAddress(0, 0, 0, 4));
 
         if (request != null && request.getCustomTimeRange() != null) {
             Row subtitleRow = sheet.createRow(1);
@@ -270,7 +270,7 @@ public class ExpenseCategoryExcelExporter {
 
             subtitleCell.setCellValue(timeRangeTitle);
             subtitleCell.setCellStyle(subtitleStyle);
-            sheet.addMergedRegion(new CellRangeAddress(1, 1, 0, 1));
+            sheet.addMergedRegion(new CellRangeAddress(1, 1, 0, 4));
 
             // Thêm dòng trống sau tiêu đề
             sheet.createRow(2);
