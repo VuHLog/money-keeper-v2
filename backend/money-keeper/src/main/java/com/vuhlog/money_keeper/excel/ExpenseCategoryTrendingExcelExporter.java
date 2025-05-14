@@ -360,7 +360,7 @@ public class ExpenseCategoryTrendingExcelExporter {
         for (ReportExpenseCategory item : data) {
             uniqueCategories.put(item.getCategoryId(), item.getCategoryName());
         }
-        int columnCount = uniqueCategories.size() + 1; // +1 cho cột thời gian
+        int columnCount = uniqueCategories.size() + 1;
 
         CellStyle titleStyle = workbook.createCellStyle();
         XSSFFont titleFont = workbook.createFont();
@@ -383,7 +383,7 @@ public class ExpenseCategoryTrendingExcelExporter {
         Cell titleCell = titleRow.createCell(0);
         titleCell.setCellValue("BÁO CÁO XU HƯỚNG CHI TIÊU THEO DANH MỤC CHI");
         titleCell.setCellStyle(titleStyle);
-        sheet.addMergedRegion(new CellRangeAddress(0, 0, 0, columnCount - 1));
+        sheet.addMergedRegion(new CellRangeAddress(0, 0, 0, Math.max(4, columnCount - 1)));
 
         if (request != null && request.getCustomTimeRange() != null) {
             Row subtitleRow = sheet.createRow(1);
@@ -405,7 +405,7 @@ public class ExpenseCategoryTrendingExcelExporter {
 
             subtitleCell.setCellValue(timeRangeTitle);
             subtitleCell.setCellStyle(subtitleStyle);
-            sheet.addMergedRegion(new CellRangeAddress(1, 1, 0, columnCount - 1));
+            sheet.addMergedRegion(new CellRangeAddress(1, 1, 0, Math.max(4, columnCount - 1)));
 
             sheet.createRow(2);
         } else {

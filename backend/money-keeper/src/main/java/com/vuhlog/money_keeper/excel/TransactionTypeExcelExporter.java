@@ -377,7 +377,7 @@ public class TransactionTypeExcelExporter {
         Cell titleCell = titleRow.createCell(0);
         titleCell.setCellValue("BÁO CÁO THỐNG KÊ GIAO DỊCH");
         titleCell.setCellStyle(titleStyle);
-        sheet.addMergedRegion(new CellRangeAddress(0, 0, 0, 13));
+        sheet.addMergedRegion(new CellRangeAddress(0, 0, 0, 4));
 
         // Nếu có request, tạo dòng phụ đề với thông tin khoảng thời gian
         if (request != null && request.getCustomTimeRange() != null) {

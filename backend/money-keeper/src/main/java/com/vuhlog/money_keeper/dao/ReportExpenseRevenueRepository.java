@@ -360,7 +360,7 @@ public interface ReportExpenseRevenueRepository extends JpaRepository<ReportExpe
 
 
 //    REPORT BUCKET PAYMENT
-    @Query(value = "SELECT id, account_name, account_type, balance, icon_url\n" +
+    @Query(value = "SELECT id, account_name, account_type, balance, initial_balance, icon_url\n" +
             "FROM dictionary_bucket_payment dbp\n" +
             "WHERE dbp.user_id = :userId\n" +
             "ORDER BY account_name", nativeQuery = true)

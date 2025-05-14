@@ -238,6 +238,23 @@ public class ReportController {
                 .build();
     }
 
+    @PostMapping("account-balance-fluctuation/export-excel")
+    public ResponseEntity<InputStreamResource> exportAccountBalanceFluctuation(@RequestBody ReportFilterOptionsRequest request) throws IOException {
+        String headerKey = "Content-Disposition";
+        String headerValue = "attachment; filename=account-balance-fluctuation.xls";
+        HttpHeaders headers = new HttpHeaders();
+        headers.add(headerKey, headerValue);
+        List<AccountBalanceFluctuation> accountBalanceFluctuation = reportService.getAccountBalanceFluctuation(request);
+
+        AccountBalanceFluctuationExcelExporter exporter = new AccountBalanceFluctuationExcelExporter(accountBalanceFluctuation);
+        ByteArrayInputStream in = exporter.export(request);
+        return ResponseEntity.ok()
+                .headers(headers)
+                .contentType(MediaType.parseMediaType(
+                        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"))
+                .body(new InputStreamResource(in));
+    }
+
     @PostMapping("bucket-payment-balance")
     public ApiResponse<List<ReportBucketPaymentBalance>> getReportBucketPaymentBalance() {
         return ApiResponse.<List<ReportBucketPaymentBalance>>builder()
@@ -245,11 +262,45 @@ public class ReportController {
                 .build();
     }
 
+    @PostMapping("bucket-payment-balance/export-excel")
+    public ResponseEntity<InputStreamResource> exportBucketPaymentBalance() throws IOException {
+        String headerKey = "Content-Disposition";
+        String headerValue = "attachment; filename=bucket-payment-balance.xls";
+        HttpHeaders headers = new HttpHeaders();
+        headers.add(headerKey, headerValue);
+        List<ReportBucketPaymentBalance> reportBucketPaymentBalance = reportService.getReportBucketPaymentBalance();
+
+        BucketPaymentBalanceExcelExporter exporter = new BucketPaymentBalanceExcelExporter(reportBucketPaymentBalance);
+        ByteArrayInputStream in = exporter.export();
+        return ResponseEntity.ok()
+                .headers(headers)
+                .contentType(MediaType.parseMediaType(
+                        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"))
+                .body(new InputStreamResource(in));
+    }
+
     @PostMapping("bucket-payment-type-balance")
     public ApiResponse<List<ReportBucketPaymentTypeBalance>> getReportBucketPaymentTypeBalance() {
         return ApiResponse.<List<ReportBucketPaymentTypeBalance>>builder()
                 .result(reportService.getReportBucketPaymentTypeBalance())
                 .build();
+    }
+
+    @PostMapping("bucket-payment-type-balance/export-excel")
+    public ResponseEntity<InputStreamResource> exportBucketPaymentTypeBalance() throws IOException {
+        String headerKey = "Content-Disposition";
+        String headerValue = "attachment; filename=bucket-payment-type-balance.xls";
+        HttpHeaders headers = new HttpHeaders();
+        headers.add(headerKey, headerValue);
+        List<ReportBucketPaymentTypeBalance> reportBucketPaymentTypeBalance = reportService.getReportBucketPaymentTypeBalance();
+
+        BucketPaymentTypeBalanceExcelExporter exporter = new BucketPaymentTypeBalanceExcelExporter(reportBucketPaymentTypeBalance);
+        ByteArrayInputStream in = exporter.export();
+        return ResponseEntity.ok()
+                .headers(headers)
+                .contentType(MediaType.parseMediaType(
+                        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"))
+                .body(new InputStreamResource(in));
     }
 
     @PostMapping("transaction-history")

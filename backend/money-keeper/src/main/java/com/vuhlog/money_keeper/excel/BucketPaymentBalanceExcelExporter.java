@@ -1,9 +1,6 @@
 package com.vuhlog.money_keeper.excel;
 
-import com.vuhlog.money_keeper.constants.ReportTimeOptionType;
-import com.vuhlog.money_keeper.dto.request.ReportFilterOptionsRequest;
-import com.vuhlog.money_keeper.dto.response.responseinterface.report.ReportExpenseCategory;
-import com.vuhlog.money_keeper.dto.response.responseinterface.report.ReportRevenueCategory;
+import com.vuhlog.money_keeper.dto.response.responseinterface.report.ReportBucketPaymentBalance;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.ss.util.CellRangeAddress;
 import org.apache.poi.xssf.usermodel.XSSFFont;
@@ -14,47 +11,40 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.List;
+import java.util.*;
 
-public class RevenueCategoryExcelExporter {
+public class BucketPaymentBalanceExcelExporter {
     private XSSFWorkbook workbook;
     private XSSFSheet sheet;
-    private List<ReportRevenueCategory> data;
+    private List<ReportBucketPaymentBalance> data;
 
-    public RevenueCategoryExcelExporter(List<ReportRevenueCategory> data) {
+    public BucketPaymentBalanceExcelExporter(List<ReportBucketPaymentBalance> data) {
         this.data = data;
         workbook = new XSSFWorkbook();
-        sheet = workbook.createSheet("Danh mục thu nhập");
-
-        setupPageProperties(null);
+        sheet = workbook.createSheet("Số dư tài khoản");
+        // Thiết lập thuộc tính trang mà không có thông tin customTimeRange
+        setupPageProperties();
     }
 
-    private void setupPageProperties(ReportFilterOptionsRequest request) {
+    private void setupPageProperties() {
+        // Cài đặt các thuộc tính trang
         sheet.setFitToPage(true);
         PrintSetup printSetup = sheet.getPrintSetup();
         printSetup.setLandscape(true);
         printSetup.setFitHeight((short)0);
         printSetup.setFitWidth((short)1);
 
+        // Thiết lập lề trang
         sheet.setMargin(Sheet.LeftMargin, 0.5);
         sheet.setMargin(Sheet.RightMargin, 0.5);
         sheet.setMargin(Sheet.TopMargin, 0.7);
         sheet.setMargin(Sheet.BottomMargin, 0.7);
 
+        // Thiết lập header và footer
         Header header = sheet.getHeader();
         header.setLeft("MONEY KEEPER");
 
-        String timeRangeTitle = "";
-        if(request != null){
-            timeRangeTitle = createTimeRangeTitle(request.getCustomTimeRange());
-            if(request.getTimeOption().equals(ReportTimeOptionType.MONTH.getType())){
-                timeRangeTitle = " THEO THÁNG " + timeRangeTitle;
-            }else if (request.getTimeOption().equals(ReportTimeOptionType.YEAR.getType())) {
-                timeRangeTitle = " THEO NĂM " + timeRangeTitle;
-            }
-        }
-        header.setCenter("BÁO CÁO DANH MỤC THU NHẬP" + timeRangeTitle);
+        header.setCenter("BÁO CÁO SỐ DƯ TÀI KHOẢN");
 
         SimpleDateFormat dateFormat = new SimpleDateFormat("dd/MM/yyyy HH:mm");
         header.setRight("Ngày xuất: " + dateFormat.format(new Date()));
@@ -62,23 +52,6 @@ public class RevenueCategoryExcelExporter {
         Footer footer = sheet.getFooter();
         footer.setLeft("Money Keeper - Quản lý chi tiêu cá nhân");
         footer.setCenter("");
-    }
-
-    private String createTimeRangeTitle(List<String> customTimeRange) {
-        if (customTimeRange == null || customTimeRange.isEmpty() || customTimeRange.size() < 2) {
-            return "";
-        }
-        
-        try {
-            String startDate = customTimeRange.get(0);
-            String endDate = customTimeRange.get(1);
-            if(startDate.equals(endDate)) {
-                return startDate;
-            }
-            return "\nTỪ " + startDate + " ĐẾN " + endDate;
-        } catch (Exception e) {
-            return "";
-        }
     }
 
     private CellStyle createBaseStyle() {
@@ -138,8 +111,10 @@ public class RevenueCategoryExcelExporter {
         headerStyle.setBorderBottom(BorderStyle.MEDIUM);
         headerStyle.setBorderLeft(BorderStyle.MEDIUM);
 
+
+
         String[] headers = {
-                "Danh mục thu", "Tổng tiền",
+                "ID","Tên tài khoản", "Loại tài khoản", "Số dư hiện tại tài khoản"
         };
 
         for (int i = 0; i < headers.length; i++) {
@@ -151,6 +126,9 @@ public class RevenueCategoryExcelExporter {
 
     private void writeDataRows() {
         CellStyle baseStyle = createBaseStyle();
+        CellStyle rightBaseStyle = workbook.createCellStyle();
+        rightBaseStyle.cloneStyleFrom(baseStyle);
+        rightBaseStyle.setAlignment(HorizontalAlignment.RIGHT);
         CellStyle amountStyle = createAmountStyle();
 
         int headerRowIndex = 0;
@@ -159,20 +137,28 @@ public class RevenueCategoryExcelExporter {
         }
         int rowCount = headerRowIndex;
 
-        for (ReportRevenueCategory category : data) {
+        for (ReportBucketPaymentBalance paymentBalance : data) {
             Row row = sheet.createRow(rowCount++);
 
-            // Category ID and Name
             Cell cell = row.createCell(0);
-            cell.setCellValue(category.getCategoryName());
+            cell.setCellValue(paymentBalance.getId());
             cell.setCellStyle(baseStyle);
             sheet.autoSizeColumn(0);
 
-            // Amount
             cell = row.createCell(1);
-            cell.setCellValue(category.getTotalRevenue());
-            cell.setCellStyle(amountStyle);
+            cell.setCellValue(paymentBalance.getAccountName());
+            cell.setCellStyle(baseStyle);
             sheet.autoSizeColumn(1);
+
+            cell = row.createCell(2);
+            cell.setCellValue(paymentBalance.getAccountType());
+            cell.setCellStyle(baseStyle);
+            sheet.autoSizeColumn(2);
+
+            cell = row.createCell(3);
+            cell.setCellValue(paymentBalance.getBalance());
+            cell.setCellStyle(amountStyle);
+            sheet.autoSizeColumn(3);
         }
 
         if (!data.isEmpty()) {
@@ -181,7 +167,7 @@ public class RevenueCategoryExcelExporter {
     }
 
     private void addSummaryRow(int rowIndex) {
-        Row row = sheet.createRow(rowIndex);
+        Row row = sheet.createRow(rowIndex + 2);
         row.setHeightInPoints(25);
 
         CellStyle summaryStyle = workbook.createCellStyle();
@@ -202,21 +188,30 @@ public class RevenueCategoryExcelExporter {
         DataFormat format = workbook.createDataFormat();
         totalAmountStyle.setDataFormat(format.getFormat("#,##0 [$₫-vi-VN]"));
 
-        double totalExpense = 0;
-        for (ReportRevenueCategory category : data) {
-            totalExpense += category.getTotalRevenue();
+        Long total = 0L;
+        for (ReportBucketPaymentBalance reportBucketPaymentBalance : data) {
+            total += reportBucketPaymentBalance.getBalance();
         }
 
         Cell cell = row.createCell(0);
-        cell.setCellValue("TỔNG CỘNG");
+        cell.setCellValue("TỔNG SỐ DƯ");
         cell.setCellStyle(summaryStyle);
 
-        cell = row.createCell(1);
-        cell.setCellValue(totalExpense);
+        // merge cell 0 -> 3
+        sheet.addMergedRegion(new CellRangeAddress(rowIndex, rowIndex, 0, 2));
+
+        for (int i = 1; i <= 2; i++) {
+            cell = row.createCell(i);
+            cell.setCellStyle(summaryStyle);
+        }
+
+        cell = row.createCell(3);
+        cell.setCellValue(total);
         cell.setCellStyle(totalAmountStyle);
+        sheet.autoSizeColumn(3);
     }
 
-    private void addTitleToSheet(ReportFilterOptionsRequest request) {
+    private void addTitleToSheet() {
         // Tạo style cho title
         CellStyle titleStyle = workbook.createCellStyle();
         XSSFFont titleFont = workbook.createFont();
@@ -239,48 +234,16 @@ public class RevenueCategoryExcelExporter {
         Row titleRow = sheet.createRow(0);
         titleRow.setHeightInPoints(30);
         Cell titleCell = titleRow.createCell(0);
-        titleCell.setCellValue("BÁO CÁO DANH MỤC THU NHẬP");
+        titleCell.setCellValue("BÁO CÁO SỐ DƯ TÀI KHOẢN");
         titleCell.setCellStyle(titleStyle);
-        sheet.addMergedRegion(new CellRangeAddress(0, 0, 0, 4));
-
-        // Nếu có request, tạo dòng phụ đề với thông tin khoảng thời gian
-        if (request != null && request.getCustomTimeRange() != null) {
-            Row subtitleRow = sheet.createRow(1);
-            subtitleRow.setHeightInPoints(25);
-            Cell subtitleCell = subtitleRow.createCell(0);
-
-            String timeRangeTitle = "";
-            timeRangeTitle = createTimeRangeTitle(request.getCustomTimeRange());
-
-            if(request.getTimeOption() != null) {
-                if(request.getTimeOption().equals(ReportTimeOptionType.MONTH.getType())){
-                    timeRangeTitle = "THEO THÁNG " + timeRangeTitle;
-                } else if (request.getTimeOption().equals(ReportTimeOptionType.YEAR.getType())) {
-                    timeRangeTitle = "THEO NĂM " + timeRangeTitle;
-                } else if (request.getTimeOption().equals(ReportTimeOptionType.OPTIONAL.getType())) {
-                    timeRangeTitle = "THEO NGÀY " + timeRangeTitle;
-                }
-            }
-
-            subtitleCell.setCellValue(timeRangeTitle);
-            subtitleCell.setCellStyle(subtitleStyle);
-            sheet.addMergedRegion(new CellRangeAddress(1, 1, 0, 4));
-
-            // Thêm dòng trống sau tiêu đề
-            sheet.createRow(2);
-        } else {
-            // Nếu không có request, chỉ thêm dòng trống sau tiêu đề
-            sheet.createRow(1);
-        }
+        sheet.addMergedRegion(new CellRangeAddress(0, 0, 0, 13));
+        sheet.createRow(1);
     }
 
-    public ByteArrayInputStream export(ReportFilterOptionsRequest request) throws IOException {
-        if (request != null) {
-            setupPageProperties(request);
-        }
-        
-        addTitleToSheet(request);
-        
+    public ByteArrayInputStream export() throws IOException {
+        setupPageProperties();
+        addTitleToSheet();
+
         // Viết header và dữ liệu
         writeHeaderRow();
         writeDataRows();

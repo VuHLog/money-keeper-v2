@@ -14,6 +14,7 @@ const accountTypeBalanceData = ref([])
 const accountTypeBalanceColors = ref([])
 const accountBalanceFluctuationData = ref([])
 const filters = ref();
+const excelFilters = ref();
 // Add showCharts variable to control chart visibility
 const showCharts = ref(false);
 
@@ -218,6 +219,8 @@ onMounted(async () => {
     ],
   }
 
+  excelFilters.value = filters.value;
+
   await getData();
   updateTransactionData();
   
@@ -249,6 +252,7 @@ const handleFilterChange = (filterOptions) => {
 const handleApplyFilter = async () => {
   // Hide charts before updating data
   showCharts.value = false;
+  excelFilters.value = filters.value;
   
   await getData();
   updateTransactionData();
@@ -417,6 +421,19 @@ const updateTransactionData = () => {
     }
   };
 }
+
+const exportExcelForBucketPaymentBalance = async () => {
+  await reportStore.exportExcelForBucketPaymentBalance();
+}
+
+const exportExcelForBucketPaymentTypeBalance = async () => {
+  await reportStore.exportExcelForBucketPaymentTypeBalance();
+}
+
+const exportExcelForAccountBalanceFluctuation = async () => {
+  await reportStore.exportExcelForAccountBalanceFluctuation(excelFilters.value);
+}
+
 </script>
 
 <template>
@@ -430,19 +447,55 @@ const updateTransactionData = () => {
     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
       <!-- Account Balances -->
       <div class="bg-surface rounded-xl p-4 shadow-sm">
-        <h3 class="text-lg font-medium text-text mb-4">Số dư tài khoản</h3>
+        <div class="flex justify-between items-center mb-4">
+          <h3 class="text-lg font-medium text-text mb-4">Số dư tài khoản</h3>
+          <div class="flex justify-end items-center">
+            <!-- Export Excel button -->
+            <button
+              class="flex items-center space-x-2 px-4 py-2 bg-success text-white rounded-lg hover:bg-success/90 transition-colors duration-200"
+              @click="exportExcelForBucketPaymentBalance"
+            >
+              <font-awesome-icon :icon="['fas', 'file-excel']" />
+              <span>Xuất Excel</span>
+            </button>
+          </div>
+        </div>
         <apexchart v-if="showCharts" type="donut" height="350" :options="accountBalancesChart" :series="accountBalancesChart.series" />
       </div>
 
       <!-- Account Types -->
       <div class="bg-surface rounded-xl p-4 shadow-sm">
-        <h3 class="text-lg font-medium text-text mb-4">Phân bổ theo loại tài khoản</h3>
+        <div class="flex justify-between items-center mb-4">
+          <h3 class="text-lg font-medium text-text mb-4">Phân bổ theo loại tài khoản</h3>
+          <div class="flex justify-end items-center">
+            <!-- Export Excel button -->
+            <button
+              class="flex items-center space-x-2 px-4 py-2 bg-success text-white rounded-lg hover:bg-success/90 transition-colors duration-200"
+              @click="exportExcelForBucketPaymentTypeBalance"
+            >
+              <font-awesome-icon :icon="['fas', 'file-excel']" />
+              <span>Xuất Excel</span>
+            </button>
+          </div>
+        </div>
         <apexchart v-if="showCharts" type="donut" height="350" :options="accountTypesChart" :series="accountTypesChart.series" />
       </div>
 
       <!-- Account Transactions -->
       <div class="bg-surface rounded-xl p-4 shadow-sm md:col-span-2">
-        <h3 class="text-lg font-medium text-text mb-4">Biến động số dư tài khoản</h3>
+        <div class="flex justify-between items-center mb-4">
+          <h3 class="text-lg font-medium text-text mb-4">Biến động số dư tài khoản</h3>
+          <div class="flex justify-end items-center">
+            <!-- Export Excel button -->
+            <button
+              class="flex items-center space-x-2 px-4 py-2 bg-success text-white rounded-lg hover:bg-success/90 transition-colors duration-200"
+              @click="exportExcelForAccountBalanceFluctuation"
+            >
+              <font-awesome-icon :icon="['fas', 'file-excel']" />
+              <span>Xuất Excel</span>
+            </button>
+          </div>
+        </div>
         <apexchart v-if="showCharts" type="line" height="350" :options="accountTransactionsChart"
           :series="accountTransactionsChart.series" />
       </div>

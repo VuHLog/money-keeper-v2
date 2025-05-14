@@ -5,5 +5,6 @@ public interface ReportBucketPaymentBalance {
     String getAccountName();
     String getAccountType();
     Long getBalance();
+    Long getInitialBalance();
     String getIconUrl();
 }

@@ -452,18 +452,6 @@ const exportExcel = async () => {
     <!-- Add ToastManager component -->
     <ToastManager ref="toastManagerRef" />
     
-    <!-- Header section with filters and export button -->
-    <div class="flex justify-end items-center mb-4">
-      <!-- Export Excel button -->
-      <button
-        class="flex items-center space-x-2 px-4 py-2 bg-success text-white rounded-lg hover:bg-success/90 transition-colors duration-200"
-        @click="exportExcel"
-      >
-        <font-awesome-icon :icon="['fas', 'file-excel']" />
-        <span>Xuất Excel</span>
-      </button>
-    </div>
-    
     <!-- Filters -->
     <FilterOptions
       :is-reset="isReset" 
@@ -475,6 +463,18 @@ const exportExcel = async () => {
       @filter-reset="handleFilterReset"
       @apply-filter="handleApplyFilter"
     />
+
+    <!-- Header section with filters and export button -->
+    <div class="flex justify-end items-center mb-4">
+      <!-- Export Excel button -->
+      <button
+        class="flex items-center space-x-2 px-4 py-2 bg-success text-white rounded-lg hover:bg-success/90 transition-colors duration-200"
+        @click="exportExcel"
+      >
+        <font-awesome-icon :icon="['fas', 'file-excel']" />
+        <span>Xuất Excel</span>
+      </button>
+    </div>
 
     <!-- Transactions List -->
     <div class="mt-6 bg-white rounded-lg shadow-sm">
