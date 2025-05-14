@@ -14,6 +14,7 @@ public interface DictionaryBucketPaymentMapper {
     DictionaryBucketPayment toDictionaryBucketPayment(DictionaryBucketPaymentRequest request);
 
     @Mapping(target = "bank", ignore = true)
+    @Mapping(target = "balance", ignore = true)
     void updateDictionaryBucketPaymentFromRequest(DictionaryBucketPaymentRequest request,@MappingTarget DictionaryBucketPayment dictionaryBucketPayment);
 
     DictionaryBucketPaymentResponse toDictionaryBucketResponse(DictionaryBucketPayment dictionaryBucketPayment);
