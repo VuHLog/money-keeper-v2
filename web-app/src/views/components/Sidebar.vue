@@ -118,6 +118,7 @@ const isActive = (path) => {
             :alt="isOpen ? 'Money Keeper Logo' : 'MK'" 
             class="h-8 w-auto"
           />
+          <span v-if="isOpen" class="ml-2 text-lg font-semibold gradient-text">Sổ thu chi</span>
         </router-link>
       </div>
 
@@ -177,5 +178,13 @@ aside {
 * {
   -ms-overflow-style: none;  /* IE and Edge */
   scrollbar-width: none;  /* Firefox */
+}
+
+.gradient-text {
+  background: linear-gradient(90deg, #4F46E5 0%, #06B6D4 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  color: transparent;
 }
 </style>

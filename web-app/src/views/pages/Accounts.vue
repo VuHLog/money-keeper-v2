@@ -124,7 +124,7 @@ const handleTransferConfirm = (data) => {
         <!-- Add Button - Full width on mobile -->
         <button 
           @click="isAddModalOpen = true"
-          class="w-full sm:w-auto bg-primary text-white px-4 sm:px-8 py-3 rounded-lg flex items-center justify-center space-x-2 sm:space-x-3 hover:bg-primary/90"
+          class="w-full sm:w-auto bg-primary text-white px-4 sm:px-4 py-2 rounded-lg flex items-center justify-center space-x-2 sm:space-x-3 hover:bg-primary/90"
         >
           <font-awesome-icon :icon="['fas', 'plus']" class="text-lg" />
           <span class="text-base">Thêm tài khoản</span>
