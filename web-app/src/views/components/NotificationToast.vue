@@ -144,13 +144,13 @@ onUnmounted(() => {
             </h3>
             <div class="mt-1 text-sm text-gray-500" v-html="props.notification.content"></div>
           </div>
-          <button 
-            class="absolute top-2 right-2 text-gray-400 hover:text-gray-600"
-            @click.stop="handleClose"
-          >
-            <FontAwesomeIcon icon="times" />
-          </button>
         </div>
+        <button 
+          class="absolute top-2 right-2 text-gray-400 hover:text-gray-600 bg-white rounded-full p-1 hover:bg-gray-100 w-8 h-8 flex items-center justify-center"
+          @click.stop="handleClose"
+        >
+          <FontAwesomeIcon icon="times" size="lg" />
+        </button>
       </div>
     </div>
   </div>
