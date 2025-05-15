@@ -56,6 +56,12 @@ const routes = [
     meta: { requiresAuth: true }
   },
   {
+    path: '/report',
+    name: 'Report',
+    component: () => import('@pages/Report.vue'),
+    meta: { requiresAuth: true }
+  },
+  {
     path: '/spending-limits',
     name: 'SpendingLimit',
     component: () => import('@pages/SpendingLimit.vue'),

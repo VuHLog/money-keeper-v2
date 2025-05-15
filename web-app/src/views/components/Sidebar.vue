@@ -16,7 +16,8 @@ import {
   faPiggyBank,
   faUtensils,
   faShoppingBag,
-  faMoneyBillWave
+  faMoneyBillWave,
+  faFileAlt
 } from '@fortawesome/free-solid-svg-icons'
 import logoFull from '@/assets/img/logo/logo.png'
 import logoIcon from '@/assets/img/logo/logo.png'
@@ -36,7 +37,8 @@ library.add(
   faPiggyBank,
   faUtensils,
   faShoppingBag,
-  faMoneyBillWave
+  faMoneyBillWave,
+  faFileAlt
 )
 
 const props = defineProps({
@@ -88,6 +90,11 @@ const menuItems = [
     label: 'Thống Kê',
     path: '/statistics',
     icon: ['fas', 'chart-bar']
+  },
+  {
+    label: 'Báo cáo',
+    path: '/report',
+    icon: ['fas', 'file-alt']
   },
   {
     label: 'Thông Tin Người Dùng',

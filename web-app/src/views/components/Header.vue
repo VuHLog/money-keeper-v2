@@ -69,6 +69,8 @@ const currentPageTitle = computed(() => {
       return 'Danh Mục'
     case '/statistics':
       return 'Thống Kê'
+    case '/report':
+      return 'Báo Cáo'
     case '/profile':
       return 'Thông Tin Người Dùng'
     default:
