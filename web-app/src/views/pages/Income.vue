@@ -596,15 +596,15 @@ const handleConfirmDelete = async () => {
                     </div>
                     <div>
                       <p class="font-medium flex text-text">
-                        <Avatar :src="transaction.dictionaryRevenue.iconUrl" :alt="transaction.dictionaryRevenue.name"
+                        <Avatar :src="transaction?.dictionaryRevenue?.iconUrl || 'https://res.cloudinary.com/cloud1412/image/upload/v1747283065/noInfo_vwxabr.svg'" :alt="transaction?.dictionaryRevenue?.name || 'Không có thông tin'"
                           size="m" class="mr-2" />
-                        {{ transaction.dictionaryRevenue.name }}
+                        {{ transaction?.dictionaryRevenue?.name || 'Không xác định' }}
                       </p>
                       <div class="flex flex-col justify-center text-sm text-text-secondary">
                         <span>{{ transaction.transferType === 'transfer' ? 'Nhận ' +
-                          transaction.dictionaryRevenue.name.toLowerCase() + ' từ ' +
+                          transaction?.dictionaryRevenue?.name?.toLowerCase() || 'Không xác định' + ' từ ' +
                           transaction.senderAccount.accountName :
-                          transaction.dictionaryRevenue.name }}</span>
+                          transaction?.dictionaryRevenue?.name || 'Không xác định' }}</span>
                         <span>{{ formatDateToVietnam(transaction.revenueDate) }}</span>
                       </div>
                     </div>

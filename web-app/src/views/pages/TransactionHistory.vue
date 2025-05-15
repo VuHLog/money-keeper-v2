@@ -393,11 +393,11 @@ const formatDateTime = (datetime) => {
 
 // Get category name based on transactionType
 const getCategoryName = (transaction) => {
-  return transaction.categoryName || 'Không có danh mục'
+  return transaction.categoryName || 'Danh mục không xác định'
 }
 
 const getAccountName = (transaction) => {
-  return transaction.accountName || 'Không có tài khoản'
+  return transaction.accountName || 'Tài khoản không xác định'
 }
 // Xác định loại giao dịch
 const getTransactionType = (type) => {
@@ -532,13 +532,13 @@ const exportExcel = async () => {
               </td>
               <td class="px-6 py-4 whitespace-nowrap">
                 <div class="flex items-center">
-                  <Avatar v-if="transaction.categoryIconUrl" :src="transaction.categoryIconUrl" size="m" class="mr-2" />
+                  <Avatar :src="transaction.categoryIconUrl || 'https://res.cloudinary.com/cloud1412/image/upload/v1747283065/noInfo_vwxabr.svg'" :alt="transaction.categoryName || 'Không có thông tin'" size="m" class="mr-2" />
                   <span>{{ getCategoryName(transaction) }}</span>
                 </div>
               </td>
               <td class="px-6 py-4 whitespace-nowrap">
                 <div class="flex items-center">
-                  <Avatar v-if="transaction.bucketPaymentIconUrl" :src="transaction.bucketPaymentIconUrl" size="m" class="mr-2" />
+                  <Avatar v-if="transaction.bucketPaymentIconUrl" :src="transaction.bucketPaymentIconUrl || 'https://res.cloudinary.com/cloud1412/image/upload/v1747283065/noInfo_vwxabr.svg'" :alt="transaction.bucketPaymentName || 'Không có thông tin'" size="m" class="mr-2" />
                   <span>{{ getAccountName(transaction) }}</span>
                 </div>
               </td>

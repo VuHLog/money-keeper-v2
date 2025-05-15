@@ -110,9 +110,9 @@ const getCategoryName = computed(() => {
               <div>
                 <p class="text-sm text-text-secondary">Danh mục</p>
                 <p class="font-medium flex text-text">
-                  <Avatar v-if="getIconUrl" :src="getIconUrl" :alt="getCategoryName" 
+                  <Avatar :src="getIconUrl || 'https://res.cloudinary.com/cloud1412/image/upload/v1747283065/noInfo_vwxabr.svg'" :alt="getCategoryName || 'Không có thông tin'" 
                     size="m" class="mr-2" />
-                  {{ getCategoryName }}
+                  {{ getCategoryName || 'Danh mục không xác định' }}
                 </p>
               </div>
             </div>
@@ -125,9 +125,9 @@ const getCategoryName = computed(() => {
               <div>
                 <p class="text-sm text-text-secondary">Tài khoản</p>
                 <p class="font-medium flex text-text">
-                  <Avatar v-if="transaction.dictionaryBucketPayment?.iconUrl" :src="transaction.dictionaryBucketPayment?.iconUrl" :alt="transaction.dictionaryBucketPayment?.accountName" 
+                  <Avatar v-if="transaction.dictionaryBucketPayment?.iconUrl" :src="transaction.dictionaryBucketPayment?.iconUrl || 'https://res.cloudinary.com/cloud1412/image/upload/v1747283065/noInfo_vwxabr.svg'" :alt="transaction.dictionaryBucketPayment?.accountName || 'Không có thông tin'" 
                     size="m" class="mr-2" />
-                    {{ transaction.dictionaryBucketPayment?.accountName || 'Không có' }}
+                    {{ transaction.dictionaryBucketPayment?.accountName || 'Tài khoản không xác định' }}
                 </p>
                 <!-- Hiển thị số dư sau giao dịch -->
                 <p v-if="transaction.balance" class="text-sm text-text-secondary mt-1">
