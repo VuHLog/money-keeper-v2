@@ -22,8 +22,7 @@ public class ExpenseLimitSchedule {
     private final ExpenseLimitRepository expenseLimitRepository;
     private final ExpenseLimitService expenseLimitService;
 
-    @Scheduled(fixedRate = 5000)
-//    @Scheduled(cron = "0 0 0 * * *", zone = "Asia/Ho_Chi_Minh")
+    @Scheduled(cron = "0 0 0 * * *", zone = "Asia/Ho_Chi_Minh")
     public void checkExpenseLimit() {
         List<ExpenseLimit> expenseLimits = expenseLimitRepository.findAll();
         LocalDate now = LocalDate.now();

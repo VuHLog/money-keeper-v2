@@ -63,7 +63,7 @@ const handleConfirm = () => {
             <!-- Category Icon -->
             <div class="flex-shrink-0">
               <Avatar 
-                :src="transactionType === 'revenue' ? transaction.dictionaryRevenue?.iconUrl : transaction.dictionaryExpense?.iconUrl"
+                :src="transactionType === 'revenue' ? transaction.dictionaryRevenue?.iconUrl || 'https://res.cloudinary.com/cloud1412/image/upload/v1747283065/noInfo_vwxabr.svg' : transaction.dictionaryExpense?.iconUrl || 'https://res.cloudinary.com/cloud1412/image/upload/v1747283065/noInfo_vwxabr.svg'"
                 :alt="transactionType === 'revenue' ? transaction.dictionaryRevenue?.name : transaction.dictionaryExpense?.name"
                 size="m"
               />
@@ -72,7 +72,7 @@ const handleConfirm = () => {
             <!-- Transaction Info -->
             <div class="flex-1 min-w-0">
               <p class="text-sm font-medium text-text">
-                {{ transactionType === 'revenue' ? transaction.dictionaryRevenue?.name : transaction.dictionaryExpense?.name }}
+                {{ transactionType === 'revenue' ? transaction.dictionaryRevenue?.name || 'Danh mục thu không xác định' : transaction.dictionaryExpense?.name || 'Danh mục chi không xác định' }}
               </p>
               <p class="text-sm text-text-secondary">
                 {{ formatDateToVietnam(transactionType === 'revenue' ? transaction.revenueDate : transaction.expenseDate) }}

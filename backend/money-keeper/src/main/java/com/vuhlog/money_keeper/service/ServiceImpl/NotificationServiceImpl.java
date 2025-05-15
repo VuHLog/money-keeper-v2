@@ -93,7 +93,7 @@ public class NotificationServiceImpl implements NotificationService {
         Users user = userCommon.getMyUserInfo();
         Notification notification = Notification.builder()
                 .title(isCreate?"Thêm mới chi tiêu":"Điều chỉnh chi tiêu")
-                .content("Tài khoản <strong class='text-primary'>" + expenseRegular.getDictionaryBucketPayment().getAccountName() + "</strong> đã chi số tiền là " + "<span class='text-danger'>" + formatCurrency(expenseRegular.getAmount()) + "</span>")
+                .content("Tài khoản <strong class='text-primary'>" + (expenseRegular.getDictionaryBucketPayment() == null? "không xác định" : expenseRegular.getDictionaryBucketPayment().getAccountName()) + "</strong> đã chi số tiền là " + "<span class='text-danger'>" + formatCurrency(expenseRegular.getAmount()) + "</span>")
                 .type("expense")
                 .readStatus(0)
                 .iconUrl("https://res.cloudinary.com/cloud1412/image/upload/v1745068565/logo_mpkmjj.png")
@@ -116,7 +116,7 @@ public class NotificationServiceImpl implements NotificationService {
         Users user = userCommon.getMyUserInfo();
         Notification notification = Notification.builder()
                 .title("Xóa khoản chi tiêu")
-                .content("Tài khoản <strong class='text-primary'>" + expenseRegular.getDictionaryBucketPayment().getAccountName() + "</strong> đã xóa khoản chi số tiền là " + "<span class='text-danger'>" + formatCurrency(expenseRegular.getAmount()) + "</span>")
+                .content("Tài khoản <strong class='text-primary'>" + (expenseRegular.getDictionaryBucketPayment() == null? "không xác định" : expenseRegular.getDictionaryBucketPayment().getAccountName()) + "</strong> đã xóa khoản chi số tiền là " + "<span class='text-danger'>" + formatCurrency(expenseRegular.getAmount()) + "</span>")
                 .type("expense")
                 .readStatus(0)
                 .iconUrl("https://res.cloudinary.com/cloud1412/image/upload/v1745068565/logo_mpkmjj.png")
@@ -139,7 +139,7 @@ public class NotificationServiceImpl implements NotificationService {
         Users user = userCommon.getMyUserInfo();
         Notification notification = Notification.builder()
                 .title("Chuyển khoản")
-                .content("Tài khoản <strong class='text-primary'>" + expenseRegular.getDictionaryBucketPayment().getAccountName() + "</strong>" + "tới tài khoản " + "<strong class='text-danger'>" + expenseRegular.getBeneficiaryAccount().getAccountName() + "</strong> với số tiền là " + "<span class='text-error'>" + formatCurrency(expenseRegular.getAmount()) + "</span>")
+                .content("Tài khoản <strong class='text-primary'>" + (expenseRegular.getDictionaryBucketPayment() == null? "không xác định" : expenseRegular.getDictionaryBucketPayment().getAccountName()) + "</strong>" + "tới tài khoản " + "<strong class='text-danger'>" + expenseRegular.getBeneficiaryAccount().getAccountName() + "</strong> với số tiền là " + "<span class='text-error'>" + formatCurrency(expenseRegular.getAmount()) + "</span>")
                 .type("expense")
                 .readStatus(0)
                 .iconUrl("https://res.cloudinary.com/cloud1412/image/upload/v1745068565/logo_mpkmjj.png")
@@ -162,7 +162,7 @@ public class NotificationServiceImpl implements NotificationService {
         Users user = userCommon.getMyUserInfo();
         Notification notification = Notification.builder()
                 .title(isCreate?"Thu nhập":"Điều chỉnh thu nhập")
-                .content( "Tài khoản <strong class='text-primary'>" + revenueRegular.getDictionaryBucketPayment().getAccountName() + "</strong> đã nhận số tiền là " + "<span class='text-success'>" + formatCurrency(revenueRegular.getAmount()) + "</span>")
+                .content( "Tài khoản <strong class='text-primary'>" + (revenueRegular.getDictionaryBucketPayment() == null? "không xác định" : revenueRegular.getDictionaryBucketPayment().getAccountName()) + "</strong> đã nhận số tiền là " + "<span class='text-success'>" + formatCurrency(revenueRegular.getAmount()) + "</span>")
                 .type("revenue")
                 .readStatus(0)
                 .iconUrl("https://res.cloudinary.com/cloud1412/image/upload/v1745068565/logo_mpkmjj.png")
@@ -185,7 +185,7 @@ public class NotificationServiceImpl implements NotificationService {
         Users user = userCommon.getMyUserInfo();
         Notification notification = Notification.builder()
                 .title("Xóa khoản thu nhập")
-                .content("Tài khoản <strong class='text-primary'>" + revenueRegular.getDictionaryBucketPayment().getAccountName() + "</strong> đã xóa khoản thu số tiền là " + "<span class='text-success'>" + formatCurrency(revenueRegular.getAmount()) + "</span>")
+                .content("Tài khoản <strong class='text-primary'>" + (revenueRegular.getDictionaryBucketPayment() == null? "không xác định" : revenueRegular.getDictionaryBucketPayment().getAccountName()) + "</strong> đã xóa khoản thu số tiền là " + "<span class='text-success'>" + formatCurrency(revenueRegular.getAmount()) + "</span>")
                 .type("revenue")
                 .readStatus(0)
                 .iconUrl("https://res.cloudinary.com/cloud1412/image/upload/v1745068565/logo_mpkmjj.png")

@@ -6,14 +6,26 @@ import com.vuhlog.money_keeper.entity.ReportExpenseRevenue;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
 public interface ReportExpenseRevenueRepository extends JpaRepository<ReportExpenseRevenue, String> {
+    @Modifying
+    @Transactional
+    @Query("UPDATE ReportExpenseRevenue r SET r.categoryId = null WHERE r.categoryId = :categoryId and r.type='revenue'")
+    void unsetDictionaryRevenueById(@Param("categoryId") String categoryId);
+
+    @Modifying
+    @Transactional
+    @Query("UPDATE ReportExpenseRevenue r SET r.categoryId = null WHERE r.categoryId = :categoryId and r.type='expense'")
+    void unsetDictionaryExpenseById(@Param("categoryId") String categoryId);
+
     Optional<ReportExpenseRevenue> findByMonthAndYearAndBucketPaymentIdAndCategoryIdAndType(int month, int year, String bucketPaymentId, String categoryId, String type);
 
     @Query(value = "SELECT COALESCE(SUM(total_expense), 0) AS totalExpense, COALESCE(SUM(total_revenue), 0) AS totalRevenue \n" +
@@ -761,7 +773,7 @@ public interface ReportExpenseRevenueRepository extends JpaRepository<ReportExpe
             "FROM expense_regular er\n" +
             "JOIN dictionary_bucket_payment dbp ON dbp.id = er.dictionary_bucket_payment_id\n" +
             "LEFT JOIN dictionary_bucket_payment dbp1 ON dbp1.id = er.beneficiary_account_id\n" +
-            "JOIN dictionary_expense de ON de.id = er.dictionary_expense_id\n" +
+            "LEFT JOIN dictionary_expense de ON de.id = er.dictionary_expense_id\n" +
             "WHERE dbp.user_id = :userId\n" +
             "AND ( :bucketPaymentIds IS NULL OR FIND_IN_SET(er.dictionary_bucket_payment_id, :bucketPaymentIds)) \n" +
             "AND ( :startDate IS NULL OR :endDate IS NULL OR (date(expense_date) BETWEEN DATE(:startDate) AND DATE(:endDate)))\n" +
@@ -770,7 +782,7 @@ public interface ReportExpenseRevenueRepository extends JpaRepository<ReportExpe
             "FROM revenue_regular rr\n" +
             "JOIN dictionary_bucket_payment dbp ON dbp.id = rr.dictionary_bucket_payment_id\n" +
             "LEFT JOIN dictionary_bucket_payment dbp1 ON dbp1.id = rr.sender_account_id\n" +
-            "JOIN dictionary_revenue dr ON dr.id = rr.dictionary_revenue_id\n" +
+            "LEFT JOIN dictionary_revenue dr ON dr.id = rr.dictionary_revenue_id\n" +
             "WHERE dbp.user_id = :userId\n" +
             "AND ( :bucketPaymentIds IS NULL OR FIND_IN_SET(rr.dictionary_bucket_payment_id, :bucketPaymentIds)) \n" +
             "AND ( :startDate IS NULL OR :endDate IS NULL OR (date(revenue_date) BETWEEN DATE(:startDate) AND DATE(:endDate)))\n" +
@@ -804,7 +816,7 @@ public interface ReportExpenseRevenueRepository extends JpaRepository<ReportExpe
             "FROM expense_regular er\n" +
             "JOIN dictionary_bucket_payment dbp ON dbp.id = er.dictionary_bucket_payment_id\n" +
             "LEFT JOIN dictionary_bucket_payment dbp1 ON dbp1.id = er.beneficiary_account_id\n" +
-            "JOIN dictionary_expense de ON de.id = er.dictionary_expense_id\n" +
+            "LEFT JOIN dictionary_expense de ON de.id = er.dictionary_expense_id\n" +
             "WHERE dbp.user_id = :userId\n" +
             "AND ( :bucketPaymentIds IS NULL OR FIND_IN_SET(er.dictionary_bucket_payment_id, :bucketPaymentIds)) \n" +
             "AND ( :startDate IS NULL OR :endDate IS NULL OR (date(expense_date) BETWEEN DATE(:startDate) AND DATE(:endDate)))\n" +
@@ -813,7 +825,7 @@ public interface ReportExpenseRevenueRepository extends JpaRepository<ReportExpe
             "FROM revenue_regular rr\n" +
             "JOIN dictionary_bucket_payment dbp ON dbp.id = rr.dictionary_bucket_payment_id\n" +
             "LEFT JOIN dictionary_bucket_payment dbp1 ON dbp1.id = rr.sender_account_id\n" +
-            "JOIN dictionary_revenue dr ON dr.id = rr.dictionary_revenue_id\n" +
+            "LEFT JOIN dictionary_revenue dr ON dr.id = rr.dictionary_revenue_id\n" +
             "WHERE dbp.user_id = :userId\n" +
             "AND ( :bucketPaymentIds IS NULL OR FIND_IN_SET(rr.dictionary_bucket_payment_id, :bucketPaymentIds)) \n" +
             "AND ( :startDate IS NULL OR :endDate IS NULL OR (date(revenue_date) BETWEEN DATE(:startDate) AND DATE(:endDate)))\n" +
@@ -830,7 +842,7 @@ public interface ReportExpenseRevenueRepository extends JpaRepository<ReportExpe
             "FROM expense_regular er\n" +
             "JOIN dictionary_bucket_payment dbp ON dbp.id = er.dictionary_bucket_payment_id\n" +
             "LEFT JOIN dictionary_bucket_payment dbp1 ON dbp1.id = er.beneficiary_account_id\n" +
-            "JOIN dictionary_expense de ON de.id = er.dictionary_expense_id\n" +
+            "LEFT JOIN dictionary_expense de ON de.id = er.dictionary_expense_id\n" +
             "WHERE dbp.user_id = :userId\n" +
             "AND ( :bucketPaymentIds IS NULL OR FIND_IN_SET(er.dictionary_bucket_payment_id, :bucketPaymentIds)) \n" +
             "AND (:categoriesId IS NULL OR FIND_IN_SET(er.dictionary_expense_id, :categoriesId)) \n" +
@@ -856,7 +868,7 @@ public interface ReportExpenseRevenueRepository extends JpaRepository<ReportExpe
             "FROM expense_regular er\n" +
             "JOIN dictionary_bucket_payment dbp ON dbp.id = er.dictionary_bucket_payment_id\n" +
             "LEFT JOIN dictionary_bucket_payment dbp1 ON dbp1.id = er.beneficiary_account_id\n" +
-            "JOIN dictionary_expense de ON de.id = er.dictionary_expense_id\n" +
+            "LEFT JOIN dictionary_expense de ON de.id = er.dictionary_expense_id\n" +
             "WHERE dbp.user_id = :userId\n" +
             "AND ( :bucketPaymentIds IS NULL OR FIND_IN_SET(er.dictionary_bucket_payment_id, :bucketPaymentIds)) \n" +
             "AND (:categoriesId IS NULL OR FIND_IN_SET(er.dictionary_expense_id, :categoriesId)) \n" +
@@ -873,7 +885,7 @@ public interface ReportExpenseRevenueRepository extends JpaRepository<ReportExpe
     @Query(value = "SELECT rr.id,'revenue' AS transactionType ,rr.amount, dr.`name` AS categoryName, dr.icon_url AS categoryIconUrl, dbp.account_name as accountName, dbp.icon_url AS bucketPaymentIconUrl, revenue_date AS date, rr.transfer_type as transferType, rr.interpretation, rr.trip_event as tripEvent, rr.location as location, null as beneficiary, null as beneficiaryAccountName, null AS beneficiaryAccountIconUrl, rr.collect_money_who as collectMoneyWho, dbp1.account_name as senderAccountName, dbp1.icon_url as senderAccountIconUrl\n" +
             "FROM revenue_regular rr\n" +
             "JOIN dictionary_bucket_payment dbp ON dbp.id = rr.dictionary_bucket_payment_id\n" +
-            "JOIN dictionary_revenue dr ON dr.id = rr.dictionary_revenue_id\n" +
+            "LEFT JOIN dictionary_revenue dr ON dr.id = rr.dictionary_revenue_id\n" +
             "LEFT JOIN dictionary_bucket_payment dbp1 ON dbp1.id = rr.sender_account_id\n" +
             "WHERE dbp.user_id = :userId\n" +
             "AND ( :bucketPaymentIds IS NULL OR FIND_IN_SET(rr.dictionary_bucket_payment_id, :bucketPaymentIds)) \n" +
@@ -901,7 +913,7 @@ public interface ReportExpenseRevenueRepository extends JpaRepository<ReportExpe
             "FROM revenue_regular rr\n" +
             "JOIN dictionary_bucket_payment dbp ON dbp.id = rr.dictionary_bucket_payment_id\n" +
             "LEFT JOIN dictionary_bucket_payment dbp1 ON dbp1.id = rr.sender_account_id\n" +
-            "JOIN dictionary_revenue dr ON dr.id = rr.dictionary_revenue_id\n" +
+            "LEFT JOIN dictionary_revenue dr ON dr.id = rr.dictionary_revenue_id\n" +
             "WHERE dbp.user_id = :userId\n" +
             "AND ( :bucketPaymentIds IS NULL OR FIND_IN_SET(rr.dictionary_bucket_payment_id, :bucketPaymentIds)) \n" +
             "AND (:categoriesId IS NULL OR FIND_IN_SET(rr.dictionary_revenue_id, :categoriesId)) \n" +

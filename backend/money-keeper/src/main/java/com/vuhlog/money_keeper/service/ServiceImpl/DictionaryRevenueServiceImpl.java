@@ -1,6 +1,8 @@
 package com.vuhlog.money_keeper.service.ServiceImpl;
 
 import com.vuhlog.money_keeper.dao.DictionaryRevenueRepository;
+import com.vuhlog.money_keeper.dao.ReportExpenseRevenueRepository;
+import com.vuhlog.money_keeper.dao.RevenueRegularRepository;
 import com.vuhlog.money_keeper.dao.UsersRepository;
 import com.vuhlog.money_keeper.dao.specification.DictionaryRevenueSpecification;
 import com.vuhlog.money_keeper.dto.request.DictionaryRevenueRequest;
@@ -25,6 +27,8 @@ public class DictionaryRevenueServiceImpl implements DictionaryRevenueService {
     private final DictionaryRevenueRepository dictionaryRevenueRepository;
     private final UsersRepository usersRepository;
     private final DictionaryRevenueMapper dictionaryRevenueMapper;
+    private final RevenueRegularRepository revenueRegularRepository;
+    private final ReportExpenseRevenueRepository reportExpenseRevenueRepository;
 
     @Override
     public DictionaryRevenueResponse createDictionaryRevenue(DictionaryRevenueRequest request) {
@@ -46,10 +50,10 @@ public class DictionaryRevenueServiceImpl implements DictionaryRevenueService {
 
     @Override
     public void deleteDictionaryRevenueItem(String id) {
-        DictionaryRevenue dictionaryRevenue = dictionaryRevenueRepository.findById(id).orElseThrow( () -> new AppException(ErrorCode.DICTIONARY_REVENUE_NOT_EXISTED));
-        if(!dictionaryRevenue.isSystemDefault() && dictionaryRevenue.getUser().getId().equals(getMyInfo().getId())){
-            dictionaryRevenueRepository.deleteById(id);
-        }
+        dictionaryRevenueRepository.findById(id).orElseThrow( () -> new AppException(ErrorCode.DICTIONARY_REVENUE_NOT_EXISTED));
+        reportExpenseRevenueRepository.unsetDictionaryRevenueById(id);
+        revenueRegularRepository.unsetDictionaryRevenueInRevenueRegular(id);
+        dictionaryRevenueRepository.deleteById(id);
     }
 
     @Override
