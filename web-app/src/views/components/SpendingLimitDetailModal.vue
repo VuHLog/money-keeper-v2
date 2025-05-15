@@ -2,7 +2,6 @@
 import { ref, computed, watch } from 'vue'
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
 import { formatCurrency } from '@/utils/formatters'
-import { ElScrollbar } from 'element-plus'
 import { useExpenseLimitStore } from '@/store/ExpenseLimitStore'
 import Avatar from '@/views/components/Avatar.vue'
 
@@ -91,8 +90,8 @@ const percentageUsed = computed(() => {
             </div>
           </div>
 
-          <!-- Danh sách giao dịch với ElScrollbar -->
-          <ElScrollbar height="calc(70vh - 250px)" class="custom-scrollbar">
+          <!-- Danh sách giao dịch với standard scrolling -->
+          <div class="standard-scrollbar" style="height: calc(70vh - 250px); overflow-y: auto;">
             <div class="space-y-2 px-2">
               <div v-for="(item, idx) in details" :key="idx"
                 class="flex items-center justify-between py-3 border-b border-gray-100 last:border-0">
@@ -111,7 +110,7 @@ const percentageUsed = computed(() => {
                 </div>
               </div>
             </div>
-          </ElScrollbar>
+          </div>
         </div>
 
         <!-- Modal Footer -->
@@ -126,28 +125,27 @@ const percentageUsed = computed(() => {
 </template>
 
 <style scoped>
-/* Custom scrollbar styles */
-.custom-scrollbar :deep(.el-scrollbar__bar) {
-  z-index: 10;
+/* Custom standard scrollbar styles */
+.standard-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(144, 147, 153, 0.3) transparent;
 }
 
-.custom-scrollbar :deep(.el-scrollbar__wrap) {
-  margin-right: -8px !important;
-  margin-bottom: -8px !important;
+.standard-scrollbar::-webkit-scrollbar {
+  width: 6px;
 }
 
-.custom-scrollbar :deep(.el-scrollbar__thumb) {
+.standard-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.standard-scrollbar::-webkit-scrollbar-thumb {
   background-color: rgba(144, 147, 153, 0.3);
+  border-radius: 10px;
 }
 
-.custom-scrollbar :deep(.el-scrollbar__thumb:hover) {
+.standard-scrollbar::-webkit-scrollbar-thumb:hover {
   background-color: rgba(144, 147, 153, 0.5);
-}
-
-/* Thêm style cho container */
-.custom-scrollbar :deep(.el-scrollbar__view) {
-  width: 100%;
-  min-width: 0;
 }
 
 /* Thêm style cho modal container */

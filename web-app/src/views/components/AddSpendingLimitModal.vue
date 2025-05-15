@@ -127,6 +127,16 @@ const validateForm = () => {
         }
     }
 
+    if (formData.end_date) {
+        const today = new Date()
+        today.setHours(0, 0, 0, 0)
+        const end = new Date(formData.end_date)
+        if (end < today) {
+            errors.value.end_date = 'Ngày kết thúc phải lớn hơn hoặc bằng ngày hiện tại'
+            isValid = false
+        }
+    }
+
     if (formData.repeat_time === 'Không lặp lại' && !formData.end_date) {
         errors.value.end_date = 'Vui lòng chọn ngày kết thúc'
         isValid = false

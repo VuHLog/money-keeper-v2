@@ -1,6 +1,7 @@
 <script setup>
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
 import { formatCurrency } from '@/utils/formatters'
+import { useExpenseLimitStore } from '@/store/expenseLimitStore'
 
 const props = defineProps({
   isOpen: Boolean,
@@ -9,6 +10,19 @@ const props = defineProps({
     default: null
   }
 })
+
+const expenseLimitStore = useExpenseLimitStore()
+
+
+const handleSubmit = async () => {
+    try{
+        await expenseLimitStore.deleteExpenseLimit(props.limit.id);
+        await emit('confirm')
+        closeModal()
+    } catch (error) {
+        console.error('Lỗi khi xóa hạn mức chi:', error)
+    }
+}
 
 const emit = defineEmits(['close', 'confirm'])
 </script>
@@ -70,7 +84,7 @@ const emit = defineEmits(['close', 'confirm'])
             Hủy
           </button>
           <button 
-            @click="$emit('confirm')"
+            @click="handleSubmit()"
             class="px-4 py-2 bg-danger text-white rounded-lg hover:bg-danger/90 flex items-center space-x-2"
           >
             <font-awesome-icon :icon="['fas', 'trash']" />

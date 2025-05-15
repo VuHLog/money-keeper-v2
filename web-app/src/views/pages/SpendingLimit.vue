@@ -108,11 +108,9 @@ const deleteLimit = (limit) => {
   showDeleteModal.value = true
 }
 
-const handleConfirmDelete = () => {
-  const index = spendingLimits.value.findIndex(item => item.id === limitToDelete.value.id)
-  if (index !== -1) {
-    expenseLimitStore.deleteExpenseLimit(limitToDelete.value.id)
-    spendingLimits.value.splice(index, 1)
+const handleConfirmDelete = async () => {
+  try {
+    await getData()
 
     // Show success message with ToastManager
     if (toastManagerRef.value) {
@@ -122,6 +120,8 @@ const handleConfirmDelete = () => {
         content: 'Xóa hạn mức chi thành công!'
       })
     }
+  } catch (error) {
+    console.error('Lỗi khi xóa hạn mức chi:', error)
   }
 
   // Đóng modal và reset state
@@ -130,9 +130,8 @@ const handleConfirmDelete = () => {
 }
 
 const handleAddLimit = async (formData) => {
-  // Thêm vào đầu danh sách
-  spendingLimits.value.unshift(formData)
-  spendingLimits.value = spendingLimits.value.sort((a, b) => new Date(b.startDateLimit) - new Date(a.startDateLimit))
+  try {
+    await getData()
 
   // Đóng modal
   showAddModal.value = false
@@ -142,18 +141,17 @@ const handleAddLimit = async (formData) => {
     toastManagerRef.value.addToast({
       type: 'success',
       title: 'Thành công!',
-      content: 'Thêm hạn mức chi thành công!'
-    })
+        content: 'Thêm hạn mức chi thành công!'
+      })
+    }
+  } catch (error) {
+    console.error('Lỗi khi thêm hạn mức chi:', error)
   }
 }
 
-const handleEditLimit = (formData) => {
-  const index = spendingLimits.value.findIndex(limit => limit.id === formData.id)
-
-  if (index !== -1) {
-    // Cập nhật vào danh sách
-    spendingLimits.value[index] = formData
-    spendingLimits.value = spendingLimits.value.sort((a, b) => new Date(b.startDateLimit) - new Date(a.startDateLimit))
+const handleEditLimit = async (formData) => {
+  try {
+    await getData()
 
     // Đóng modal
     showEditModal.value = false
@@ -167,6 +165,8 @@ const handleEditLimit = (formData) => {
         content: 'Cập nhật hạn mức chi thành công!'
       })
     }
+  } catch (error) {
+    console.error('Lỗi khi cập nhật hạn mức chi:', error)
   }
 }
 
@@ -176,6 +176,14 @@ const formatCurrency = (amount) => {
     style: 'currency',
     currency: 'VND'
   }).format(amount)
+}
+
+// Check if a limit is expired (endDateLimit < current date)
+const isExpired = (endDate) => {
+  const today = new Date()
+  today.setHours(0, 0, 0, 0)
+  const endDateObj = new Date(endDate)
+  return endDateObj < today
 }
 
 // Thêm computed property để tính toán số tiền đã chi
@@ -318,6 +326,10 @@ const style = `
               </td>
               <td class="px-6 py-4 whitespace-nowrap">
                 <div class="flex flex-col">
+                  <span v-if="isExpired(limit.endDateLimit)" 
+                        class="mt-1 text-xs font-medium text-white bg-red-500 px-2 py-0.5 rounded-full inline-block w-fit">
+                    Hết hạn
+                  </span>
                   <span class="text-sm">Từ: {{ limit.startDateLimit }}</span>
                   <span class="text-sm">Đến: {{ limit.endDateLimit }}</span>
                 </div>

@@ -260,7 +260,7 @@ const handleSubmit = async () => {
     categoriesId: formData.category_ids.join(','),
     bucketPaymentIds: formData.account_ids.join(','),
     startDate: formatDate(formData.start_date),
-    endDate: formatDate(formData.end_date),
+    endDate: formData.end_date ? formatDate(formData.end_date) : null,
     repeatTime: formData.repeat_time,
   }
 
@@ -323,6 +323,16 @@ const validateForm = () => {
     const end = new Date(formData.end_date)
     if (end < start) {
       errors.value.end_date = 'Ngày kết thúc phải sau ngày bắt đầu'
+      isValid = false
+    }
+  }
+
+  if (formData.end_date) {
+    const today = new Date()
+    today.setHours(0, 0, 0, 0)
+    const end = new Date(formData.end_date)
+    if (end < today) {
+      errors.value.end_date = 'Ngày kết thúc phải lớn hơn hoặc bằng ngày hiện tại'
       isValid = false
     }
   }
