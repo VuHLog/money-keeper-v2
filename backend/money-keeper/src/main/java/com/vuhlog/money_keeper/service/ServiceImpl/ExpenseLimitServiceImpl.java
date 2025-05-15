@@ -139,6 +139,8 @@ public class ExpenseLimitServiceImpl implements ExpenseLimitService {
             if (endDateMinimum != null) {
                 throw new AppException(ErrorCode.EXPENSE_LIMIT_END_DATE_INVALID, endDateMinimum.toString());
             }
+        }else{
+            expenseLimit.setEndDate(null);
         }
         expenseLimitRepository.save(expenseLimit);
         return convertToResponse(expenseLimitMapper.toExpenseLimitResponse(expenseLimit), request.getBucketPaymentIds(), request.getCategoriesId(),expenseLimit.getEndDate());
