@@ -30,6 +30,20 @@ public class ReportController {
                 .build();
     }
 
+    @PostMapping("total-expense")
+    public ApiResponse<Long> getTotalExpense(@RequestBody ReportFilterOptionsRequest request) {
+        return ApiResponse.<Long>builder()
+                .result(reportService.getTotalExpense(request))
+                .build();
+    }
+
+    @PostMapping("total-revenue")
+    public ApiResponse<Long> getTotalRevenue(@RequestBody ReportFilterOptionsRequest request) {
+        return ApiResponse.<Long>builder()
+                .result(reportService.getTotalRevenue(request))
+                .build();
+    }
+
     @PostMapping("transaction-type/export-excel")
     public ResponseEntity<InputStreamResource> exportExcelForTransactionType(
             @RequestBody ReportFilterOptionsRequest request) throws IOException {

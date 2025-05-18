@@ -9,7 +9,7 @@ import com.vuhlog.money_keeper.dao.ReportExpenseRevenueRepository;
 import com.vuhlog.money_keeper.dao.RevenueRegularRepository;
 import com.vuhlog.money_keeper.dao.specification.DictionaryBucketPaymentSpecification;
 import com.vuhlog.money_keeper.dto.request.ReportFilterOptionsRequest;
-import com.vuhlog.money_keeper.dto.response.responseinterface.dashboard.TotalExpenseRevenue;
+import com.vuhlog.money_keeper.dto.response.responseinterface.report.TotalExpenseRevenue;
 import com.vuhlog.money_keeper.dto.response.responseinterface.report.*;
 import com.vuhlog.money_keeper.entity.DictionaryBucketPayment;
 import com.vuhlog.money_keeper.mapper.ReportExpenseRevenueMapper;
@@ -43,6 +43,72 @@ public class ReportServiceImpl implements ReportService {
     @PersistenceContext
     private EntityManager em;
 
+
+    @Override
+    public Long getTotalExpense(ReportFilterOptionsRequest request) {
+        String transactionType = request.getTransactionType();
+        String userId = userCommon.getMyUserInfo().getId();
+        String timeOption = request.getTimeOption();
+        String bucketPaymentIds = request.getBucketPaymentIds();
+        String start = null;
+        String end = null;
+        if(request.getCustomTimeRange() != null && request.getCustomTimeRange().size() > 0){
+            start = request.getCustomTimeRange().get(0);
+            end = request.getCustomTimeRange().get(1);
+        }
+        LocalDate startDate = null;
+        LocalDate endDate = null;
+
+        if(timeOption.equals(ReportTimeOptionType.MONTH.getType())){
+            YearMonth startMonth = YearMonth.parse(start);
+            YearMonth endMonth = YearMonth.parse(end);
+            startDate = startMonth.atDay(1);
+            endDate = endMonth.atEndOfMonth();
+        }else if (timeOption.equals(ReportTimeOptionType.YEAR.getType())){
+            int startYear = Integer.parseInt(start);
+            int endYear = Integer.parseInt(end);
+            startDate = LocalDate.of(startYear, 1, 1);
+            endDate = LocalDate.of(endYear, 12, 31);
+        } else if (timeOption.equals(ReportTimeOptionType.OPTIONAL.getType())) {
+            startDate = LocalDate.parse(start);
+            endDate = LocalDate.parse(end);
+        }
+
+        return reportExpenseRevenueRepository.getTotalExpense(userId, bucketPaymentIds, request.getExpenseCategoriesId(), startDate, endDate);
+    }
+
+    @Override
+    public Long getTotalRevenue(ReportFilterOptionsRequest request) {
+        String transactionType = request.getTransactionType();
+        String userId = userCommon.getMyUserInfo().getId();
+        String timeOption = request.getTimeOption();
+        String bucketPaymentIds = request.getBucketPaymentIds();
+        String start = null;
+        String end = null;
+        if(request.getCustomTimeRange() != null && request.getCustomTimeRange().size() > 0){
+            start = request.getCustomTimeRange().get(0);
+            end = request.getCustomTimeRange().get(1);
+        }
+        LocalDate startDate = null;
+        LocalDate endDate = null;
+
+        if(timeOption.equals(ReportTimeOptionType.MONTH.getType())){
+            YearMonth startMonth = YearMonth.parse(start);
+            YearMonth endMonth = YearMonth.parse(end);
+            startDate = startMonth.atDay(1);
+            endDate = endMonth.atEndOfMonth();
+        }else if (timeOption.equals(ReportTimeOptionType.YEAR.getType())){
+            int startYear = Integer.parseInt(start);
+            int endYear = Integer.parseInt(end);
+            startDate = LocalDate.of(startYear, 1, 1);
+            endDate = LocalDate.of(endYear, 12, 31);
+        } else if (timeOption.equals(ReportTimeOptionType.OPTIONAL.getType())) {
+            startDate = LocalDate.parse(start);
+            endDate = LocalDate.parse(end);
+        }
+
+        return reportExpenseRevenueRepository.getTotalRevenue(userId, bucketPaymentIds, request.getRevenueCategoriesId(), startDate, endDate);
+    }
 
     @Override
     public List<ReportTransactionTypeReponse> getReportForTransactionType(ReportFilterOptionsRequest request) {

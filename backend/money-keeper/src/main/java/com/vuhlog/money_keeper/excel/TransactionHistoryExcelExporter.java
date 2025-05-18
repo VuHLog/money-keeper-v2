@@ -101,11 +101,23 @@ public class TransactionHistoryExcelExporter {
         return style;
     }
 
-    private CellStyle createAmountStyle() {
+    private CellStyle createAmountStyle(String transactionType) {
         CellStyle style = workbook.createCellStyle();
         style.cloneStyleFrom(createBaseStyle());
 
         style.setAlignment(HorizontalAlignment.RIGHT);
+
+        XSSFFont font = workbook.createFont();
+        font.setFontHeight(11);
+        font.setFontName("Arial");
+        font.setBold(true);
+        if (transactionType.equals(TransactionType.EXPENSE.getType())) {
+            font.setColor(IndexedColors.RED.getIndex());
+        } else {
+            font.setColor(IndexedColors.GREEN.getIndex());
+        }
+
+        style.setFont(font);
 
         DataFormat format = workbook.createDataFormat();
         style.setDataFormat(format.getFormat("#,##0 [$₫-vi-VN]"));
@@ -178,9 +190,9 @@ public class TransactionHistoryExcelExporter {
         headerStyle.setBorderLeft(BorderStyle.MEDIUM);
 
         String[] headers = {
-                "ID giao dịch", "Loại giao dịch", "Tên tài khoản", "Tên danh mục",
-                "Số tiền", "Ngày giao dịch", "Người thụ hưởng", "Nhận tiền từ",
-                "Loại chuyển khoản", "Tên tài khoản thụ hưởng", "Tên tài khoản gửi tiền",
+                "Ngày giao dịch", "Số tiền", "Loại giao dịch",
+                "Tên danh mục", "Tài khoản", "Loại chuyển khoản", "Người thụ hưởng",
+                "Nhận tiền từ", "Tài khoản thụ hưởng", "Tài khoản gửi tiền",
                 "Chuyến đi/Sự kiện", "Địa điểm", "Ghi chú"
         };
 
@@ -193,7 +205,8 @@ public class TransactionHistoryExcelExporter {
 
     private void writeDataRows() {
         CellStyle baseStyle = createBaseStyle();
-        CellStyle amountStyle = createAmountStyle();
+        CellStyle amountExpenseStyle = createAmountStyle("expense");
+        CellStyle amountRevenueStyle = createAmountStyle("revenue");
         CellStyle dateStyle = createDateStyle();
         CellStyle expenseStyle = createTransactionTypeStyle(TransactionType.EXPENSE.getType());
         CellStyle revenueStyle = createTransactionTypeStyle(TransactionType.REVENUE.getType());
@@ -206,24 +219,24 @@ public class TransactionHistoryExcelExporter {
 
         for (TransactionHistory transaction : transactionHistories) {
             Row row = sheet.createRow(rowCount);
+            boolean isExpense = transaction.getTransactionType().equals(TransactionType.EXPENSE.getType());
 
-            // ID giao dịch
+            // Ngày giao dịch
             Cell cell = row.createCell(0);
-            cell.setCellValue(transaction.getId());
-            cell.setCellStyle(baseStyle);
+            cell.setCellValue(transaction.getDate());
+            cell.setCellStyle(dateStyle);
             sheet.autoSizeColumn(0);
 
-            // Loại giao dịch
+            // Số tiền
             cell = row.createCell(1);
-            boolean isExpense = transaction.getTransactionType().equals(TransactionType.EXPENSE.getType());
-            cell.setCellValue(isExpense ? "Chi tiêu" : "Thu nhập");
-            cell.setCellStyle(isExpense ? expenseStyle : revenueStyle);
+            cell.setCellValue(transaction.getAmount());
+            cell.setCellStyle(isExpense ? amountExpenseStyle : amountRevenueStyle);
             sheet.autoSizeColumn(1);
 
-            // Tên tài khoản
+            // Loại giao dịch
             cell = row.createCell(2);
-            cell.setCellValue(transaction.getAccountName());
-            cell.setCellStyle(baseStyle);
+            cell.setCellValue(isExpense ? "Chi tiêu" : "Thu nhập");
+            cell.setCellStyle(isExpense ? expenseStyle : revenueStyle);
             sheet.autoSizeColumn(2);
 
             // Tên danh mục
@@ -232,66 +245,60 @@ public class TransactionHistoryExcelExporter {
             cell.setCellStyle(baseStyle);
             sheet.autoSizeColumn(3);
 
-            // Số tiền
+            // Tên tài khoản
             cell = row.createCell(4);
-            cell.setCellValue(transaction.getAmount());
-            cell.setCellStyle(amountStyle);
+            cell.setCellValue(transaction.getAccountName());
+            cell.setCellStyle(baseStyle);
             sheet.autoSizeColumn(4);
 
-            // Ngày giao dịch
+            // Người thụ hưởng
             cell = row.createCell(5);
-            cell.setCellValue(transaction.getDate());
-            cell.setCellStyle(dateStyle);
+            cell.setCellValue(transaction.getBeneficiary());
+            cell.setCellStyle(baseStyle);
             sheet.autoSizeColumn(5);
 
-            // Người thụ hưởng
+            // Nhận tiền từ
             cell = row.createCell(6);
-            cell.setCellValue(transaction.getBeneficiary());
+            cell.setCellValue(transaction.getCollectMoneyWho());
             cell.setCellStyle(baseStyle);
             sheet.autoSizeColumn(6);
 
-            // Nhận tiền từ
-            cell = row.createCell(7);
-            cell.setCellValue(transaction.getCollectMoneyWho());
-            cell.setCellStyle(baseStyle);
-            sheet.autoSizeColumn(7);
-
             // Loại chuyển khoản
-            cell = row.createCell(8);
+            cell = row.createCell(7);
             cell.setCellValue(transaction.getTransferType().equals(TransferType.NORMAL.getType()) ?
                     "Thông thường" : "Chuyển khoản");
             cell.setCellStyle(baseStyle);
-            sheet.autoSizeColumn(8);
+            sheet.autoSizeColumn(7);
 
             // Tên tài khoản thụ hưởng
-            cell = row.createCell(9);
+            cell = row.createCell(8);
             cell.setCellValue(transaction.getBeneficiaryAccountName());
+            cell.setCellStyle(baseStyle);
+            sheet.autoSizeColumn(8);
+
+            // Tên tài khoản gửi tiền
+            cell = row.createCell(9);
+            cell.setCellValue(transaction.getSenderAccountName());
             cell.setCellStyle(baseStyle);
             sheet.autoSizeColumn(9);
 
-            // Tên tài khoản gửi tiền
+            // Chuyến đi/Sự kiện
             cell = row.createCell(10);
-            cell.setCellValue(transaction.getSenderAccountName());
+            cell.setCellValue(transaction.getTripEvent());
             cell.setCellStyle(baseStyle);
             sheet.autoSizeColumn(10);
 
-            // Chuyến đi/Sự kiện
+            // Địa điểm
             cell = row.createCell(11);
-            cell.setCellValue(transaction.getTripEvent());
+            cell.setCellValue(transaction.getLocation());
             cell.setCellStyle(baseStyle);
             sheet.autoSizeColumn(11);
 
-            // Địa điểm
-            cell = row.createCell(12);
-            cell.setCellValue(transaction.getLocation());
-            cell.setCellStyle(baseStyle);
-            sheet.autoSizeColumn(12);
-
             // Ghi chú
-            cell = row.createCell(13);
+            cell = row.createCell(12);
             cell.setCellValue(transaction.getInterpretation());
             cell.setCellStyle(baseStyle);
-            sheet.autoSizeColumn(13);
+            sheet.autoSizeColumn(12);
 
             rowCount++;
         }
@@ -317,11 +324,41 @@ public class TransactionHistoryExcelExporter {
         summaryStyle.setFillForegroundColor(IndexedColors.GREY_25_PERCENT.getIndex());
         summaryStyle.setFillPattern(FillPatternType.SOLID_FOREGROUND);
 
-        CellStyle totalAmountStyle = workbook.createCellStyle();
-        totalAmountStyle.cloneStyleFrom(summaryStyle);
-        totalAmountStyle.setAlignment(HorizontalAlignment.RIGHT);
         DataFormat format = workbook.createDataFormat();
-        totalAmountStyle.setDataFormat(format.getFormat("#,##0 [$₫-vi-VN]"));
+
+        CellStyle totalAmountExpenseStyle = workbook.createCellStyle();
+        totalAmountExpenseStyle.cloneStyleFrom(summaryStyle);
+        totalAmountExpenseStyle.setAlignment(HorizontalAlignment.RIGHT);
+        totalAmountExpenseStyle.setDataFormat(format.getFormat("#,##0 [$₫-vi-VN]"));
+        XSSFFont fontExpense = workbook.createFont();
+        fontExpense.setFontHeight(12);
+        fontExpense.setFontName("Arial");
+        fontExpense.setBold(true);
+        fontExpense.setColor(IndexedColors.RED.getIndex());
+        totalAmountExpenseStyle.setFont(fontExpense);
+
+
+        CellStyle totalAmountRevenueStyle = workbook.createCellStyle();
+        totalAmountRevenueStyle.cloneStyleFrom(summaryStyle);
+        totalAmountRevenueStyle.setAlignment(HorizontalAlignment.RIGHT);
+        totalAmountRevenueStyle.setDataFormat(format.getFormat("#,##0 [$₫-vi-VN]"));
+        XSSFFont fontRevenue = workbook.createFont();
+        fontRevenue.setFontHeight(12);
+        fontRevenue.setFontName("Arial");
+        fontRevenue.setBold(true);
+        fontRevenue.setColor(IndexedColors.GREEN.getIndex());
+        totalAmountRevenueStyle.setFont(fontRevenue);
+
+        CellStyle summaryAmountStyle = workbook.createCellStyle();
+        summaryAmountStyle.cloneStyleFrom(summaryStyle);
+        summaryAmountStyle.setAlignment(HorizontalAlignment.RIGHT);
+        summaryAmountStyle.setDataFormat(format.getFormat("#,##0 [$₫-vi-VN]"));
+        XSSFFont fontSummary = workbook.createFont();
+        fontSummary.setFontHeight(12);
+        fontSummary.setFontName("Arial");
+        fontSummary.setBold(true);
+        fontSummary.setColor(IndexedColors.BLACK.getIndex());
+        summaryAmountStyle.setFont(fontSummary);
 
         double totalExpense = 0;
         double totalRevenue = 0;
@@ -334,22 +371,6 @@ public class TransactionHistoryExcelExporter {
             }
         }
 
-        Cell cell = row.createCell(0);
-        cell.setCellValue("TỔNG CỘNG");
-        cell.setCellStyle(summaryStyle);
-
-        // merge cell 0 -> 3
-        sheet.addMergedRegion(new CellRangeAddress(rowIndex, rowIndex, 0, 3));
-
-        for (int i = 1; i <= 3; i++) {
-            cell = row.createCell(i);
-            cell.setCellStyle(summaryStyle);
-        }
-
-        cell = row.createCell(4);
-        cell.setCellValue(totalRevenue - totalExpense);
-        cell.setCellStyle(totalAmountStyle);
-
         CellStyle totalExpenseStyle = workbook.createCellStyle();
         totalExpenseStyle.cloneStyleFrom(summaryStyle);
 
@@ -357,22 +378,32 @@ public class TransactionHistoryExcelExporter {
         totalRevenueStyle.cloneStyleFrom(summaryStyle);
 
         row = sheet.createRow(rowIndex + 2);
+        Cell cell = row.createCell(0);
+        cell.setCellValue("Tổng thu:");
+        cell.setCellStyle(totalRevenueStyle);
+
+        cell = row.createCell(1);
+        cell.setCellValue(totalRevenue);
+        cell.setCellStyle(totalAmountRevenueStyle);
+
+        row = sheet.createRow(rowIndex + 3);
         cell = row.createCell(0);
         cell.setCellValue("Tổng chi:");
         cell.setCellStyle(totalExpenseStyle);
 
         cell = row.createCell(1);
         cell.setCellValue(totalExpense);
-        cell.setCellStyle(totalAmountStyle);
+        cell.setCellStyle(totalAmountExpenseStyle);
 
-        row = sheet.createRow(rowIndex + 3);
+
+        row = sheet.createRow(rowIndex + 4);
         cell = row.createCell(0);
-        cell.setCellValue("Tổng thu:");
-        cell.setCellStyle(totalRevenueStyle);
+        cell.setCellValue("Chênh lệch:");
+        cell.setCellStyle(summaryStyle);
 
         cell = row.createCell(1);
-        cell.setCellValue(totalRevenue);
-        cell.setCellStyle(totalAmountStyle);
+        cell.setCellValue(totalRevenue - totalExpense);
+        cell.setCellStyle(summaryAmountStyle);
     }
 
     private void addTitleToSheet(ReportFilterOptionsRequest request) {

@@ -1,13 +1,17 @@
 package com.vuhlog.money_keeper.service;
 
 import com.vuhlog.money_keeper.dto.request.ReportFilterOptionsRequest;
-import com.vuhlog.money_keeper.dto.response.responseinterface.dashboard.TotalExpenseRevenue;
+import com.vuhlog.money_keeper.dto.response.responseinterface.report.TotalExpenseRevenue;
 import com.vuhlog.money_keeper.dto.response.responseinterface.report.*;
 import org.springframework.data.domain.Page;
 
 import java.util.List;
 
 public interface ReportService {
+    Long getTotalExpense(ReportFilterOptionsRequest request);
+
+    Long getTotalRevenue(ReportFilterOptionsRequest request);
+
     List<ReportTransactionTypeReponse> getReportForTransactionType(ReportFilterOptionsRequest request);
 
     List<ReportExpenseCategory> getReportExpenseCategory(ReportFilterOptionsRequest request);

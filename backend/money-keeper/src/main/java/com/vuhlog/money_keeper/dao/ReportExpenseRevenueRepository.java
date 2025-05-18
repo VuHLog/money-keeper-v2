@@ -1,6 +1,6 @@
 package com.vuhlog.money_keeper.dao;
 
-import com.vuhlog.money_keeper.dto.response.responseinterface.dashboard.TotalExpenseRevenue;
+import com.vuhlog.money_keeper.dto.response.responseinterface.report.TotalExpenseRevenue;
 import com.vuhlog.money_keeper.dto.response.responseinterface.report.*;
 import com.vuhlog.money_keeper.entity.ReportExpenseRevenue;
 import org.springframework.data.domain.Page;
@@ -25,6 +25,36 @@ public interface ReportExpenseRevenueRepository extends JpaRepository<ReportExpe
     @Transactional
     @Query("UPDATE ReportExpenseRevenue r SET r.categoryId = null WHERE r.categoryId = :categoryId and r.type='expense'")
     void unsetDictionaryExpenseById(@Param("categoryId") String categoryId);
+
+    @Query(value = "SELECT COALESCE(SUM(er.amount), 0)\n" +
+            "FROM expense_regular er\n" +
+            "JOIN dictionary_bucket_payment dbp ON dbp.id = er.dictionary_bucket_payment_id\n" +
+            "WHERE dbp.user_id = :userId\n" +
+            "AND ( :bucketPaymentIds IS NULL OR FIND_IN_SET(er.dictionary_bucket_payment_id, :bucketPaymentIds)) \n" +
+            "AND (:categoriesId IS NULL OR FIND_IN_SET(er.dictionary_expense_id, :categoriesId)) \n" +
+            "AND ( :startDate IS NULL OR :endDate IS NULL OR (date(expense_date) BETWEEN DATE(:startDate) AND DATE(:endDate)))\n", nativeQuery = true)
+    Long getTotalExpense(
+            @Param("userId") String userId,
+            @Param("bucketPaymentIds") String bucketPaymentIds,
+            @Param("categoriesId") String categoriesId,
+            @Param("startDate") LocalDate startDate,
+            @Param("endDate") LocalDate endDate
+    );
+
+    @Query(value = "SELECT COALESCE(SUM(rr.amount), 0)\n" +
+            "FROM revenue_regular rr\n" +
+            "JOIN dictionary_bucket_payment dbp ON dbp.id = rr.dictionary_bucket_payment_id\n" +
+            "WHERE dbp.user_id = :userId\n" +
+            "AND ( :bucketPaymentIds IS NULL OR FIND_IN_SET(rr.dictionary_bucket_payment_id, :bucketPaymentIds)) \n" +
+            "AND (:categoriesId IS NULL OR FIND_IN_SET(rr.dictionary_revenue_id, :categoriesId)) \n" +
+            "AND ( :startDate IS NULL OR :endDate IS NULL OR (date(revenue_date) BETWEEN DATE(:startDate) AND DATE(:endDate)))\n", nativeQuery = true)
+    Long getTotalRevenue(
+            @Param("userId") String userId,
+            @Param("bucketPaymentIds") String bucketPaymentIds,
+            @Param("categoriesId") String categoriesId,
+            @Param("startDate") LocalDate startDate,
+            @Param("endDate") LocalDate endDate
+    );
 
     Optional<ReportExpenseRevenue> findByMonthAndYearAndBucketPaymentIdAndCategoryIdAndType(int month, int year, String bucketPaymentId, String categoryId, String type);
 
@@ -793,7 +823,7 @@ public interface ReportExpenseRevenueRepository extends JpaRepository<ReportExpe
             "FROM expense_regular er " +
             "JOIN dictionary_bucket_payment dbp ON dbp.id = er.dictionary_bucket_payment_id " +
             "WHERE dbp.user_id = :userId " +
-            "AND (:bucketPaymentIds IS NULL OR FIND_IN_SET(er.dictionary_expense_id, :bucketPaymentIds)) " +
+            "AND (:bucketPaymentIds IS NULL OR FIND_IN_SET(er.dictionary_bucket_payment_id, :bucketPaymentIds)) " +
             "AND (:startDate IS NULL OR :endDate IS NULL OR (date(expense_date) BETWEEN DATE(:startDate) AND DATE(:endDate))) " +
             "UNION ALL " +
             "SELECT rr.id " +
