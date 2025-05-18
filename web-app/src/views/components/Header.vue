@@ -49,6 +49,12 @@ const switchNotificationTab = async (tab) => {
   }
 }
 
+watch(isNotificationsOpen, (newVal) => {
+  if (newVal) {
+    notificationStore.getNotifications();
+  }
+})
+
 const currentPageTitle = computed(() => {
   console.log('Current route:', route.name) // Debug log
   const routePath = route.path
