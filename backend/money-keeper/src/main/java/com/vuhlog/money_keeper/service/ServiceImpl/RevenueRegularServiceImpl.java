@@ -305,7 +305,7 @@ public class RevenueRegularServiceImpl implements RevenueRegularService {
                     }
                 }
             }else
-                return dictionaryBucketPayment.getBalance() + amount;
+                return dictionaryBucketPayment.getInitialBalance() + amount;
         }
         return 0;
     }
