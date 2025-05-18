@@ -541,7 +541,7 @@ public class ExpenseRegularServiceImpl implements ExpenseRegularService {
                     }
                 }
             }else
-                return dictionaryBucketPayment.getBalance() - amount;
+                return dictionaryBucketPayment.getInitialBalance() - amount;
         }
         return 0;
     }
