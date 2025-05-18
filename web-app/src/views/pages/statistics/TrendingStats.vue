@@ -394,16 +394,16 @@ const exportExcelForYearlyTrend = async () => {
       <div class="bg-surface rounded-xl p-4 shadow-sm">
       <div class="flex justify-between items-center mb-4">
         <h3 class="text-lg font-medium text-text">Xu hướng {{ transactionType === 'expense' ? 'chi tiêu' : 'thu nhập' }} theo ngày</h3>
-        <div class="flex justify-end items-center">
+        <!-- <div class="flex justify-end items-center"> -->
           <!-- Export Excel button -->
-          <button
+          <!-- <button
             class="flex items-center space-x-2 px-4 py-2 bg-success text-white rounded-lg hover:bg-success/90 transition-colors duration-200"
             @click="exportExcelForDailyTrend"
           >
             <font-awesome-icon :icon="['fas', 'file-excel']" />
             <span>Xuất Excel</span>
-          </button>
-        </div>
+          </button> -->
+        <!-- </div> -->
       </div>
         <apexchart
           type="line"
@@ -417,16 +417,16 @@ const exportExcelForYearlyTrend = async () => {
       <div class="bg-surface rounded-xl p-4 shadow-sm">
         <div class="flex justify-between items-center mb-4">
           <h3 class="text-lg font-medium text-text">Xu hướng {{ transactionType === 'expense' ? 'chi tiêu' : 'thu nhập' }} theo tuần</h3>
-          <div class="flex justify-end items-center">
+          <!-- <div class="flex justify-end items-center"> -->
             <!-- Export Excel button -->
-            <button
+            <!-- <button
               class="flex items-center space-x-2 px-4 py-2 bg-success text-white rounded-lg hover:bg-success/90 transition-colors duration-200"
               @click="exportExcelForWeeklyTrend"
             >
               <font-awesome-icon :icon="['fas', 'file-excel']" />
               <span>Xuất Excel</span>
-            </button>
-          </div>
+            </button> -->
+          <!-- </div> -->
         </div>
         <apexchart
           type="line"
@@ -440,16 +440,16 @@ const exportExcelForYearlyTrend = async () => {
       <div class="bg-surface rounded-xl p-4 shadow-sm">
         <div class="flex justify-between items-center mb-4">
           <h3 class="text-lg font-medium text-text">Xu hướng {{ transactionType === 'expense' ? 'chi tiêu' : 'thu nhập' }} theo tháng</h3>
-          <div class="flex justify-end items-center">
+          <!-- <div class="flex justify-end items-center"> -->
             <!-- Export Excel button -->
-            <button
+            <!-- <button
               class="flex items-center space-x-2 px-4 py-2 bg-success text-white rounded-lg hover:bg-success/90 transition-colors duration-200"
               @click="exportExcelForMonthlyTrend"
             >
               <font-awesome-icon :icon="['fas', 'file-excel']" />
               <span>Xuất Excel</span>
-            </button>
-          </div>
+            </button> -->
+          <!-- </div> -->
         </div>
         <apexchart
           type="line"
@@ -463,16 +463,16 @@ const exportExcelForYearlyTrend = async () => {
       <div class="bg-surface rounded-xl p-4 shadow-sm">
         <div class="flex justify-between items-center mb-4">
           <h3 class="text-lg font-medium text-text">Xu hướng {{ transactionType === 'expense' ? 'chi tiêu' : 'thu nhập' }} 5 năm gần nhất</h3>
-          <div class="flex justify-end items-center">
+          <!-- <div class="flex justify-end items-center"> -->
             <!-- Export Excel button -->
-            <button
+            <!-- <button
               class="flex items-center space-x-2 px-4 py-2 bg-success text-white rounded-lg hover:bg-success/90 transition-colors duration-200"
               @click="exportExcelForYearlyTrend"
             >
               <font-awesome-icon :icon="['fas', 'file-excel']" />
               <span>Xuất Excel</span>
-            </button>
-          </div>
+            </button> -->
+          <!-- </div> -->
         </div>
         <apexchart
           type="line"
