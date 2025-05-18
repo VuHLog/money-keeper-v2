@@ -449,16 +449,16 @@ const exportExcelForAccountBalanceFluctuation = async () => {
       <div class="bg-surface rounded-xl p-4 shadow-sm">
         <div class="flex justify-between items-center mb-4">
           <h3 class="text-lg font-medium text-text mb-4">Số dư tài khoản</h3>
-          <div class="flex justify-end items-center">
+          <!-- <div class="flex justify-end items-center"> -->
             <!-- Export Excel button -->
-            <button
+            <!-- <button
               class="flex items-center space-x-2 px-4 py-2 bg-success text-white rounded-lg hover:bg-success/90 transition-colors duration-200"
               @click="exportExcelForBucketPaymentBalance"
             >
               <font-awesome-icon :icon="['fas', 'file-excel']" />
               <span>Xuất Excel</span>
-            </button>
-          </div>
+            </button> -->
+          <!-- </div> -->
         </div>
         <apexchart v-if="showCharts" type="donut" height="350" :options="accountBalancesChart" :series="accountBalancesChart.series" />
       </div>
@@ -467,16 +467,16 @@ const exportExcelForAccountBalanceFluctuation = async () => {
       <div class="bg-surface rounded-xl p-4 shadow-sm">
         <div class="flex justify-between items-center mb-4">
           <h3 class="text-lg font-medium text-text mb-4">Phân bổ theo loại tài khoản</h3>
-          <div class="flex justify-end items-center">
+          <!-- <div class="flex justify-end items-center"> -->
             <!-- Export Excel button -->
-            <button
+            <!-- <button
               class="flex items-center space-x-2 px-4 py-2 bg-success text-white rounded-lg hover:bg-success/90 transition-colors duration-200"
               @click="exportExcelForBucketPaymentTypeBalance"
             >
               <font-awesome-icon :icon="['fas', 'file-excel']" />
               <span>Xuất Excel</span>
-            </button>
-          </div>
+            </button> -->
+          <!-- </div> -->
         </div>
         <apexchart v-if="showCharts" type="donut" height="350" :options="accountTypesChart" :series="accountTypesChart.series" />
       </div>

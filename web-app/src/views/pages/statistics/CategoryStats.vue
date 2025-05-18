@@ -668,16 +668,16 @@ const exportRevenueCategoryTrendingExcel = async () => {
       <div class="bg-surface rounded-xl p-4 shadow-sm">
         <div class="flex justify-between items-center mb-4">
           <h3 class="text-lg font-medium text-text">Phân bổ thu nhập</h3>
-          <div class="flex justify-end items-center">
+          <!-- <div class="flex justify-end items-center"> -->
             <!-- Export Excel button -->
-            <button
+            <!-- <button
               class="flex items-center space-x-2 px-4 py-2 bg-success text-white rounded-lg hover:bg-success/90 transition-colors duration-200"
               @click="exportRevenueCategoryExcel"
             >
               <font-awesome-icon :icon="['fas', 'file-excel']" />
               <span>Xuất Excel</span>
-            </button>
-          </div>
+            </button> -->
+          <!-- </div> -->
         </div>
         <apexchart v-if="showCharts" type="bar" height="350" :options="revenueCategoriesChart" :series="revenueCategoriesChart.series" />
       </div>
@@ -686,16 +686,16 @@ const exportRevenueCategoryTrendingExcel = async () => {
       <div class="bg-surface rounded-xl p-4 shadow-sm">
         <div class="flex justify-between items-center mb-4">
           <h3 class="text-lg font-medium text-text">Phân bổ chi tiêu</h3>
-          <div class="flex justify-end items-center">
+          <!-- <div class="flex justify-end items-center"> -->
             <!-- Export Excel button -->
-            <button
+            <!-- <button
               class="flex items-center space-x-2 px-4 py-2 bg-success text-white rounded-lg hover:bg-success/90 transition-colors duration-200"
               @click="exportExpenseCategoryExcel"
             >
               <font-awesome-icon :icon="['fas', 'file-excel']" />
               <span>Xuất Excel</span>
-            </button>
-          </div>
+            </button> -->
+          <!-- </div> -->
         </div>
         <apexchart v-if="showCharts" type="bar" height="350" :options="expenseCategoriesChart" :series="expenseCategoriesChart.series" />
       </div>
@@ -704,16 +704,16 @@ const exportRevenueCategoryTrendingExcel = async () => {
       <div class="bg-surface rounded-xl p-4 shadow-sm md:col-span-2">
         <div class="flex justify-between items-center mb-4">
           <h3 class="text-lg font-medium text-text mb-4">Xu hướng thu nhập theo danh mục thu</h3>
-          <div class="flex justify-end items-center">
+          <!-- <div class="flex justify-end items-center"> -->
             <!-- Export Excel button -->
-            <button
+            <!-- <button
               class="flex items-center space-x-2 px-4 py-2 bg-success text-white rounded-lg hover:bg-success/90 transition-colors duration-200"
               @click="exportRevenueCategoryTrendingExcel"
             >
               <font-awesome-icon :icon="['fas', 'file-excel']" />
               <span>Xuất Excel</span>
-            </button>
-          </div>
+            </button> -->
+          <!-- </div> -->
         </div>
         <apexchart v-if="showCharts" type="line" height="350" :options="revenueCategoryTrendsChart"
           :series="revenueCategoryTrendsChart.series" />
@@ -722,16 +722,16 @@ const exportRevenueCategoryTrendingExcel = async () => {
       <div class="bg-surface rounded-xl p-4 shadow-sm md:col-span-2">
         <div class="flex justify-between items-center mb-4">
           <h3 class="text-lg font-medium text-text mb-4">Xu hướng chi tiêu theo danh mục chi</h3>
-          <div class="flex justify-end items-center">
+          <!-- <div class="flex justify-end items-center"> -->
             <!-- Export Excel button -->
-            <button
+            <!-- <button
               class="flex items-center space-x-2 px-4 py-2 bg-success text-white rounded-lg hover:bg-success/90 transition-colors duration-200"
               @click="exportExpenseCategoryTrendingExcel"
             >
               <font-awesome-icon :icon="['fas', 'file-excel']" />
               <span>Xuất Excel</span>
-            </button>
-          </div>
+            </button> -->
+          <!-- </div> -->
         </div>
         <apexchart v-if="showCharts" type="line" height="350" :options="expenseCategoryTrendsChart"
           :series="expenseCategoryTrendsChart.series" />
