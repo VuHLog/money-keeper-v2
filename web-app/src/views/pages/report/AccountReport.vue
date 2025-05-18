@@ -1,16 +1,20 @@
 <template>
   <div class="account-report">
     <FilterOptions 
+      :show-expense-category="false"
+      :show-revenue-category="false"
+      :show-transaction-type="false"
+      :default-open="false"
       @filter-change="handleFilterChange" 
       @filter-reset="handleFilterReset"
-      @apply-filter="fetchData"
+      @apply-filter="handleApplyFilter"
     />
     
     <div class="bg-white rounded-lg shadow-sm p-4 mt-4">
       <div class="flex justify-between items-center mb-4">
         <h2 class="text-lg font-medium text-gray-800">Báo cáo theo tài khoản</h2>
         <button 
-          @click="exportToExcel" 
+          @click="exportExcel" 
           class="px-3 py-2 bg-green-50 text-green-600 rounded-lg hover:bg-green-100 transition-colors flex items-center text-sm"
         >
           <font-awesome-icon :icon="['fas', 'file-excel']" class="mr-2" />
@@ -191,6 +195,7 @@ const filters = ref({
   customTimeRange: [(new Date()).toISOString().slice(0, 7), new Date().toISOString().slice(0, 7)],
   transactionType: ''
 });
+const excelFilters = ref({})
 
 // Pagination state
 const pagination = ref({
@@ -250,7 +255,7 @@ const totalCurrentBalance = computed(() => {
 });
 
 // Sample data for demonstration - replace with API call
-const fetchData = async () => {
+const loadData = async () => {
   loading.value = true;
   
   try {
@@ -391,7 +396,7 @@ const handleFilterReset = () => {
     customTimeRange: [(new Date()).toISOString().slice(0, 7), new Date().toISOString().slice(0, 7)],
     transactionType: ''
   };
-  fetchData();
+  loadData();
 };
 
 // Format helpers
@@ -400,7 +405,7 @@ const formatAmount = (amount) => {
 };
 
 // Export to Excel
-const exportToExcel = () => {
+const exportExcel = () => {
   // Implement Excel export logic here
   console.log('Exporting data to Excel...');
   alert('Tính năng xuất Excel đang được phát triển');
@@ -408,8 +413,14 @@ const exportToExcel = () => {
 
 // Lifecycle hooks
 onMounted(() => {
-  fetchData();
+  loadData();
 });
+
+const handleApplyFilter = async () => {
+  excelFilters.value = filters.value
+  // transactionHistoryStore.resetPagination()
+  await loadData()
+}
 </script>
 
 <style scoped>

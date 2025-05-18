@@ -956,4 +956,33 @@ public interface ReportExpenseRevenueRepository extends JpaRepository<ReportExpe
             @Param("startDate") LocalDate startDate,
             @Param("endDate") LocalDate endDate
     );
+
+    @Query(value = "SELECT combined.id, combined.account_name, combined.account_type, combined.initial_balance, COALESCE(SUM(totalExpense), 0) AS totalExpense, COALESCE(SUM(totalRevenue), 0) AS totalRevenue, combined.balance, (combined.balance - combined.initial_balance) AS disparity FROM(\n" +
+            "SELECT dbp.id, dbp.account_name, dbp.account_type, dbp.initial_balance, COALESCE(SUM(er.amount), 0) AS totalExpense, 0 AS totalRevenue, dbp.balance\n" +
+            "FROM dictionary_bucket_payment dbp\n" +
+            "LEFT JOIN expense_regular er ON dbp.id = er.dictionary_bucket_payment_id AND ( :startDate IS NULL OR :endDate IS NULL IS NULL OR (date(expense_date) BETWEEN DATE(:startDate) AND DATE(:endDate)))\n" +
+            "WHERE dbp.user_id = :userId\n" +
+            "AND ( :bucketPaymentIds IS NULL OR FIND_IN_SET(dbp.id,:bucketPaymentIds)) \n" +
+            "GROUP BY dbp.id\n" +
+            "UNION ALL\n" +
+            "SELECT dbp.id, dbp.account_name, dbp.account_type, dbp.initial_balance, 0 AS totalExpense, COALESCE(SUM(rr.amount), 0) AS totalRevenue, dbp.balance\n" +
+            "FROM dictionary_bucket_payment dbp\n" +
+            "JOIN revenue_regular rr ON dbp.id = rr.dictionary_bucket_payment_id AND ( :startDate IS NULL OR :endDate IS NULL IS NULL OR (date(revenue_date) BETWEEN DATE(:startDate) AND DATE(:endDate)))\n" +
+            "WHERE dbp.user_id = :userId\n" +
+            "AND ( :bucketPaymentIds IS NULL OR FIND_IN_SET(dbp.id,:bucketPaymentIds)) \n" +
+            "GROUP BY dbp.id\n" +
+            ") AS combined\n" +
+            "GROUP BY combined.id, combined.account_name, combined.account_type, combined.initial_balance, combined.balance\n" +
+            "ORDER BY account_name",
+            countQuery = "SELECT COUNT(*)\n" +
+                    "FROM dictionary_bucket_payment dbp\n" +
+                    "WHERE dbp.user_id = :userId\n" +
+                    "AND ( :bucketPaymentIds IS NULL OR FIND_IN_SET(dbp.id,:bucketPaymentIds))"
+            , nativeQuery = true)
+    List<Object []> getBucketPaymentReport(
+            @Param("userId") String userId,
+            @Param("bucketPaymentIds") String bucketPaymentIds,
+            @Param("startDate") LocalDate startDate,
+            @Param("endDate") LocalDate endDate
+    );
 }
