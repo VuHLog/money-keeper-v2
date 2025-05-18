@@ -1,7 +1,7 @@
 package com.vuhlog.money_keeper.controller;
 
 import com.vuhlog.money_keeper.dto.response.ApiResponse;
-import com.vuhlog.money_keeper.dto.response.responseinterface.dashboard.TotalExpenseRevenue;
+import com.vuhlog.money_keeper.dto.response.responseinterface.report.TotalExpenseRevenue;
 import com.vuhlog.money_keeper.service.DictionaryBucketPaymentService;
 import com.vuhlog.money_keeper.service.ReportService;
 import lombok.RequiredArgsConstructor;

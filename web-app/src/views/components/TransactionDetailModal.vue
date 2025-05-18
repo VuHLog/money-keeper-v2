@@ -130,7 +130,7 @@ const getCategoryName = computed(() => {
                     {{ transaction.dictionaryBucketPayment?.accountName || 'Tài khoản không xác định' }}
                 </p>
                 <!-- Hiển thị số dư sau giao dịch -->
-                <p v-if="transaction.balance" class="text-sm text-text-secondary mt-1">
+                <p class="text-sm text-text-secondary mt-1">
                   Số dư sau giao dịch: <span class="font-medium">{{ formatCurrency(transaction.balance) }}</span>
                 </p>
               </div>
