@@ -56,23 +56,23 @@
               <td class="px-4 py-3 text-sm text-gray-900">
                 <div class="flex items-center">
                   <font-awesome-icon :icon="['fas', 'wallet']" class="mr-2 text-primary" />
-                  {{ account.name }}
+                  {{ account.accountName }}
                 </div>
               </td>
-              <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-600">{{ formatAmount(account.initialBalance) }}</td>
-              <td class="px-4 py-3 whitespace-nowrap text-sm font-medium text-green-600">{{ formatAmount(account.totalIncome) }}</td>
-              <td class="px-4 py-3 whitespace-nowrap text-sm font-medium text-red-500">{{ formatAmount(account.totalExpense) }}</td>
-              <td class="px-4 py-3 whitespace-nowrap text-sm font-medium text-blue-600">{{ formatAmount(account.currentBalance) }}</td>
+              <td class="px-4 py-3 text-end whitespace-nowrap text-sm text-gray-600">{{ formatAmount(account.initialBalance) }}</td>
+              <td class="px-4 py-3 text-end whitespace-nowrap text-sm font-medium text-green-600">{{ formatAmount(account.totalRevenue) }}</td>
+              <td class="px-4 py-3 text-end whitespace-nowrap text-sm font-medium text-red-500">{{ formatAmount(account.totalExpense) }}</td>
+              <td class="px-4 py-3 text-end whitespace-nowrap text-sm font-medium text-blue-600">{{ formatAmount(account.balance) }}</td>
               <td 
-                class="px-4 py-3 whitespace-nowrap text-sm font-medium"
+                class="px-4 py-3 text-end whitespace-nowrap text-sm font-medium"
                 :class="{
-                  'text-red-500': account.difference < 0,
-                  'text-green-600': account.difference >= 0
+                  'text-red-500': account.disparity < 0,
+                  'text-green-600': account.disparity >= 0
                 }"
               >
-                {{ formatAmount(account.difference) }}
+                {{ formatAmount(account.disparity) }}
                 <span class="text-xs ml-1">
-                  ({{ account.differencePercentage }}%)
+                  ({{ account.initialBalance !== 0 ? ((account.disparity / account.initialBalance) * 100).toFixed(1) : 0 }}%)
                 </span>
               </td>
             </tr>
@@ -182,200 +182,101 @@ import FilterOptions from '@/views/components/FilterOptions.vue';
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome';
 import { library } from '@fortawesome/fontawesome-svg-core';
 import { faFileExcel, faWallet, faChevronLeft, faChevronRight } from '@fortawesome/free-solid-svg-icons';
+import { useReportStore } from '@/store/ReportStore';
 
 // Register Font Awesome icons
 library.add(faFileExcel, faWallet, faChevronLeft, faChevronRight);
+
+// Store
+const reportStore = useReportStore();
 
 // Data state
 const accounts = ref([]);
 const loading = ref(true);
 const filters = ref({
-  timeOption: 'Theo tháng',
-  account: ['all'],
-  customTimeRange: [(new Date()).toISOString().slice(0, 7), new Date().toISOString().slice(0, 7)],
-  transactionType: ''
+  timeOption: '',
+  transactionType: 'all',
+  account: [],
+  expenseCategory: [],
+  revenueCategory: [],
+  customTimeRange: null
 });
-const excelFilters = ref({})
+const excelFilters = ref({
+  timeOption: '',
+  transactionType: 'all',
+  account: [],
+  expenseCategory: [],
+  revenueCategory: [],
+  customTimeRange: null
+})
 
 // Pagination state
 const pagination = ref({
   currentPage: 1,
-  pageSize: 10,
-  totalPages: 1
+  pageSize: 5,
+  totalPages: 1,
+  totalElements: 0
 });
 
 // Computed properties for pagination
 const paginatedAccounts = computed(() => {
-  const start = (pagination.value.currentPage - 1) * pagination.value.pageSize;
-  const end = start + pagination.value.pageSize;
-  return accounts.value.slice(start, end);
+  return accounts.value;
 });
 
 const paginationInfo = computed(() => {
   const start = ((pagination.value.currentPage - 1) * pagination.value.pageSize) + 1;
-  const end = Math.min(start + pagination.value.pageSize - 1, accounts.value.length);
+  const end = Math.min(start + pagination.value.pageSize - 1, pagination.value.totalElements);
   return {
     start,
     end,
-    total: accounts.value.length
+    total: pagination.value.totalElements
   };
 });
 
-// Update pagination based on data length
-const updatePagination = () => {
-  pagination.value.totalPages = Math.ceil(accounts.value.length / pagination.value.pageSize);
-  // Reset to page 1 if current page exceeds total pages
-  if (pagination.value.currentPage > pagination.value.totalPages) {
-    pagination.value.currentPage = 1;
-  }
-};
-
 // Handle page change
-const handlePageChange = (newPage) => {
+const handlePageChange = async (newPage) => {
   if (newPage >= 1 && newPage <= pagination.value.totalPages) {
     pagination.value.currentPage = newPage;
+    await loadData();
   }
 };
 
 // Computed properties for summary
-const totalInitialBalance = computed(() => {
-  return accounts.value.reduce((sum, account) => sum + account.initialBalance, 0);
-});
+const totalInitialBalance = ref(0);
 
-const totalIncome = computed(() => {
-  return accounts.value.reduce((sum, account) => sum + account.totalIncome, 0);
-});
+const totalIncome = ref(0);
 
-const totalExpense = computed(() => {
-  return accounts.value.reduce((sum, account) => sum + account.totalExpense, 0);
-});
+const totalExpense = ref(0);
 
-const totalCurrentBalance = computed(() => {
-  return accounts.value.reduce((sum, account) => sum + account.currentBalance, 0);
-});
+const totalCurrentBalance = ref(0);
 
-// Sample data for demonstration - replace with API call
+// Load data from API
 const loadData = async () => {
   loading.value = true;
   
   try {
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 800));
-    
-    // Sample data - Replace with actual API data
-    accounts.value = [
-      {
-        name: 'Tiền mặt',
-        initialBalance: 5000000,
-        totalIncome: 10000000,
-        totalExpense: 8000000,
-        currentBalance: 7000000,
-        difference: 2000000,
-        differencePercentage: '+40'
-      },
-      {
-        name: 'Techcombank',
-        initialBalance: 10000000,
-        totalIncome: 15000000,
-        totalExpense: 5000000,
-        currentBalance: 20000000,
-        difference: 10000000,
-        differencePercentage: '+100'
-      },
-      {
-        name: 'Vietcombank',
-        initialBalance: 8000000,
-        totalIncome: 5000000,
-        totalExpense: 10000000,
-        currentBalance: 3000000,
-        difference: -5000000,
-        differencePercentage: '-62.5'
-      },
-      {
-        name: 'VPBank',
-        initialBalance: 2000000,
-        totalIncome: 0,
-        totalExpense: 500000,
-        currentBalance: 1500000,
-        difference: -500000,
-        differencePercentage: '-25'
-      },
-      {
-        name: 'MB Bank',
-        initialBalance: 3000000,
-        totalIncome: 2000000,
-        totalExpense: 1000000,
-        currentBalance: 4000000,
-        difference: 1000000,
-        differencePercentage: '+33.3'
-      },
-      {
-        name: 'Vietinbank',
-        initialBalance: 7000000,
-        totalIncome: 3000000,
-        totalExpense: 2000000,
-        currentBalance: 8000000,
-        difference: 1000000,
-        differencePercentage: '+14.3'
-      },
-      {
-        name: 'BIDV',
-        initialBalance: 5000000,
-        totalIncome: 1000000,
-        totalExpense: 3000000,
-        currentBalance: 3000000,
-        difference: -2000000,
-        differencePercentage: '-40'
-      },
-      {
-        name: 'ACB',
-        initialBalance: 4000000,
-        totalIncome: 2000000,
-        totalExpense: 1500000,
-        currentBalance: 4500000,
-        difference: 500000,
-        differencePercentage: '+12.5'
-      },
-      {
-        name: 'TPBank',
-        initialBalance: 3000000,
-        totalIncome: 1500000,
-        totalExpense: 1000000,
-        currentBalance: 3500000,
-        difference: 500000,
-        differencePercentage: '+16.7'
-      },
-      {
-        name: 'Agribank',
-        initialBalance: 6000000,
-        totalIncome: 500000,
-        totalExpense: 2000000,
-        currentBalance: 4500000,
-        difference: -1500000,
-        differencePercentage: '-25'
-      },
-      {
-        name: 'Sacombank',
-        initialBalance: 4500000,
-        totalIncome: 1000000,
-        totalExpense: 800000,
-        currentBalance: 4700000,
-        difference: 200000,
-        differencePercentage: '+4.4'
-      },
-      {
-        name: 'VIB',
-        initialBalance: 2500000,
-        totalIncome: 300000,
-        totalExpense: 400000,
-        currentBalance: 2400000,
-        difference: -100000,
-        differencePercentage: '-4'
-      }
-    ];
-    
-    // Update pagination
-    updatePagination();
+    const response = await reportStore.getReportBucketPayment({
+      ...filters.value,
+    }, {
+      pageNumber: pagination.value.currentPage,
+      pageSize: pagination.value.pageSize
+    });
+    debugger
+    if (response) {
+      accounts.value = response.content;
+      pagination.value.totalElements = response.totalElements;
+      pagination.value.totalPages = response.totalPages;
+    }
+
+    // Get total summary
+    const totalResponse = await reportStore.getReportTotalBucketPayment(filters.value);
+    if (totalResponse) {
+      totalInitialBalance.value = totalResponse.totalInitialBalance;
+      totalIncome.value = totalResponse.totalRevenue;
+      totalExpense.value = totalResponse.totalExpense;
+      totalCurrentBalance.value = totalResponse.totalBalance;
+    }
+
   } catch (error) {
     console.error('Error fetching account data:', error);
     accounts.value = [];
@@ -385,19 +286,27 @@ const loadData = async () => {
 };
 
 // Handle filter changes
-const handleFilterChange = (newFilters) => {
-  filters.value = { ...filters.value, ...newFilters };
-};
-
-const handleFilterReset = () => {
+const handleFilterChange = (filterOptions) => {
   filters.value = {
-    timeOption: 'Theo tháng',
-    account: ['all'],
-    customTimeRange: [(new Date()).toISOString().slice(0, 7), new Date().toISOString().slice(0, 7)],
-    transactionType: ''
-  };
-  loadData();
-};
+    ...filters.value,
+    ...filterOptions
+  }
+  console.log('Filters changed:', filters.value)
+}
+
+const handleFilterReset = async () => {
+  filters.value = {
+    timeOption: '',
+    transactionType: 'all',
+    account: [],
+    customTimeRange: null,
+    expenseCategory: [],
+    revenueCategory: [],
+  }
+  pagination.value.currentPage = 1;
+  await loadData();
+}
+
 
 // Format helpers
 const formatAmount = (amount) => {
@@ -405,21 +314,23 @@ const formatAmount = (amount) => {
 };
 
 // Export to Excel
-const exportExcel = () => {
-  // Implement Excel export logic here
-  console.log('Exporting data to Excel...');
-  alert('Tính năng xuất Excel đang được phát triển');
+const exportExcel = async () => {
+  try {
+    await reportStore.exportExcelForReportBucketPayment(excelFilters.value);
+  } catch (error) {
+    console.error('Error exporting to Excel:', error);
+  }
 };
 
 // Lifecycle hooks
-onMounted(() => {
-  loadData();
+onMounted(async () => {
+  await loadData();
 });
 
 const handleApplyFilter = async () => {
-  excelFilters.value = filters.value
-  // transactionHistoryStore.resetPagination()
-  await loadData()
+  excelFilters.value = filters.value;
+  pagination.value.currentPage = 1;
+  await loadData();
 }
 </script>
 

@@ -533,5 +533,64 @@ export const useReportStore = defineStore("report", {
         return Promise.reject(error);
       }
     },
+    async getReportBucketPayment(filters, pagination){
+      let response = null;
+      let bucketPaymentIds = (filters.account === null || filters.account.length === 0 || filters.account[0] === "all") ? null : filters.account.join(",");
+      let request = {
+        timeOption: filters.timeOption,
+        bucketPaymentIds,
+        customTimeRange: filters.customTimeRange,
+      }
+      await base
+        .post(`/report/bucket-payment?pageNumber=${pagination.pageNumber - 1}&pageSize=${pagination.pageSize}`, request)
+        .then((res) => {
+          response = res.result;
+        })
+        .catch((err) => {
+          console.log(err);
+        });
+      return response;
+    },
+    async getReportTotalBucketPayment(filters){
+      let response = null;
+      let bucketPaymentIds = (filters.account === null || filters.account.length === 0 || filters.account[0] === "all") ? null : filters.account.join(",");
+      let request = {
+        timeOption: filters.timeOption,
+        bucketPaymentIds,
+        customTimeRange: filters.customTimeRange,
+      }
+      await base
+        .post(`/report/total-bucket-payment`, request)
+        .then((res) => {
+          response = res.result;
+        })
+        .catch((err) => {
+          console.log(err);
+        });
+      return response;
+    },
+    async exportExcelForReportBucketPayment(filters){
+      let response = null;
+      let request = {
+        timeOption: filters.timeOption,
+        customTimeRange: filters.customTimeRange,
+      }
+      try {
+        response = await instance.post(`/report/bucket-payment/export-excel`,request, {
+          responseType: 'blob',
+        });
+        const blob = new Blob([response.data], {
+          type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        });
+        const link = document.createElement('a');
+        link.href = window.URL.createObjectURL(blob);
+        link.download = 'Báo cáo theo tài khoản ' + (filters.timeOption && filters.timeOption !== 'Tùy chọn' ?' ' + filters.timeOption.toLowerCase() : '') + '.xlsx';
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+      } catch (error) {
+        return Promise.reject(error);
+      }
+    },
   },
 });

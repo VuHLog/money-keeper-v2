@@ -261,7 +261,7 @@
           </div>
           <div class="bg-blue-50 p-3 rounded-lg">
             <div class="text-sm text-gray-600">Chênh lệch</div>
-            <div class="text-lg font-medium" :class="{'text-green-600': netBalance >= 0, 'text-red-500': netBalance < 0}">
+            <div class="text-lg font-medium" :class="{'text-green-600': totalRevenue - totalExpense >= 0, 'text-red-500': totalRevenue - totalExpense < 0}">
               {{ formatCurrency(totalRevenue - totalExpense) }}
             </div>
           </div>
