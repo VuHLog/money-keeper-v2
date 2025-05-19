@@ -346,4 +346,44 @@ public class ReportController {
                         "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"))
                 .body(new InputStreamResource(in));
     }
+
+    @PostMapping("/bucket-payment")
+    public ApiResponse<Page<ReportBucketPayment>> getReportBucketPayment(
+            @RequestParam(name = "field", required = false, defaultValue = "date") String field,
+            @RequestParam(name = "pageNumber", required = false, defaultValue = "0") Integer pageNumber,
+            @RequestParam(name = "pageSize", required = false, defaultValue = "10") Integer pageSize,
+            @RequestParam(name = "sort", required = false, defaultValue = "desc") String sort,
+            @RequestBody ReportFilterOptionsRequest request
+    ){
+        return ApiResponse.<Page<ReportBucketPayment>>builder()
+                .result(reportService.getBucketPaymentReport(field, pageNumber, pageSize, sort, request))
+                .build();
+    }
+
+    @PostMapping("/total-bucket-payment")
+    public ApiResponse<ReportTotalBucketPayment> getReportTotalBucketPayment(
+            @RequestBody ReportFilterOptionsRequest request
+    ){
+        return ApiResponse.<ReportTotalBucketPayment>builder()
+                .result(reportService.getReportTotalBucketPayment(request))
+                .build();
+    }
+
+    @PostMapping("bucket-payment/export-excel")
+    public ResponseEntity<InputStreamResource> exportBucketPayment(@RequestBody ReportFilterOptionsRequest request) throws IOException {
+        String headerKey = "Content-Disposition";
+        String headerValue = "attachment; filename=bucket-payment.xls";
+        HttpHeaders headers = new HttpHeaders();
+        headers.add(headerKey, headerValue);
+        List<ReportBucketPayment> reportBucketPayment = reportService.getBucketPaymentReportNoPaging(request);
+        ReportTotalBucketPayment total = reportService.getReportTotalBucketPayment(request);
+
+        BucketPaymentExcelExporter exporter = new BucketPaymentExcelExporter(reportBucketPayment, total);
+        ByteArrayInputStream in = exporter.export(request);
+        return ResponseEntity.ok()
+                .headers(headers)
+                .contentType(MediaType.parseMediaType(
+                        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"))
+                .body(new InputStreamResource(in));
+    }
 }

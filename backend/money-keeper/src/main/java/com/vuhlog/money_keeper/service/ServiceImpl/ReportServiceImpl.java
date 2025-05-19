@@ -544,4 +544,100 @@ public class ReportServiceImpl implements ReportService {
             return reportExpenseRevenueRepository.getAllExpenseRevenueHistoryNoPaging(userId, bucketPaymentIds, startDate, endDate);
         }
     }
+
+    @Override
+    public Page<ReportBucketPayment> getBucketPaymentReport(String field, Integer pageNumber, Integer pageSize, String sort,ReportFilterOptionsRequest request) {
+        String userId = userCommon.getMyUserInfo().getId();
+        String timeOption = request.getTimeOption();
+        String bucketPaymentIds = request.getBucketPaymentIds();
+        String start = null;
+        String end = null;
+        if(request.getCustomTimeRange() != null && request.getCustomTimeRange().size() > 0){
+            start = request.getCustomTimeRange().get(0);
+            end = request.getCustomTimeRange().get(1);
+        }
+        LocalDate startDate = null;
+        LocalDate endDate = null;
+
+        if(timeOption.equals(ReportTimeOptionType.MONTH.getType())){
+            YearMonth startMonth = YearMonth.parse(start);
+            YearMonth endMonth = YearMonth.parse(end);
+            startDate = startMonth.atDay(1);
+            endDate = endMonth.atEndOfMonth();
+        }else if (timeOption.equals(ReportTimeOptionType.YEAR.getType())){
+            int startYear = Integer.parseInt(start);
+            int endYear = Integer.parseInt(end);
+            startDate = LocalDate.of(startYear, 1, 1);
+            endDate = LocalDate.of(endYear, 12, 31);
+        } else if (timeOption.equals(ReportTimeOptionType.OPTIONAL.getType())) {
+            startDate = LocalDate.parse(start);
+            endDate = LocalDate.parse(end);
+        }
+
+        Pageable pageable = PageRequest.of(pageNumber, pageSize);
+        return reportExpenseRevenueRepository.getBucketPaymentReport(userId, bucketPaymentIds, startDate, endDate, pageable);
+    }
+
+    @Override
+    public List<ReportBucketPayment> getBucketPaymentReportNoPaging(ReportFilterOptionsRequest request) {
+        String userId = userCommon.getMyUserInfo().getId();
+        String timeOption = request.getTimeOption();
+        String bucketPaymentIds = request.getBucketPaymentIds();
+        String start = null;
+        String end = null;
+        if(request.getCustomTimeRange() != null && request.getCustomTimeRange().size() > 0){
+            start = request.getCustomTimeRange().get(0);
+            end = request.getCustomTimeRange().get(1);
+        }
+        LocalDate startDate = null;
+        LocalDate endDate = null;
+
+        if(timeOption.equals(ReportTimeOptionType.MONTH.getType())){
+            YearMonth startMonth = YearMonth.parse(start);
+            YearMonth endMonth = YearMonth.parse(end);
+            startDate = startMonth.atDay(1);
+            endDate = endMonth.atEndOfMonth();
+        }else if (timeOption.equals(ReportTimeOptionType.YEAR.getType())){
+            int startYear = Integer.parseInt(start);
+            int endYear = Integer.parseInt(end);
+            startDate = LocalDate.of(startYear, 1, 1);
+            endDate = LocalDate.of(endYear, 12, 31);
+        } else if (timeOption.equals(ReportTimeOptionType.OPTIONAL.getType())) {
+            startDate = LocalDate.parse(start);
+            endDate = LocalDate.parse(end);
+        }
+        return reportExpenseRevenueRepository.getBucketPaymentReportNoPaging(userId, bucketPaymentIds, startDate, endDate);
+    }
+
+    @Override
+    public ReportTotalBucketPayment getReportTotalBucketPayment(ReportFilterOptionsRequest request){
+        String userId = userCommon.getMyUserInfo().getId();
+        String timeOption = request.getTimeOption();
+        String bucketPaymentIds = request.getBucketPaymentIds();
+        String start = null;
+        String end = null;
+        if(request.getCustomTimeRange() != null && request.getCustomTimeRange().size() > 0){
+            start = request.getCustomTimeRange().get(0);
+            end = request.getCustomTimeRange().get(1);
+        }
+        LocalDate startDate = null;
+        LocalDate endDate = null;
+
+        if(timeOption.equals(ReportTimeOptionType.MONTH.getType())){
+            YearMonth startMonth = YearMonth.parse(start);
+            YearMonth endMonth = YearMonth.parse(end);
+            startDate = startMonth.atDay(1);
+            endDate = endMonth.atEndOfMonth();
+        }else if (timeOption.equals(ReportTimeOptionType.YEAR.getType())){
+            int startYear = Integer.parseInt(start);
+            int endYear = Integer.parseInt(end);
+            startDate = LocalDate.of(startYear, 1, 1);
+            endDate = LocalDate.of(endYear, 12, 31);
+        } else if (timeOption.equals(ReportTimeOptionType.OPTIONAL.getType())) {
+            startDate = LocalDate.parse(start);
+            endDate = LocalDate.parse(end);
+        }
+        return reportExpenseRevenueRepository.getTotalBucketPayment(userId, bucketPaymentIds, startDate, endDate);
+    }
+
 }

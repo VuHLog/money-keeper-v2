@@ -34,4 +34,11 @@ public interface ReportService {
     Page<TransactionHistory> getAllTransactionHistory(String field, Integer pageNumber, Integer pageSize, String sort, ReportFilterOptionsRequest request);
 
     List<TransactionHistory> getAllTransactionHistoryNoPaging(ReportFilterOptionsRequest request);
+
+    Page<ReportBucketPayment> getBucketPaymentReport(String field, Integer pageNumber, Integer pageSize, String sort,ReportFilterOptionsRequest request);
+
+    List<ReportBucketPayment> getBucketPaymentReportNoPaging(ReportFilterOptionsRequest request);
+
+    ReportTotalBucketPayment getReportTotalBucketPayment(ReportFilterOptionsRequest request);
+
 }

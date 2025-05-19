@@ -94,67 +94,67 @@
           </thead>
           <tbody class="bg-white divide-y divide-gray-200">
             <tr v-for="transaction in transactions" :key="transaction.id">
-              <td class="px-6 py-4 whitespace-nowrap">
+              <td class="px-6 py-4 whitespace-nowrap text-sm">
                 {{ formatDateTime(transaction.date) }}
               </td>
-              <td class="px-6 py-4 whitespace-nowrap text-end">
+              <td class="px-6 py-4 whitespace-nowrap text-sm text-end">
                 <span :class="getTransactionTypeClass(transaction.transactionType)" >
                   {{ formatCurrency(transaction.amount) }}
                 </span>
               </td>
-              <td class="px-6 py-4 whitespace-nowrap">
+              <td class="px-6 py-4 whitespace-nowrap text-sm">
                 <div class="flex items-center">
                   <span :class="getTransactionTypeClass(transaction.transactionType)">
                     {{ getTransactionType(transaction.transactionType) }}
                   </span>
                 </div>
               </td>
-              <td class="px-6 py-4 whitespace-nowrap">
+              <td class="px-6 py-4 whitespace-nowrap text-sm">
                 <div class="flex items-center">
                   <span>{{ getCategoryName(transaction) }}</span>
                 </div>
               </td>
-              <td class="px-6 py-4 whitespace-nowrap">
+              <td class="px-6 py-4 whitespace-nowrap text-sm">
                 <div class="flex items-center">
                   <span>{{ getAccountName(transaction) }}</span>
                 </div>
               </td>
-              <td class="px-6 py-4 whitespace-nowrap">
+              <td class="px-6 py-4 whitespace-nowrap text-sm">
                 <div class="flex items-center">
                   <span>{{ transaction.transferType === 'normal' ? 'Thông thường' : 'Chuyển khoản' }}</span>
                 </div>
               </td>
-              <td class="px-6 py-4 whitespace-nowrap">
+              <td class="px-6 py-4 whitespace-nowrap text-sm">
                 <div class="flex items-center">
                   <span>{{ transaction.beneficiary || 'Không có thông tin' }}</span>
                 </div>
               </td>
-              <td class="px-6 py-4 whitespace-nowrap">
+              <td class="px-6 py-4 whitespace-nowrap text-sm">
                 <div class="flex items-center">
                   <span>{{ transaction.collectMoneyWho || 'Không có thông tin' }}</span>
                 </div>
               </td>
-              <td class="px-6 py-4 whitespace-nowrap">
+              <td class="px-6 py-4 whitespace-nowrap text-sm">
                 <div class="flex items-center">
                   <span>{{ transaction.beneficiaryAccountName? transaction.beneficiaryAccountName : 'Không có thông tin' }}</span>
                 </div>
               </td>
-              <td class="px-6 py-4 whitespace-nowrap">
+              <td class="px-6 py-4 whitespace-nowrap text-sm">
                 <div class="flex items-center">
                   <span>{{ transaction.senderAccountName? transaction.senderAccountName : 'Không có thông tin' }}</span>
                 </div>
               </td>
-              <td class="px-6 py-4 whitespace-nowrap">
+              <td class="px-6 py-4 whitespace-nowrap text-sm">
                 <div class="flex items-center">
                   <span>{{ transaction.tripEvent || 'Không có thông tin' }}</span>
                 </div>
               </td>
-              <td class="px-6 py-4 whitespace-nowrap">
+              <td class="px-6 py-4 whitespace-nowrap text-sm">
                 <div class="flex items-center">
                   <span>{{ transaction.location || 'Không có thông tin' }}</span>
                 </div>
               </td>
-              <td class="px-6 py-4 whitespace-nowrap">
+              <td class="px-6 py-4 whitespace-nowrap text-sm">
                 <span class="truncate block max-w-[200px]" :title="transaction.interpretation">
                   {{ transaction.interpretation || 'Không có ghi chú' }}
                 </span>
@@ -261,7 +261,7 @@
           </div>
           <div class="bg-blue-50 p-3 rounded-lg">
             <div class="text-sm text-gray-600">Chênh lệch</div>
-            <div class="text-lg font-medium" :class="{'text-green-600': netBalance >= 0, 'text-red-500': netBalance < 0}">
+            <div class="text-lg font-medium" :class="{'text-green-600': totalRevenue - totalExpense >= 0, 'text-red-500': totalRevenue - totalExpense < 0}">
               {{ formatCurrency(totalRevenue - totalExpense) }}
             </div>
           </div>
@@ -366,6 +366,7 @@ onMounted(async () => {
       initialFilters.value.customTimeRange = [monthString, monthString]
     }
   }
+  transactionHistoryStore.pagination.pageSize = 10
   await loadData()
 })
 
