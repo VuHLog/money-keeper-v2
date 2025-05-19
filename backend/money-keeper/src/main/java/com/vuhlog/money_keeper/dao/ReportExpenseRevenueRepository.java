@@ -1037,4 +1037,79 @@ public interface ReportExpenseRevenueRepository extends JpaRepository<ReportExpe
             @Param("startDate") LocalDate startDate,
             @Param("endDate") LocalDate endDate
     );
+
+    @Query(value = "SELECT *\n" +
+            "FROM(\n" +
+            "SELECT de.id, de.name, 'expense' AS TYPE, COUNT(er.id) AS totalTransaction, SUM(er.amount) AS totalAmount\n" +
+            "from dictionary_expense de\n" +
+            "LEFT JOIN expense_regular er ON de.id = er.dictionary_expense_id AND ( :startDate IS NULL OR :endDate IS NULL IS NULL OR (date(expense_date) BETWEEN DATE(:startDate) AND DATE(:endDate)))\n" +
+            "LEFT JOIN dictionary_bucket_payment dbp ON dbp.id = er.dictionary_bucket_payment_id\n" +
+            "WHERE dbp.user_id = :userId\n" +
+            "AND ( :expenseCategoriesId IS NULL OR FIND_IN_SET(er.dictionary_expense_id,:expenseCategoriesId))\n" +
+            "GROUP BY de.id\n" +
+            "UNION ALL\n" +
+            "SELECT dr.id, dr.name, 'revenue' AS TYPE, COUNT(rr.id) AS totalTransaction, SUM(rr.amount) AS totalAmount\n" +
+            "from dictionary_revenue dr\n" +
+            "LEFT JOIN revenue_regular rr ON dr.id = rr.dictionary_revenue_id AND ( :startDate IS NULL OR :endDate IS NULL IS NULL OR (date(revenue_date) BETWEEN DATE(:startDate) AND DATE(:endDate)))\n" +
+            "LEFT JOIN dictionary_bucket_payment dbp ON dbp.id = rr.dictionary_bucket_payment_id\n" +
+            "WHERE dbp.user_id = :userId\n" +
+            "AND ( :revenueCategoriesId IS NULL OR FIND_IN_SET(rr.dictionary_revenue_id,:revenueCategoriesId))\n" +
+            "GROUP BY dr.id\n" +
+            ") AS combined\n" +
+            "ORDER BY name",
+    countQuery = "SELECT COUNT(*)\n" +
+            "FROM(\n" +
+            "SELECT de.id, de.name, 'expense' AS TYPE, COUNT(er.id) AS totalTransaction, SUM(er.amount) AS totalAmount\n" +
+            "from dictionary_expense de\n" +
+            "LEFT JOIN expense_regular er ON de.id = er.dictionary_expense_id AND ( :startDate IS NULL OR :endDate IS NULL IS NULL OR (date(expense_date) BETWEEN DATE(:startDate) AND DATE(:endDate)))\n" +
+            "LEFT JOIN dictionary_bucket_payment dbp ON dbp.id = er.dictionary_bucket_payment_id\n" +
+            "WHERE dbp.user_id = :userId\n" +
+            "AND ( :expenseCategoriesId IS NULL OR FIND_IN_SET(er.dictionary_expense_id,:expenseCategoriesId))\n" +
+            "GROUP BY de.id\n" +
+            "UNION ALL\n" +
+            "SELECT dr.id, dr.name, 'revenue' AS TYPE, COUNT(rr.id) AS totalTransaction, SUM(rr.amount) AS totalAmount\n" +
+            "from dictionary_revenue dr\n" +
+            "LEFT JOIN revenue_regular rr ON dr.id = rr.dictionary_revenue_id AND ( :startDate IS NULL OR :endDate IS NULL IS NULL OR (date(revenue_date) BETWEEN DATE(:startDate) AND DATE(:endDate)))\n" +
+            "LEFT JOIN dictionary_bucket_payment dbp ON dbp.id = rr.dictionary_bucket_payment_id\n" +
+            "WHERE dbp.user_id = :userId\n" +
+            "AND ( :revenueCategoriesId IS NULL OR FIND_IN_SET(rr.dictionary_revenue_id,:revenueCategoriesId))\n" +
+            "GROUP BY dr.id\n" +
+            ") AS combined",
+    nativeQuery = true)
+    Page<ReportCategory> getCategoryReport(
+            @Param("userId") String userId,
+            @Param("expenseCategoriesId") String expenseCategoriesId,
+            @Param("revenueCategoriesId") String revenueCategoriesId,
+            @Param("startDate") LocalDate startDate,
+            @Param("endDate") LocalDate endDate,
+            Pageable pageable
+    );
+
+    @Query(value = "SELECT *\n" +
+            "FROM(\n" +
+            "SELECT de.id, de.name, 'expense' AS TYPE, COUNT(er.id) AS totalTransaction, SUM(er.amount) AS totalAmount\n" +
+            "from dictionary_expense de\n" +
+            "LEFT JOIN expense_regular er ON de.id = er.dictionary_expense_id AND ( :startDate IS NULL OR :endDate IS NULL IS NULL OR (date(expense_date) BETWEEN DATE(:startDate) AND DATE(:endDate)))\n" +
+            "LEFT JOIN dictionary_bucket_payment dbp ON dbp.id = er.dictionary_bucket_payment_id\n" +
+            "WHERE dbp.user_id = :userId\n" +
+            "AND ( :expenseCategoriesId IS NULL OR FIND_IN_SET(er.dictionary_expense_id,:expenseCategoriesId))\n" +
+            "GROUP BY de.id\n" +
+            "UNION ALL\n" +
+            "SELECT dr.id, dr.name, 'revenue' AS TYPE, COUNT(rr.id) AS totalTransaction, SUM(rr.amount) AS totalAmount\n" +
+            "from dictionary_revenue dr\n" +
+            "LEFT JOIN revenue_regular rr ON dr.id = rr.dictionary_revenue_id AND ( :startDate IS NULL OR :endDate IS NULL IS NULL OR (date(revenue_date) BETWEEN DATE(:startDate) AND DATE(:endDate)))\n" +
+            "LEFT JOIN dictionary_bucket_payment dbp ON dbp.id = rr.dictionary_bucket_payment_id\n" +
+            "WHERE dbp.user_id = :userId\n" +
+            "AND ( :revenueCategoriesId IS NULL OR FIND_IN_SET(rr.dictionary_revenue_id,:revenueCategoriesId))\n" +
+            "GROUP BY dr.id\n" +
+            ") AS combined\n" +
+            "ORDER BY name",
+            nativeQuery = true)
+    List<ReportCategory> getCategoryReportNoPaging(
+            @Param("userId") String userId,
+            @Param("expenseCategoriesId") String expenseCategoriesId,
+            @Param("revenueCategoriesId") String revenueCategoriesId,
+            @Param("startDate") LocalDate startDate,
+            @Param("endDate") LocalDate endDate
+    );
 }
