@@ -1,16 +1,19 @@
 <template>
   <div class="category-report">
     <FilterOptions 
-      @filter-change="handleFilterChange" 
+      :show-transaction-type="false"
+      :show-account="false"
+      :default-open="false"
+      @filter-change="handleFilterChange"
       @filter-reset="handleFilterReset"
-      @apply-filter="fetchData"
+      @apply-filter="handleApplyFilter"
     />
     
     <div class="bg-white rounded-lg shadow-sm p-4 mt-4">
       <div class="flex justify-between items-center mb-4">
         <h2 class="text-lg font-medium text-gray-800">Báo cáo theo danh mục</h2>
         <button 
-          @click="exportToExcel" 
+          @click="exportExcel" 
           class="px-3 py-2 bg-green-50 text-green-600 rounded-lg hover:bg-green-100 transition-colors flex items-center text-sm"
         >
           <font-awesome-icon :icon="['fas', 'file-excel']" class="mr-2" />
@@ -40,7 +43,6 @@
               <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Số giao dịch</th>
               <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tổng số tiền</th>
               <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tỷ lệ (%)</th>
-              <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Ghi chú</th>
             </tr>
           </thead>
           <tbody class="bg-white divide-y divide-gray-200">
@@ -72,9 +74,9 @@
                   {{ category.type === 'expense' ? 'Chi tiêu' : 'Thu nhập' }}
                 </span>
               </td>
-              <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-600">{{ category.transactionCount }}</td>
+              <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-600 text-end">{{ category.transactionCount }}</td>
               <td 
-                class="px-4 py-3 whitespace-nowrap text-sm font-medium"
+                class="px-4 py-3 whitespace-nowrap text-sm font-medium text-end"
                 :class="{
                   'text-red-500': category.type === 'expense',
                   'text-green-600': category.type === 'revenue'
@@ -83,21 +85,10 @@
                 {{ formatAmount(category.totalAmount) }}
               </td>
               <td class="px-4 py-3 whitespace-nowrap text-sm">
-                <div class="flex items-center">
-                  <div class="w-16 bg-gray-200 rounded-full h-2 mr-2">
-                    <div 
-                      class="h-2 rounded-full" 
-                      :class="{
-                        'bg-red-500': category.type === 'expense',
-                        'bg-green-500': category.type === 'revenue'
-                      }"
-                      :style="{ width: category.percentage + '%' }"
-                    ></div>
-                  </div>
+                <div class="flex items-center justify-end">
                   {{ category.percentage.toFixed(1) }}%
                 </div>
               </td>
-              <td class="px-4 py-3 text-sm text-gray-500">{{ category.note }}</td>
             </tr>
           </tbody>
         </table>
@@ -183,172 +174,104 @@ import FilterOptions from '@/views/components/FilterOptions.vue';
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome';
 import { library } from '@fortawesome/fontawesome-svg-core';
 import { faFileExcel, faChevronLeft, faChevronRight } from '@fortawesome/free-solid-svg-icons';
+import { useReportStore } from '@/store/ReportStore';
 
 // Register Font Awesome icons
 library.add(faFileExcel, faChevronLeft, faChevronRight);
+
+// Store
+const reportStore = useReportStore();
 
 // Data state
 const categoryData = ref([]);
 const loading = ref(true);
 const filters = ref({
-  timeOption: 'Theo tháng',
-  account: ['all'],
+  timeOption: '',
+  transactionType: 'all',
+  account: [],
   expenseCategory: ['all'],
   revenueCategory: ['all'],
-  customTimeRange: [(new Date()).toISOString().slice(0, 7), new Date().toISOString().slice(0, 7)],
-  transactionType: ''
+  customTimeRange: null
 });
+const excelFilters = ref({
+  timeOption: '',
+  transactionType: 'all',
+  account: [],
+  expenseCategory: ['all'],
+  revenueCategory: ['all'],
+  customTimeRange: null
+})
 
+// Totals for percentage calculation
+const totalExpenseAmount = ref(0);
+const totalRevenueAmount = ref(0);
 // Pagination state
 const pagination = ref({
   currentPage: 1,
   pageSize: 10,
-  totalPages: 1
+  totalPages: 1,
+  totalElements: 0
 });
 
 // Computed properties for pagination
 const paginatedCategoryData = computed(() => {
-  const start = (pagination.value.currentPage - 1) * pagination.value.pageSize;
-  const end = start + pagination.value.pageSize;
-  return categoryData.value.slice(start, end);
+  // Add percentage to each category based on type
+  return categoryData.value.map(category => {
+    const total = category.type === 'expense' ? totalExpenseAmount.value : totalRevenueAmount.value;
+    const percentage = total > 0 ? (category.totalAmount / total) * 100 : 0;
+    
+    return {
+      ...category,
+      percentage,
+      transactionCount: category.totalTransaction // Map API field to UI field
+    };
+  });
 });
 
 const paginationInfo = computed(() => {
   const start = ((pagination.value.currentPage - 1) * pagination.value.pageSize) + 1;
-  const end = Math.min(start + pagination.value.pageSize - 1, categoryData.value.length);
+  const end = Math.min(start + pagination.value.pageSize - 1, pagination.value.totalElements);
   return {
     start,
     end,
-    total: categoryData.value.length
+    total: pagination.value.totalElements
   };
 });
 
-// Update pagination based on data length
-const updatePagination = () => {
-  pagination.value.totalPages = Math.ceil(categoryData.value.length / pagination.value.pageSize);
-  // Reset to page 1 if current page exceeds total pages
-  if (pagination.value.currentPage > pagination.value.totalPages) {
-    pagination.value.currentPage = 1;
-  }
-};
-
 // Handle page change
-const handlePageChange = (newPage) => {
+const handlePageChange = async (newPage) => {
   if (newPage >= 1 && newPage <= pagination.value.totalPages) {
     pagination.value.currentPage = newPage;
+    await loadData();
   }
 };
 
-// Sample data for demonstration - replace with API call
-const fetchData = async () => {
+// Load data from API
+const loadData = async () => {
   loading.value = true;
   
   try {
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 800));
+    // Get category data
+    const response = await reportStore.getReportCategory(filters.value, {
+      pageNumber: pagination.value.currentPage,
+      pageSize: pagination.value.pageSize
+    });
+
     
-    // Sample data - Replace with actual API data
-    categoryData.value = [
-      {
-        name: 'Mua sắm',
-        type: 'expense',
-        transactionCount: 15,
-        totalAmount: 2500000,
-        percentage: 25.0,
-        note: 'Tổng hợp chi tiêu mua sắm'
-      },
-      {
-        name: 'Hóa đơn',
-        type: 'expense',
-        transactionCount: 8,
-        totalAmount: 1500000,
-        percentage: 15.0,
-        note: 'Điện, nước, internet'
-      },
-      {
-        name: 'Đi lại',
-        type: 'expense',
-        transactionCount: 20,
-        totalAmount: 1000000,
-        percentage: 10.0,
-        note: 'Xăng, vé xe'
-      },
-      {
-        name: 'Lương',
-        type: 'revenue',
-        transactionCount: 1,
-        totalAmount: 15000000,
-        percentage: 88.2,
-        note: 'Lương tháng'
-      },
-      {
-        name: 'Thưởng',
-        type: 'revenue',
-        transactionCount: 1,
-        totalAmount: 2000000,
-        percentage: 11.8,
-        note: 'Thưởng dự án'
-      },
-      {
-        name: 'Ăn uống',
-        type: 'expense',
-        transactionCount: 25,
-        totalAmount: 2000000,
-        percentage: 20.0,
-        note: 'Ăn uống hàng ngày'
-      },
-      {
-        name: 'Giải trí',
-        type: 'expense',
-        transactionCount: 5,
-        totalAmount: 800000,
-        percentage: 8.0,
-        note: 'Phim, nhạc, game'
-      },
-      {
-        name: 'Sức khỏe',
-        type: 'expense',
-        transactionCount: 3,
-        totalAmount: 600000,
-        percentage: 6.0,
-        note: 'Khám bệnh, thuốc men'
-      },
-      {
-        name: 'Giáo dục',
-        type: 'expense',
-        transactionCount: 2,
-        totalAmount: 500000,
-        percentage: 5.0,
-        note: 'Sách vở, khóa học'
-      },
-      {
-        name: 'Tặng quà',
-        type: 'expense',
-        transactionCount: 2,
-        totalAmount: 400000,
-        percentage: 4.0,
-        note: 'Quà sinh nhật, lễ tết'
-      },
-      {
-        name: 'Đầu tư',
-        type: 'expense',
-        transactionCount: 1,
-        totalAmount: 1000000,
-        percentage: 10.0,
-        note: 'Đầu tư cổ phiếu'
-      },
-      {
-        name: 'Tiền lãi',
-        type: 'revenue',
-        transactionCount: 1,
-        totalAmount: 500000,
-        percentage: 2.9,
-        note: 'Lãi tiết kiệm'
-      }
-    ];
+    if (response) {
+      categoryData.value = response.content;
+      pagination.value.totalElements = response.totalElements;
+      pagination.value.totalPages = response.totalPages;
+    }
+    const responseNoPaging = await reportStore.getReportCategoryNoPaging(filters.value);
+    // Calculate totals for percentage calculations
+    totalExpenseAmount.value = responseNoPaging
+    .filter(item => item.type === 'expense')
+    .reduce((sum, item) => sum + item.totalAmount, 0);
     
-    // Update pagination
-    updatePagination();
+    totalRevenueAmount.value = responseNoPaging
+    .filter(item => item.type === 'revenue')
+    .reduce((sum, item) => sum + item.totalAmount, 0);
   } catch (error) {
     console.error('Error fetching category data:', error);
     categoryData.value = [];
@@ -358,20 +281,31 @@ const fetchData = async () => {
 };
 
 // Handle filter changes
-const handleFilterChange = (newFilters) => {
-  filters.value = { ...filters.value, ...newFilters };
+const handleFilterChange = (filterOptions) => {
+  filters.value = {
+    ...filters.value,
+    ...filterOptions
+  };
+  console.log('Filters changed:', filters.value);
 };
 
-const handleFilterReset = () => {
+const handleFilterReset = async () => {
   filters.value = {
-    timeOption: 'Theo tháng',
-    account: ['all'],
+    timeOption: '',
+    transactionType: 'all',
+    account: [],
+    customTimeRange: null,
     expenseCategory: ['all'],
     revenueCategory: ['all'],
-    customTimeRange: [(new Date()).toISOString().slice(0, 7), new Date().toISOString().slice(0, 7)],
-    transactionType: ''
-  };
-  fetchData();
+  }
+  pagination.value.currentPage = 1;
+  await loadData();
+};
+
+const handleApplyFilter = async () => {
+  excelFilters.value = filters.value;
+  pagination.value.currentPage = 1;
+  await loadData();
 };
 
 // Format helpers
@@ -380,15 +314,17 @@ const formatAmount = (amount) => {
 };
 
 // Export to Excel
-const exportToExcel = () => {
-  // Implement Excel export logic here
-  console.log('Exporting data to Excel...');
-  alert('Tính năng xuất Excel đang được phát triển');
+const exportExcel = async () => {
+  try {
+    await reportStore.exportExcelForReportCategory(excelFilters.value);
+  } catch (error) {
+    console.error('Error exporting to Excel:', error);
+  }
 };
 
 // Lifecycle hooks
-onMounted(() => {
-  fetchData();
+onMounted(async () => {
+  await loadData();
 });
 </script>
 

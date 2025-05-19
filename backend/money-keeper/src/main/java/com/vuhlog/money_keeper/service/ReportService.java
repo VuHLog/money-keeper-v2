@@ -41,4 +41,7 @@ public interface ReportService {
 
     ReportTotalBucketPayment getReportTotalBucketPayment(ReportFilterOptionsRequest request);
 
+    Page<ReportCategory> getReportCategory(String field, Integer pageNumber, Integer pageSize, String sort, ReportFilterOptionsRequest request);
+
+    List<ReportCategory> getReportCategoryNoPaging(ReportFilterOptionsRequest request);
 }

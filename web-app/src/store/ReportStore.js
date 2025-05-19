@@ -592,5 +592,62 @@ export const useReportStore = defineStore("report", {
         return Promise.reject(error);
       }
     },
+    async getReportCategory(filters, pagination){
+      let response = null;
+      let expenseCategoriesId = (filters.expenseCategory === null || filters.expenseCategory.length === 0 || filters.expenseCategory[0] === "all") ? null : filters.expenseCategory.join(",");
+      let revenueCategoriesId = (filters.revenueCategory === null || filters.revenueCategory.length === 0 || filters.revenueCategory[0] === "all") ? null : filters.revenueCategory.join(",");
+      let request = {
+        timeOption: filters.timeOption,
+        expenseCategoriesId,
+        revenueCategoriesId,
+        customTimeRange: filters.customTimeRange,
+      }
+      await base.post(`/report/category?pageNumber=${pagination.pageNumber - 1}&pageSize=${pagination.pageSize}`, request).then((res) => {
+        response = res.result;
+      })
+      return response;
+    },
+    async getReportCategoryNoPaging(filters){
+      let response = null;
+      let expenseCategoriesId = (filters.expenseCategory === null || filters.expenseCategory.length === 0 || filters.expenseCategory[0] === "all") ? null : filters.expenseCategory.join(",");
+      let revenueCategoriesId = (filters.revenueCategory === null || filters.revenueCategory.length === 0 || filters.revenueCategory[0] === "all") ? null : filters.revenueCategory.join(",");
+      let request = {
+        timeOption: filters.timeOption,
+        expenseCategoriesId,
+        revenueCategoriesId,
+        customTimeRange: filters.customTimeRange,
+      }
+      await base.post(`/report/category-no-paging`, request).then((res) => {
+        response = res.result;
+      })
+      return response;
+    },
+    async exportExcelForReportCategory(filters){
+      let response = null;
+      let expenseCategoriesId = (filters.expenseCategory === null || filters.expenseCategory.length === 0 || filters.expenseCategory[0] === "all") ? null : filters.expenseCategory.join(",");
+      let revenueCategoriesId = (filters.revenueCategory === null || filters.revenueCategory.length === 0 || filters.revenueCategory[0] === "all") ? null : filters.revenueCategory.join(",");
+      let request = {
+        timeOption: filters.timeOption,
+        expenseCategoriesId,
+        revenueCategoriesId,
+        customTimeRange: filters.customTimeRange,
+      }
+      try {
+        response = await instance.post(`/report/category/export-excel`,request, {
+          responseType: 'blob',
+        });
+        const blob = new Blob([response.data], {
+          type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        });
+        const link = document.createElement('a');
+        link.href = window.URL.createObjectURL(blob);
+        link.download = 'Báo cáo theo tài khoản ' + (filters.timeOption && filters.timeOption !== 'Tùy chọn' ?' ' + filters.timeOption.toLowerCase() : '') + '.xlsx';
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+      } catch (error) {
+        return Promise.reject(error);
+      }
+    },
   },
 });

@@ -386,4 +386,43 @@ public class ReportController {
                         "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"))
                 .body(new InputStreamResource(in));
     }
+
+    @PostMapping("/category")
+    public ApiResponse<Page<ReportCategory>> getReportCategory(
+            @RequestParam(name = "field", required = false, defaultValue = "date") String field,
+            @RequestParam(name = "pageNumber", required = false, defaultValue = "0") Integer pageNumber,
+            @RequestParam(name = "pageSize", required = false, defaultValue = "10") Integer pageSize,
+            @RequestParam(name = "sort", required = false, defaultValue = "desc") String sort,
+            @RequestBody ReportFilterOptionsRequest request
+    ){
+        return ApiResponse.<Page<ReportCategory>>builder()
+                .result(reportService.getReportCategory(field, pageNumber, pageSize, sort, request))
+                .build();
+    }
+
+    @PostMapping("/category-no-paging")
+    public ApiResponse<List<ReportCategory>> getReportCategoryNoPaging(
+            @RequestBody ReportFilterOptionsRequest request
+    ){
+        return ApiResponse.<List<ReportCategory>>builder()
+                .result(reportService.getReportCategoryNoPaging(request))
+                .build();
+    }
+
+    @PostMapping("category/export-excel")
+    public ResponseEntity<InputStreamResource> exportCategory(@RequestBody ReportFilterOptionsRequest request) throws IOException {
+        String headerKey = "Content-Disposition";
+        String headerValue = "attachment; filename=category.xls";
+        HttpHeaders headers = new HttpHeaders();
+        headers.add(headerKey, headerValue);
+        List<ReportCategory> reportCategory = reportService.getReportCategoryNoPaging(request);
+
+        CategoryExcelExporter exporter = new CategoryExcelExporter(reportCategory);
+        ByteArrayInputStream in = exporter.export(request);
+        return ResponseEntity.ok()
+                .headers(headers)
+                .contentType(MediaType.parseMediaType(
+                        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"))
+                .body(new InputStreamResource(in));
+    }
 }

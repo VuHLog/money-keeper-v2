@@ -213,7 +213,7 @@ const excelFilters = ref({
 // Pagination state
 const pagination = ref({
   currentPage: 1,
-  pageSize: 5,
+  pageSize: 10,
   totalPages: 1,
   totalElements: 0
 });
@@ -261,7 +261,6 @@ const loadData = async () => {
       pageNumber: pagination.value.currentPage,
       pageSize: pagination.value.pageSize
     });
-    debugger
     if (response) {
       accounts.value = response.content;
       pagination.value.totalElements = response.totalElements;
