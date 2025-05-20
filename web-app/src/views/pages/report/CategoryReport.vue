@@ -1,8 +1,8 @@
 <template>
   <div class="category-report">
     <FilterOptions 
-      :show-transaction-type="false"
-      :show-account="false"
+      :show-time-range="false"
+      :show-revenue-category="false" 
       :default-open="false"
       @filter-change="handleFilterChange"
       @filter-reset="handleFilterReset"

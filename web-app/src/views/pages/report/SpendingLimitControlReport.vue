@@ -1,16 +1,20 @@
 <template>
   <div class="spending-limit-report">
-    <FilterOptions 
+    <FilterOptions
+      :show-transaction-type="false"
+      :show-time-range="false"
+      :show-revenue-category="false"
+      :default-open="false"
       @filter-change="handleFilterChange" 
       @filter-reset="handleFilterReset"
-      @apply-filter="fetchData"
+      @apply-filter="handleApplyFilter"
     />
     
     <div class="bg-white rounded-lg shadow-sm p-4 mt-4">
       <div class="flex justify-between items-center mb-4">
         <h2 class="text-lg font-medium text-gray-800">Báo cáo kiểm soát hạn mức chi tiêu</h2>
         <button 
-          @click="exportToExcel" 
+          @click="exportExcel" 
           class="px-3 py-2 bg-green-50 text-green-600 rounded-lg hover:bg-green-100 transition-colors flex items-center text-sm"
         >
           <font-awesome-icon :icon="['fas', 'file-excel']" class="mr-2" />
@@ -31,16 +35,19 @@
       </div>
       
       <!-- Data table -->
-      <div v-else class="overflow-auto max-h-[500px]">
+      <div v-else class="overflow-x-auto">
         <table class="min-w-full">
           <thead class="bg-gray-50 sticky top-0">
             <tr>
+              <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tên hạn mức</th>
+              <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tài khoản áp dụng</th>
               <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Danh mục</th>
               <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Hạn mức</th>
               <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Đã chi tiêu</th>
               <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Còn lại</th>
               <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Trạng thái</th>
               <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tiến độ</th>
+              <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Thời gian</th>
             </tr>
           </thead>
           <tbody class="bg-white divide-y divide-gray-200">
@@ -49,16 +56,17 @@
               :key="index"
               class="hover:bg-gray-50 transition-colors"
             >
-              <td class="px-4 py-3 text-sm text-gray-900">
-                <div class="flex items-center">
-                  <div class="w-2 h-2 rounded-full mr-2 bg-primary"></div>
+            <td class="px-4 py-3 text-sm text-gray-900">{{ limit.limitName }}</td>
+            <td class="px-4 py-3 text-sm text-gray-900">{{ limit.account }}</td>
+              <td class="px-4 py-3 text-sm text-gray-900 w-[300px]">
+                <div class="line-clamp-3">
                   {{ limit.category }}
                 </div>
               </td>
-              <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-600">{{ formatAmount(limit.limitAmount) }}</td>
-              <td class="px-4 py-3 whitespace-nowrap text-sm font-medium text-red-500">{{ formatAmount(limit.spentAmount) }}</td>
+              <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-600 text-end">{{ formatAmount(limit.limitAmount) }}</td>
+              <td class="px-4 py-3 whitespace-nowrap text-sm font-medium text-red-500 text-end">{{ formatAmount(limit.spentAmount) }}</td>
               <td 
-                class="px-4 py-3 whitespace-nowrap text-sm font-medium"
+                class="px-4 py-3 whitespace-nowrap text-sm font-medium text-end"
                 :class="{
                   'text-green-600': limit.remainingAmount > 0,
                   'text-red-500': limit.remainingAmount <= 0
@@ -78,19 +86,19 @@
                   {{ limit.status }}
                 </span>
               </td>
-              <td class="px-4 py-3 text-sm">
-                <div class="w-full bg-gray-200 rounded-full h-2.5">
+              <td class="px-4 py-3 text-sm text-end">
+                <div class="w-full">
                   <div 
-                    class="h-2.5 rounded-full" 
                     :class="{
-                      'bg-green-500': limit.percentUsed < 70,
-                      'bg-yellow-500': limit.percentUsed >= 70 && limit.percentUsed < 100,
-                      'bg-red-500': limit.percentUsed >= 100
+                      'text-green-500': limit.percentUsed < 70,
+                      'text-yellow-500': limit.percentUsed >= 70 && limit.percentUsed < 100,
+                      'text-red-500': limit.percentUsed >= 100
                     }"
-                    :style="{ width: Math.min(limit.percentUsed, 100) + '%' }"
-                  ></div>
+                  >{{ limit.percentUsed }}%</div>
                 </div>
-                <div class="text-xs text-gray-500 mt-1">{{ limit.percentUsed }}%</div>
+              </td>
+              <td class="px-4 py-3 text-sm">
+                Từ {{ formatDate(limit.startDateLimit) }} đến {{ formatDate(limit.endDateLimit) }}
               </td>
             </tr>
           </tbody>
@@ -98,11 +106,11 @@
       </div>
       
       <!-- Pagination section -->
-      <div v-if="spendingLimits.length > 0" class="mt-4 flex justify-between items-center px-4 py-3 border-t border-gray-200">
+      <div v-if="paginatedSpendingLimits.length > 0" class="mt-4 flex justify-between items-center px-4 py-3 border-t border-gray-200">
         <!-- Pagination info -->
         <div class="text-sm text-gray-500">
           Hiển thị {{ paginationInfo.start }} đến {{ paginationInfo.end }}
-          trên tổng số {{ spendingLimits.length }} hạn mức
+          trên tổng số {{ pagination.totalElements }} hạn mức
         </div>
 
         <!-- Pagination controls -->
@@ -203,183 +211,94 @@ import FilterOptions from '@/views/components/FilterOptions.vue';
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome';
 import { library } from '@fortawesome/fontawesome-svg-core';
 import { faFileExcel, faChevronLeft, faChevronRight } from '@fortawesome/free-solid-svg-icons';
+import { useExpenseLimitStore } from '@/store/ExpenseLimitStore.js';
 
 // Register Font Awesome icons
 library.add(faFileExcel, faChevronLeft, faChevronRight);
 
+// Store
+const expenseLimitStore = useExpenseLimitStore();
+
 // Data state
 const spendingLimits = ref([]);
+const spendingLimitsNoPagination = ref([]);
 const loading = ref(true);
 const filters = ref({
   timeOption: 'Theo tháng',
-  account: ['all'],
-  expenseCategory: ['all'],
   customTimeRange: [(new Date()).toISOString().slice(0, 7), new Date().toISOString().slice(0, 7)]
 });
 
-// Pagination state
-const pagination = ref({
-  currentPage: 1,
-  pageSize: 10,
-  totalPages: 1
+// Pagination state - connect to store pagination
+const pagination = computed(() => {
+  return {
+    currentPage: expenseLimitStore.pagination.pageNumber,
+    pageSize: expenseLimitStore.pagination.pageSize,
+    totalPages: expenseLimitStore.pagination.totalPages,
+    totalElements: expenseLimitStore.pagination.totalElements
+  };
 });
 
 // Computed properties for pagination
 const paginatedSpendingLimits = computed(() => {
-  const start = (pagination.value.currentPage - 1) * pagination.value.pageSize;
-  const end = start + pagination.value.pageSize;
-  return spendingLimits.value.slice(start, end);
+  return spendingLimits.value;
 });
 
 const paginationInfo = computed(() => {
   const start = ((pagination.value.currentPage - 1) * pagination.value.pageSize) + 1;
-  const end = Math.min(start + pagination.value.pageSize - 1, spendingLimits.value.length);
+  const end = Math.min(start + pagination.value.pageSize - 1, pagination.value.totalElements);
   return {
     start,
     end,
-    total: spendingLimits.value.length
+    total: pagination.value.totalElements
   };
 });
 
-// Update pagination based on data length
-const updatePagination = () => {
-  pagination.value.totalPages = Math.ceil(spendingLimits.value.length / pagination.value.pageSize);
-  // Reset to page 1 if current page exceeds total pages
-  if (pagination.value.currentPage > pagination.value.totalPages) {
-    pagination.value.currentPage = 1;
-  }
-};
-
 // Handle page change
-const handlePageChange = (newPage) => {
+const handlePageChange = async (newPage) => {
   if (newPage >= 1 && newPage <= pagination.value.totalPages) {
-    pagination.value.currentPage = newPage;
+    expenseLimitStore.pagination.pageNumber = newPage;
+    await fetchData();
   }
 };
 
-// Computed properties for summary
-const totalLimit = computed(() => {
-  return spendingLimits.value.reduce((sum, limit) => sum + limit.limitAmount, 0);
-});
-
-const totalSpent = computed(() => {
-  return spendingLimits.value.reduce((sum, limit) => sum + limit.spentAmount, 0);
-});
-
-const totalRemaining = computed(() => {
-  return totalLimit.value - totalSpent.value;
-});
-
-// Sample data for demonstration - replace with API call
+// Get real data from API
 const fetchData = async () => {
   loading.value = true;
   
   try {
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 800));
-    
-    // Sample data - Replace with actual API data
-    spendingLimits.value = [
-      {
-        category: 'Ăn uống',
-        limitAmount: 3000000,
-        spentAmount: 2500000,
-        remainingAmount: 500000,
-        status: 'Cảnh báo',
-        percentUsed: 83.3
-      },
-      {
-        category: 'Đi lại',
-        limitAmount: 1000000,
-        spentAmount: 500000,
-        remainingAmount: 500000,
-        status: 'Tốt',
-        percentUsed: 50
-      },
-      {
-        category: 'Mua sắm',
-        limitAmount: 2000000,
-        spentAmount: 2500000,
-        remainingAmount: -500000,
-        status: 'Vượt hạn mức',
-        percentUsed: 125
-      },
-      {
-        category: 'Giải trí',
-        limitAmount: 1500000,
-        spentAmount: 900000,
-        remainingAmount: 600000,
-        status: 'Tốt',
-        percentUsed: 60
-      },
-      {
-        category: 'Hóa đơn',
-        limitAmount: 1800000,
-        spentAmount: 1750000,
-        remainingAmount: 50000,
-        status: 'Cảnh báo',
-        percentUsed: 97.2
-      },
-      {
-        category: 'Y tế',
-        limitAmount: 2000000,
-        spentAmount: 600000,
-        remainingAmount: 1400000,
-        status: 'Tốt',
-        percentUsed: 30
-      },
-      {
-        category: 'Giáo dục',
-        limitAmount: 1500000,
-        spentAmount: 900000,
-        remainingAmount: 600000,
-        status: 'Tốt',
-        percentUsed: 60
-      },
-      {
-        category: 'Đồ gia dụng',
-        limitAmount: 1000000,
-        spentAmount: 1200000,
-        remainingAmount: -200000,
-        status: 'Vượt hạn mức',
-        percentUsed: 120
-      },
-      {
-        category: 'Quà tặng',
-        limitAmount: 800000,
-        spentAmount: 500000,
-        remainingAmount: 300000,
-        status: 'Tốt',
-        percentUsed: 62.5
-      },
-      {
-        category: 'Thú cưng',
-        limitAmount: 600000,
-        spentAmount: 520000,
-        remainingAmount: 80000,
-        status: 'Cảnh báo',
-        percentUsed: 86.7
-      },
-      {
-        category: 'Khác',
-        limitAmount: 500000,
-        spentAmount: 100000,
-        remainingAmount: 400000,
-        status: 'Tốt',
-        percentUsed: 20
-      },
-      {
-        category: 'Đầu tư',
-        limitAmount: 5000000,
-        spentAmount: 4000000,
-        remainingAmount: 1000000,
-        status: 'Tốt',
-        percentUsed: 80
+    await expenseLimitStore.getExpenseLimitsPagination();
+    spendingLimitsNoPagination.value = await expenseLimitStore.getExpenseLimits();
+
+    // Transform data to match the format needed for the report
+    spendingLimits.value = expenseLimitStore.expenseLimits.map(limit => {
+      // Calculate spent amount and remaining amount
+      const spentAmount = limit.spentAmount || 0;
+      const remainingAmount = limit.amount - spentAmount;
+      
+      // Calculate percentage used
+      const percentUsed = limit.amount ? Math.round((spentAmount / limit.amount) * 100) : 0;
+      
+      // Determine status based on percentage
+      let status = 'Tốt';
+      if (percentUsed >= 100) {
+        status = 'Vượt hạn mức';
+      } else if (percentUsed >= 70) {
+        status = 'Cảnh báo';
       }
-    ];
-    
-    // Update pagination
-    updatePagination();
+      
+      return {
+        limitName: limit.name,
+        account: limit.bucketPayments?.accountName,
+        category: limit.categories.map(category => category.name).join(', '),
+        limitAmount: limit.amount,
+        spentAmount: spentAmount,
+        remainingAmount: remainingAmount,
+        status: status,
+        percentUsed: percentUsed,
+        startDateLimit: limit.startDateLimit,
+        endDateLimit: limit.endDateLimit
+      };
+    });
   } catch (error) {
     console.error('Error fetching spending limit data:', error);
     spendingLimits.value = [];
@@ -391,16 +310,65 @@ const fetchData = async () => {
 // Handle filter changes
 const handleFilterChange = (newFilters) => {
   filters.value = { ...filters.value, ...newFilters };
+  console.log(filters.value);
+};
+
+const handleApplyFilter = async () => {
+  // Handle expense categories
+  if (filters.value.expenseCategory && filters.value.expenseCategory.length > 0 && filters.value.expenseCategory[0] !== 'all') {
+    expenseLimitStore.categoriesId = filters.value.expenseCategory.join(',');
+  } else {
+    expenseLimitStore.categoriesId = null;
+  }
+  
+  // Handle account filter
+  if (filters.value.account && filters.value.account.length > 0 && filters.value.account[0] !== 'all') {
+    expenseLimitStore.bucketPaymentIds = filters.value.account.join(',');
+  } else {
+    expenseLimitStore.bucketPaymentIds = null;
+  }
+  await fetchData();
 };
 
 const handleFilterReset = () => {
   filters.value = {
     timeOption: 'Theo tháng',
-    account: ['all'],
-    expenseCategory: ['all'],
     customTimeRange: [(new Date()).toISOString().slice(0, 7), new Date().toISOString().slice(0, 7)]
   };
+  
+  // Reset store filters
+  expenseLimitStore.categoriesId = null;
+  expenseLimitStore.bucketPaymentIds = null;
+  expenseLimitStore.resetPagination();
+  
   fetchData();
+};
+
+// Computed properties for summary
+const totalLimit = computed(() => {
+  return spendingLimitsNoPagination.value.reduce((sum, limit) => sum + limit.amount, 0);
+});
+
+const totalSpent = computed(() => {
+  return spendingLimitsNoPagination.value.reduce((sum, limit) => sum + limit.spentAmount, 0);
+});
+
+const totalRemaining = computed(() => {
+  return totalLimit.value - totalSpent.value;
+});
+
+// Add formatDate function
+const formatDate = (dateString) => {
+  if (!dateString) return '';
+  
+  // Check if the date is in yyyy-mm-dd format
+  const dateParts = dateString.split('-');
+  if (dateParts.length === 3) {
+    // Convert to dd/mm/yyyy format
+    return `${dateParts[2]}/${dateParts[1]}/${dateParts[0]}`;
+  }
+  
+  return dateString; // Return original if not in expected format
 };
 
 // Format helpers
@@ -408,15 +376,18 @@ const formatAmount = (amount) => {
   return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(amount);
 };
 
-// Export to Excel
-const exportToExcel = () => {
-  // Implement Excel export logic here
-  console.log('Exporting data to Excel...');
-  alert('Tính năng xuất Excel đang được phát triển');
+// Export to Excel - implement later with real API
+const exportExcel = async () => {
+  try {
+    await expenseLimitStore.exportExcelForReportExpenseLimit();
+  } catch (error) {
+    console.error('Error exporting to Excel:', error);
+  }
 };
 
 // Lifecycle hooks
 onMounted(() => {
+  
   fetchData();
 });
 </script>

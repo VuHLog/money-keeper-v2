@@ -1,9 +1,12 @@
 package com.vuhlog.money_keeper.controller;
 
+import com.vuhlog.money_keeper.dto.request.ExpenseLimitSearchRequest;
 import com.vuhlog.money_keeper.dto.request.ReportFilterOptionsRequest;
 import com.vuhlog.money_keeper.dto.response.ApiResponse;
+import com.vuhlog.money_keeper.dto.response.ExpenseLimitResponse;
 import com.vuhlog.money_keeper.dto.response.responseinterface.report.*;
 import com.vuhlog.money_keeper.excel.*;
+import com.vuhlog.money_keeper.service.ExpenseLimitService;
 import com.vuhlog.money_keeper.service.ReportService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.core.io.InputStreamResource;
@@ -22,6 +25,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class ReportController {
     private final ReportService reportService;
+    private final ExpenseLimitService expenseLimitService;
 
     @PostMapping("transaction-type")
     public ApiResponse<List<ReportTransactionTypeReponse>> getReportTransactionType(@RequestBody ReportFilterOptionsRequest request) {
@@ -419,6 +423,23 @@ public class ReportController {
 
         CategoryExcelExporter exporter = new CategoryExcelExporter(reportCategory);
         ByteArrayInputStream in = exporter.export(request);
+        return ResponseEntity.ok()
+                .headers(headers)
+                .contentType(MediaType.parseMediaType(
+                        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"))
+                .body(new InputStreamResource(in));
+    }
+
+    @PostMapping("expense-limit/export-excel")
+    public ResponseEntity<InputStreamResource> exportExpenseLimit(@RequestBody ExpenseLimitSearchRequest request) throws IOException {
+        String headerKey = "Content-Disposition";
+        String headerValue = "attachment; filename=expense-limit.xls";
+        HttpHeaders headers = new HttpHeaders();
+        headers.add(headerKey, headerValue);
+        List<ExpenseLimitResponse> expenseLimitResponses = expenseLimitService.getAllExpenseLimit(request);
+
+        ExpenseLimitExcelExporter exporter = new ExpenseLimitExcelExporter(expenseLimitResponses);
+        ByteArrayInputStream in = exporter.export();
         return ResponseEntity.ok()
                 .headers(headers)
                 .contentType(MediaType.parseMediaType(

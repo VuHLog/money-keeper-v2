@@ -18,10 +18,10 @@ import java.util.List;
 public class ExpenseLimitController {
     private final ExpenseLimitService expenseLimitService;
 
-    @GetMapping("")
-    public ApiResponse<List<ExpenseLimitResponse>> getAllExpenseLimit() {
+    @PostMapping("/no-pagination")
+    public ApiResponse<List<ExpenseLimitResponse>> getAllExpenseLimit(@RequestBody ExpenseLimitSearchRequest req) {
         return ApiResponse.<List<ExpenseLimitResponse>>builder()
-                .result(expenseLimitService.getAllExpenseLimit())
+                .result(expenseLimitService.getAllExpenseLimit(req))
                 .build();
     }
 
