@@ -33,7 +33,7 @@ const emit = defineEmits(['close', 'submit'])
 const formData = reactive({
     name: '',
     category_ids: [],
-    account_ids: [],
+    account_ids: '',
     amount: '',
     start_date: '',
     end_date: '',
@@ -103,7 +103,7 @@ const validateForm = () => {
         isValid = false
     }
 
-    if (!formData.account_ids.length || (formData.account_ids.length === 1 && formData.account_ids[0] === 'all')) {
+    if (!formData.account_ids) {
         errors.value.account_ids = 'Vui lòng chọn ít nhất một tài khoản'
         isValid = false
     }
@@ -148,7 +148,7 @@ const validateForm = () => {
 const closeModal = () => {
     formData.name = ''
     formData.category_ids = []
-    formData.account_ids = []
+    formData.account_ids = ''
     formData.amount = ''
     formData.start_date = ''
     formData.end_date = ''
@@ -175,7 +175,7 @@ const handleSubmit = async () => {
         amount: Number(formData.amount),
         name: formData.name,
         categoriesId: formData.category_ids.join(','),
-        bucketPaymentIds: formData.account_ids.join(','),
+        bucketPaymentIds: formData.account_ids,
         startDate: formatDate(formData.start_date),
         endDate: formatDate(formData.end_date),
         repeatTime: formData.repeat_time,
@@ -287,7 +287,7 @@ onUnmounted(() => {
                         <!-- Tài khoản -->
                         <SelectDropdown v-model="formData.account_ids" :options="accounts" label="Tài khoản"
                             placeholder="Chọn tài khoản" :required="true" :error="errors.account_ids"
-                            :is-multiple="true" default-icon="wallet" />
+                            :is-multiple="false" default-icon="wallet" />
 
                         <!-- Lặp lại -->
                         <div>

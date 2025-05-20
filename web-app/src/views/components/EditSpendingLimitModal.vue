@@ -39,7 +39,7 @@ const emit = defineEmits(['close', 'submit'])
 const formData = reactive({
   name: '',
   category_ids: [],
-  account_ids: [],
+  account_ids: '',
   amount: '',
   start_date: '',
   end_date: '',
@@ -108,9 +108,7 @@ watch(() => props.limit, (newLimit) => {
     formData.category_ids = Array.isArray(newLimit.categories) 
       ? newLimit.categories.map(cat => cat.id)
       : [];
-    formData.account_ids = Array.isArray(newLimit.bucketPayments)
-      ? newLimit.bucketPayments.map(acc => acc.id)
-      : [];
+    formData.account_ids = newLimit.bucketPayments.id || '';
     formData.amount = newLimit.amount || '';
     formData.start_date = formatDateForForm(newLimit.startDate);
     formData.end_date = formatDateForForm(newLimit.endDate);
@@ -164,9 +162,7 @@ const handleClose = () => {
     !isArrayEqual(formData.category_ids, Array.isArray(props.limit.categories) 
       ? props.limit.categories.map(cat => cat.id)
       : []) ||
-    !isArrayEqual(formData.account_ids, Array.isArray(props.limit.bucketPayments)
-      ? props.limit.bucketPayments.map(acc => acc.id)
-      : []) ||
+    formData.account_ids !== props.limit.bucketPayments.id ||
     formAmount !== propsAmount ||
     formStartDate !== propsStartDate ||
     formEndDate !== propsEndDate ||
@@ -205,9 +201,7 @@ const resetForm = () => {
   formData.category_ids = Array.isArray(props.limit.categories)
     ? props.limit.categories.map(cat => cat.id)
     : [];
-  formData.account_ids = Array.isArray(props.limit.bucketPayments)
-    ? props.limit.bucketPayments.map(acc => acc.id)
-    : [];
+  formData.account_ids = props.limit.bucketPayments.id || '';
   formData.amount = props.limit.amount || '';
   formData.start_date = formatDateForForm(props.limit.startDate);
   formData.end_date = formatDateForForm(props.limit.endDate);
@@ -258,7 +252,7 @@ const handleSubmit = async () => {
     amount: Number(formData.amount),
     name: formData.name,
     categoriesId: formData.category_ids.join(','),
-    bucketPaymentIds: formData.account_ids.join(','),
+    bucketPaymentIds: formData.account_ids,
     startDate: formatDate(formData.start_date),
     endDate: formData.end_date ? formatDate(formData.end_date) : null,
     repeatTime: formData.repeat_time,
@@ -303,7 +297,7 @@ const validateForm = () => {
     isValid = false
   }
 
-  if (!formData.account_ids.length || (formData.account_ids.length === 1 && formData.account_ids[0] === 'all')) {
+  if (!formData.account_ids) {
     errors.value.account_ids = 'Vui lòng chọn ít nhất một tài khoản'
     isValid = false
   }
@@ -486,7 +480,7 @@ const normalizeDateForComparison = (dateStr) => {
                 placeholder="Chọn tài khoản"
                 :required="true"
                 :error="errors.account_ids"
-                :is-multiple="true"
+                :is-multiple="false"
                 default-icon="wallet"
               />
               

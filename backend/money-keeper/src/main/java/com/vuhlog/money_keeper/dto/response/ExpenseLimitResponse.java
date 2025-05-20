@@ -18,7 +18,7 @@ public class ExpenseLimitResponse {
     private Long amount;
     private String name;
     private List<DictionaryExpense> categories;
-    private List<DictionaryBucketPaymentResponse> bucketPayments;
+    private DictionaryBucketPaymentResponse bucketPayments;
     private String repeatTime;
     private String startDate;
     private String endDate;

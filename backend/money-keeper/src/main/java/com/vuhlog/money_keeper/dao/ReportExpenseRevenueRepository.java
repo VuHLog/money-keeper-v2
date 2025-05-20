@@ -70,7 +70,7 @@ public interface ReportExpenseRevenueRepository extends JpaRepository<ReportExpe
             "JOIN dictionary_bucket_payment dbp ON dbp.id = er.dictionary_bucket_payment_id " +
             "JOIN dictionary_expense de ON de.id = er.dictionary_expense_id " +
             "WHERE dbp.user_id = :userId " +
-            "AND (:bucketPaymentIds IS NULL OR FIND_IN_SET(er.dictionary_bucket_payment_id, :bucketPaymentIds)) " +
+            "AND er.dictionary_bucket_payment_id = :bucketPayment \n" +
             "AND (:categoriesId IS NULL OR FIND_IN_SET(er.dictionary_expense_id, :categoriesId)) " +
             "AND DATE(er.expense_date) >= :startDate AND DATE(er.expense_date) <= :endOfStartMonth " +
             "UNION ALL " +
@@ -79,7 +79,7 @@ public interface ReportExpenseRevenueRepository extends JpaRepository<ReportExpe
             "JOIN dictionary_bucket_payment dbp ON dbp.id = er.dictionary_bucket_payment_id " +
             "JOIN dictionary_expense de ON de.id = er.dictionary_expense_id " +
             "WHERE dbp.user_id = :userId " +
-            "AND (:bucketPaymentIds IS NULL OR FIND_IN_SET(er.dictionary_bucket_payment_id, :bucketPaymentIds)) " +
+            "AND er.dictionary_bucket_payment_id = :bucketPayment\n" +
             "AND (:categoriesId IS NULL OR FIND_IN_SET(er.dictionary_expense_id, :categoriesId)) " +
             "AND DATE(er.expense_date) >= :startDateOfMonthEndDate AND DATE(er.expense_date) <= :endDate " +
             "UNION ALL " +
@@ -87,14 +87,14 @@ public interface ReportExpenseRevenueRepository extends JpaRepository<ReportExpe
             "FROM report_expense_revenue rer " +
             "JOIN dictionary_expense de ON (rer.type = 'expense' AND rer.category_id = de.id) " +
             "WHERE rer.user_id = :userId " +
-            "AND (:bucketPaymentIds IS NULL OR FIND_IN_SET(rer.bucket_payment_id, :bucketPaymentIds)) " +
+            "AND rer.bucket_payment_id = :bucketPayment \n" +
             "AND (:categoriesId IS NULL OR FIND_IN_SET(rer.category_id, :categoriesId)) " +
             "AND (DATE(CONCAT(year, '-', LPAD(month, 2, '0'), '-01')) BETWEEN :startDateBetween AND :endDateBetween) " +
             ") AS combined",
             nativeQuery = true)
     Long getTotalExpenseByPeriodOfTime(
             @Param("userId") String userId,
-            @Param("bucketPaymentIds") String bucketPaymentIds,
+            @Param("bucketPayment") String bucketPayment,
             @Param("categoriesId") String categoriesId,
             @Param("startDate") LocalDate startDate,
             @Param("endOfStartMonth") LocalDate endOfStartMonth,

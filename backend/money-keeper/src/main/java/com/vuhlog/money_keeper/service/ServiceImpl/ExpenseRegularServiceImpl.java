@@ -136,7 +136,7 @@ public class ExpenseRegularServiceImpl implements ExpenseRegularService {
         expenseRegular = expenseRegularRepository.save(expenseRegular);
 
         //check expense limit
-        List<ExpenseLimitNotification> expenseLimitNotifications = getOverExpenseLimit();
+        List<ExpenseLimitNotification> expenseLimitNotifications = getOverExpenseLimit(request.getDictionaryBucketPaymentId());
         if(!expenseLimitNotifications.isEmpty()) {
             notificationService.expenseLimitNotification(expenseLimitNotifications);
         }
@@ -198,7 +198,7 @@ public class ExpenseRegularServiceImpl implements ExpenseRegularService {
         revenueRegularRepository.save(revenueRegular);
 
         //check expense limit
-        List<ExpenseLimitNotification> expenseLimitNotifications = getOverExpenseLimit();
+        List<ExpenseLimitNotification> expenseLimitNotifications = getOverExpenseLimit(request.getDictionaryBucketPaymentId());
         if(!expenseLimitNotifications.isEmpty()) {
             notificationService.expenseLimitNotification(expenseLimitNotifications);
         }
@@ -374,7 +374,7 @@ public class ExpenseRegularServiceImpl implements ExpenseRegularService {
         expenseRegular = expenseRegularRepository.save(expenseRegular);
 
         //check expense limit
-        List<ExpenseLimitNotification> expenseLimitNotifications = getOverExpenseLimit();
+        List<ExpenseLimitNotification> expenseLimitNotifications = getOverExpenseLimit(request.getDictionaryBucketPaymentId());
         if(!expenseLimitNotifications.isEmpty()) {
             notificationService.expenseLimitNotification(expenseLimitNotifications);
         }
@@ -552,10 +552,10 @@ public class ExpenseRegularServiceImpl implements ExpenseRegularService {
         return expenseDate.toLocalDateTime().isBefore(nextDayStart);
     }
 
-    private List<ExpenseLimitNotification> getOverExpenseLimit(){
+    private List<ExpenseLimitNotification> getOverExpenseLimit(String bucketPaymentId){
         String userId = userCommon.getMyUserInfo().getId();
         List<ExpenseLimitNotification> expenseLimitNotifications = new ArrayList<>();
-        List<ExpenseLimitNotification> expenseLimitNotificationsQuery = expenseRegularRepository.findOverExpenseLimitByUserAndExpense(userId);
+        List<ExpenseLimitNotification> expenseLimitNotificationsQuery = expenseRegularRepository.findOverExpenseLimitByUserAndExpense(userId, bucketPaymentId);
         if(expenseLimitNotificationsQuery != null){
             expenseLimitNotifications.addAll(expenseLimitNotificationsQuery);
         }
