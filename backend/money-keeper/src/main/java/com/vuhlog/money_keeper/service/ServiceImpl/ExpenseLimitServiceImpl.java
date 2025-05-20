@@ -69,16 +69,32 @@ public class ExpenseLimitServiceImpl implements ExpenseLimitService {
     }
 
     @Override
-    public List<ExpenseLimitResponse> getAllExpenseLimit() {
+    public List<ExpenseLimitResponse> getAllExpenseLimit(ExpenseLimitSearchRequest req) {
         Specification<ExpenseLimit> specs = Specification.where(null);
+
         Users user = userCommon.getMyUserInfo();
         String userId = user.getId();
         specs = specs.and(ExpenseLimitSpecification.filterByUserId(userId));
-        List<ExpenseLimit> expenseLimits = expenseLimitRepository.findAll(specs);
-        return expenseLimits.stream().map(expenseLimit -> {
+
+        if(req.getBucketPaymentIds() != null && !req.getBucketPaymentIds().isEmpty()) {
+            specs = specs.and(ExpenseLimitSpecification.filterByBucketPaymentIds(req.getBucketPaymentIds()));
+        }
+
+        if(req.getCategoriesId() != null && !req.getCategoriesId().isEmpty()) {
+            specs = specs.and(ExpenseLimitSpecification.filterByCategoriesId(req.getCategoriesId()));
+        }
+
+        if(req.getSearch() != null && !req.getSearch().isEmpty()) {
+            specs = specs.and(ExpenseLimitSpecification.filterByName(req.getSearch()));
+        }
+        return expenseLimitRepository.findAll(specs).stream().map(expenseLimit -> {
             ExpenseLimitResponse expenseLimitResponse = expenseLimitMapper.toExpenseLimitResponse(expenseLimit);
+            String endDateLimitStr = expenseLimit.getEndDateLimit() != null ? expenseLimit.getEndDateLimit().toString().split("\\.")[0] : null;;
+            CalculationTime calculationTime = TimestampUtil.calculationTime(expenseLimit.getStartDateLimit().toString().split("\\.")[0], endDateLimitStr);
+            Long totalExpense = reportExpenseRevenueRepository.getTotalExpenseByPeriodOfTime(userId, expenseLimit.getBucketPaymentIds(), req.getCategoriesId(),calculationTime.getStartDate(), calculationTime.getEndOfStartMonth(), calculationTime.getStartDateBetween(), calculationTime.getEndDateBetween(), calculationTime.getStartDateOfMonthEndDate(), calculationTime.getEndDate());
+            expenseLimitResponse.setSpentAmount(totalExpense);
             return convertToResponse(expenseLimitResponse, expenseLimit.getBucketPaymentIds(), expenseLimit.getCategoriesId(), expenseLimit.getEndDate());
-        }).sorted(Comparator.comparing(ExpenseLimitResponse::getStartDateLimit).reversed()).collect(Collectors.toList());
+        }).toList();
     }
 
     @Override

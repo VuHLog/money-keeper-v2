@@ -1,5 +1,6 @@
 import { defineStore } from "pinia";
 import {base} from "@/apis/ApiService.js"
+import { instance } from "@/apis/ApiService.js";
 import { formatDateStringToDate } from "@/utils/DateUtil.js";
 
 export const useExpenseLimitStore = defineStore("expenseLimit", {
@@ -223,13 +224,40 @@ export const useExpenseLimitStore = defineStore("expenseLimit", {
     },
   },
   actions: {
-    // async getExpenseLimits(){
-    //   let response = null;
-    //   await base.get(`/expense-limit`).then((res) => {
-    //     response = res.result;
-    //   })
-    //   return response;
-    // },
+    async getExpenseLimits(){
+      let response = null;
+      let request = {
+        categoriesId: this.categoriesId,
+        bucketPaymentIds: this.bucketPaymentIds,
+      }
+      await base.post(`/expense-limit/no-pagination`, request).then((res) => {
+        response = res.result;
+      })
+      return response;
+    },
+    async exportExcelForReportExpenseLimit(){
+      let response = null;
+      let request = {
+        categoriesId: this.categoriesId,
+        bucketPaymentIds: this.bucketPaymentIds,
+      }
+      try {
+        response = await instance.post(`/report/expense-limit/export-excel`,request, {
+          responseType: 'blob',
+        });
+        const blob = new Blob([response.data], {
+          type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        });
+        const link = document.createElement('a');
+        link.href = window.URL.createObjectURL(blob);
+        link.download = 'Báo cáo hạn mức chi có hiệu lực.xlsx';
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+      } catch (error) {
+        return Promise.reject(error);
+      }
+    },
     async getExpenseLimitsPagination(){
       let response = null;
       let request = {

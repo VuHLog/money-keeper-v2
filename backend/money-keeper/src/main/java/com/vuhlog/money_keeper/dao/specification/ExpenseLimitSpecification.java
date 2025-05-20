@@ -32,9 +32,9 @@ public class ExpenseLimitSpecification {
             String[] ids = bucketPaymentIds.split(",");
             List<Predicate> predicates = new ArrayList<>();
             for (String id : ids) {
-                predicates.add(criteriaBuilder.greaterThan(criteriaBuilder.function("FIND_IN_SET", Integer.class, criteriaBuilder.literal(id.trim()), root.get("bucketPaymentIds")), 0));
+                predicates.add(criteriaBuilder.equal(root.get("bucketPaymentIds"), id.trim()));
             }
-            return criteriaBuilder.and(predicates.toArray(new Predicate[0]));
+            return criteriaBuilder.or(predicates.toArray(new Predicate[0]));
         };
     }
 
