@@ -175,12 +175,16 @@ import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome';
 import { library } from '@fortawesome/fontawesome-svg-core';
 import { faFileExcel, faChevronLeft, faChevronRight } from '@fortawesome/free-solid-svg-icons';
 import { useReportStore } from '@/store/ReportStore';
+import { useDictionaryExpenseStore } from '@stores/DictionaryExpenseStore.js'
+import { useDictionaryRevenueStore } from '@stores/DictionaryRevenueStore.js'
 
 // Register Font Awesome icons
 library.add(faFileExcel, faChevronLeft, faChevronRight);
 
 // Store
 const reportStore = useReportStore();
+const expenseStore = useDictionaryExpenseStore();
+const revenueStore = useDictionaryRevenueStore();
 
 // Data state
 const categoryData = ref([]);
@@ -295,8 +299,8 @@ const handleFilterReset = async () => {
     transactionType: 'all',
     account: [],
     customTimeRange: null,
-    expenseCategory: ['all'],
-    revenueCategory: ['all'],
+    expenseCategory: reportStore.expenseCategoriesId,
+    revenueCategory: reportStore.revenueCategoriesId,
   }
   pagination.value.currentPage = 1;
   await loadData();
@@ -324,6 +328,10 @@ const exportExcel = async () => {
 
 // Lifecycle hooks
 onMounted(async () => {
+  reportStore.expenseCategoriesId = (await expenseStore.getMyExpenseCategories()).map(item => item.id);
+  reportStore.revenueCategoriesId = (await revenueStore.getMyRevenueCategories()).map(item => item.id);
+  filters.value.expenseCategory = reportStore.expenseCategoriesId;
+  filters.value.revenueCategory = reportStore.revenueCategoriesId;
   await loadData();
 });
 </script>

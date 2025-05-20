@@ -9,6 +9,7 @@ import SelectDropdown from '@/views/components/SelectDropdown.vue'
 import { useDictionaryBucketPaymentStore } from '@stores/DictionaryBucketPaymentStore.js'
 import { useDictionaryExpenseStore } from '@stores/DictionaryExpenseStore.js'
 import { useDictionaryRevenueStore } from '@stores/DictionaryRevenueStore.js'
+import { useReportStore } from '@stores/ReportStore.js'
 
 
 library.add(faWallet, faBuildingColumns,faList,faChevronDown,faCalendar,faArrowUp,faArrowDown,faUtensils,faCar,faHome,faGamepad,faSearch,faCheck,faRotateLeft,faFilter,faAngleDown)
@@ -101,7 +102,7 @@ const isCategoryTypeDropdownOpen = ref(false)
 const dictionaryBucketPaymentStore = useDictionaryBucketPaymentStore()
 const dictionaryExpenseStore = useDictionaryExpenseStore()
 const dictionaryRevenueStore = useDictionaryRevenueStore()
-
+const reportStore = useReportStore()
 // State for toggle filter options panel
 const isFilterOpen = ref(props.defaultOpen)
 
@@ -183,8 +184,8 @@ const applyFilter = () => {
 const handleReset = () => {
   selectedTimeRange.value = originalValues.timeRange
   selectedAccount.value = [...originalValues.account]
-  selectedExpenseCategory.value = [...originalValues.expenseCategory]
-  selectedRevenueCategory.value = [...originalValues.revenueCategory]
+  selectedExpenseCategory.value = reportStore.expenseCategoriesId || [...originalValues.expenseCategory]
+  selectedRevenueCategory.value = reportStore.revenueCategoriesId || [...originalValues.revenueCategory]
   customTimeRange.value = originalValues.customTimeRange
   selectedTransactionType.value = props.isReset ? '' : [...originalValues.transactionType]
   emit('filter-reset')

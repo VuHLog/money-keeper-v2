@@ -51,110 +51,110 @@
         <table class="min-w-full divide-y divide-gray-200">
           <thead class="bg-gray-50">
             <tr>
-              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Ngày
               </th>
-              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Số tiền
               </th>
-              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Loại
               </th>
-              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Danh mục
               </th>
-              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Tài khoản
               </th>
-              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Loại chuyển khoản
               </th>
-              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Người thụ hưởng
               </th>
-              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Nhận tiền từ
               </th>
-              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Tài khoản thụ hưởng
               </th>
-              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Tài khoản gửi tiền
               </th>
-              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Chuyến đi/sự kiện
               </th>
-              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Địa điểm
               </th>
-              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Ghi chú
               </th>
             </tr>
           </thead>
           <tbody class="bg-white divide-y divide-gray-200">
             <tr v-for="transaction in transactions" :key="transaction.id">
-              <td class="px-6 py-4 whitespace-nowrap text-sm">
+              <td class="px-4 py-3 whitespace-nowrap text-sm">
                 {{ formatDateTime(transaction.date) }}
               </td>
-              <td class="px-6 py-4 whitespace-nowrap text-sm text-end">
+              <td class="px-4 py-3 whitespace-nowrap text-sm text-end">
                 <span :class="getTransactionTypeClass(transaction.transactionType)" >
                   {{ formatCurrency(transaction.amount) }}
                 </span>
               </td>
-              <td class="px-6 py-4 whitespace-nowrap text-sm">
+              <td class="px-4 py-3 whitespace-nowrap text-sm">
                 <div class="flex items-center">
                   <span :class="getTransactionTypeClass(transaction.transactionType)">
                     {{ getTransactionType(transaction.transactionType) }}
                   </span>
                 </div>
               </td>
-              <td class="px-6 py-4 whitespace-nowrap text-sm">
+              <td class="px-4 py-3 whitespace-nowrap text-sm">
                 <div class="flex items-center">
                   <span>{{ getCategoryName(transaction) }}</span>
                 </div>
               </td>
-              <td class="px-6 py-4 whitespace-nowrap text-sm">
+              <td class="px-4 py-3 whitespace-nowrap text-sm">
                 <div class="flex items-center">
                   <span>{{ getAccountName(transaction) }}</span>
                 </div>
               </td>
-              <td class="px-6 py-4 whitespace-nowrap text-sm">
+              <td class="px-4 py-3 whitespace-nowrap text-sm">
                 <div class="flex items-center">
                   <span>{{ transaction.transferType === 'normal' ? 'Thông thường' : 'Chuyển khoản' }}</span>
                 </div>
               </td>
-              <td class="px-6 py-4 whitespace-nowrap text-sm">
+              <td class="px-4 py-3 whitespace-nowrap text-sm">
                 <div class="flex items-center">
                   <span>{{ transaction.beneficiary || 'Không có thông tin' }}</span>
                 </div>
               </td>
-              <td class="px-6 py-4 whitespace-nowrap text-sm">
+              <td class="px-4 py-3 whitespace-nowrap text-sm">
                 <div class="flex items-center">
                   <span>{{ transaction.collectMoneyWho || 'Không có thông tin' }}</span>
                 </div>
               </td>
-              <td class="px-6 py-4 whitespace-nowrap text-sm">
+              <td class="px-4 py-3 whitespace-nowrap text-sm">
                 <div class="flex items-center">
                   <span>{{ transaction.beneficiaryAccountName? transaction.beneficiaryAccountName : 'Không có thông tin' }}</span>
                 </div>
               </td>
-              <td class="px-6 py-4 whitespace-nowrap text-sm">
+              <td class="px-4 py-3 whitespace-nowrap text-sm">
                 <div class="flex items-center">
                   <span>{{ transaction.senderAccountName? transaction.senderAccountName : 'Không có thông tin' }}</span>
                 </div>
               </td>
-              <td class="px-6 py-4 whitespace-nowrap text-sm">
+              <td class="px-4 py-3 whitespace-nowrap text-sm">
                 <div class="flex items-center">
                   <span>{{ transaction.tripEvent || 'Không có thông tin' }}</span>
                 </div>
               </td>
-              <td class="px-6 py-4 whitespace-nowrap text-sm">
+              <td class="px-4 py-3 whitespace-nowrap text-sm">
                 <div class="flex items-center">
                   <span>{{ transaction.location || 'Không có thông tin' }}</span>
                 </div>
               </td>
-              <td class="px-6 py-4 whitespace-nowrap text-sm">
+              <td class="px-4 py-3 whitespace-nowrap text-sm">
                 <span class="truncate block max-w-[200px]" :title="transaction.interpretation">
                   {{ transaction.interpretation || 'Không có ghi chú' }}
                 </span>
