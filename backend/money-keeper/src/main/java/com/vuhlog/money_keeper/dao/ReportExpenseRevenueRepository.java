@@ -1045,7 +1045,7 @@ public interface ReportExpenseRevenueRepository extends JpaRepository<ReportExpe
             "LEFT JOIN expense_regular er ON de.id = er.dictionary_expense_id AND ( :startDate IS NULL OR :endDate IS NULL IS NULL OR (date(expense_date) BETWEEN DATE(:startDate) AND DATE(:endDate)))\n" +
             "LEFT JOIN dictionary_bucket_payment dbp ON dbp.id = er.dictionary_bucket_payment_id\n" +
             "WHERE dbp.user_id = :userId\n" +
-            "AND ( :expenseCategoriesId IS NULL OR FIND_IN_SET(er.dictionary_expense_id,:expenseCategoriesId))\n" +
+            "AND (FIND_IN_SET(er.dictionary_expense_id,:expenseCategoriesId))\n" +
             "GROUP BY de.id\n" +
             "UNION ALL\n" +
             "SELECT dr.id, dr.name, 'revenue' AS TYPE, COUNT(rr.id) AS totalTransaction, SUM(rr.amount) AS totalAmount\n" +
@@ -1053,7 +1053,7 @@ public interface ReportExpenseRevenueRepository extends JpaRepository<ReportExpe
             "LEFT JOIN revenue_regular rr ON dr.id = rr.dictionary_revenue_id AND ( :startDate IS NULL OR :endDate IS NULL IS NULL OR (date(revenue_date) BETWEEN DATE(:startDate) AND DATE(:endDate)))\n" +
             "LEFT JOIN dictionary_bucket_payment dbp ON dbp.id = rr.dictionary_bucket_payment_id\n" +
             "WHERE dbp.user_id = :userId\n" +
-            "AND ( :revenueCategoriesId IS NULL OR FIND_IN_SET(rr.dictionary_revenue_id,:revenueCategoriesId))\n" +
+            "AND (FIND_IN_SET(rr.dictionary_revenue_id,:revenueCategoriesId))\n" +
             "GROUP BY dr.id\n" +
             ") AS combined\n" +
             "ORDER BY name",
@@ -1064,7 +1064,7 @@ public interface ReportExpenseRevenueRepository extends JpaRepository<ReportExpe
             "LEFT JOIN expense_regular er ON de.id = er.dictionary_expense_id AND ( :startDate IS NULL OR :endDate IS NULL IS NULL OR (date(expense_date) BETWEEN DATE(:startDate) AND DATE(:endDate)))\n" +
             "LEFT JOIN dictionary_bucket_payment dbp ON dbp.id = er.dictionary_bucket_payment_id\n" +
             "WHERE dbp.user_id = :userId\n" +
-            "AND ( :expenseCategoriesId IS NULL OR FIND_IN_SET(er.dictionary_expense_id,:expenseCategoriesId))\n" +
+            "AND (FIND_IN_SET(er.dictionary_expense_id,:expenseCategoriesId))\n" +
             "GROUP BY de.id\n" +
             "UNION ALL\n" +
             "SELECT dr.id, dr.name, 'revenue' AS TYPE, COUNT(rr.id) AS totalTransaction, SUM(rr.amount) AS totalAmount\n" +
@@ -1072,7 +1072,7 @@ public interface ReportExpenseRevenueRepository extends JpaRepository<ReportExpe
             "LEFT JOIN revenue_regular rr ON dr.id = rr.dictionary_revenue_id AND ( :startDate IS NULL OR :endDate IS NULL IS NULL OR (date(revenue_date) BETWEEN DATE(:startDate) AND DATE(:endDate)))\n" +
             "LEFT JOIN dictionary_bucket_payment dbp ON dbp.id = rr.dictionary_bucket_payment_id\n" +
             "WHERE dbp.user_id = :userId\n" +
-            "AND ( :revenueCategoriesId IS NULL OR FIND_IN_SET(rr.dictionary_revenue_id,:revenueCategoriesId))\n" +
+            "AND (FIND_IN_SET(rr.dictionary_revenue_id,:revenueCategoriesId))\n" +
             "GROUP BY dr.id\n" +
             ") AS combined",
     nativeQuery = true)
@@ -1092,7 +1092,7 @@ public interface ReportExpenseRevenueRepository extends JpaRepository<ReportExpe
             "LEFT JOIN expense_regular er ON de.id = er.dictionary_expense_id AND ( :startDate IS NULL OR :endDate IS NULL IS NULL OR (date(expense_date) BETWEEN DATE(:startDate) AND DATE(:endDate)))\n" +
             "LEFT JOIN dictionary_bucket_payment dbp ON dbp.id = er.dictionary_bucket_payment_id\n" +
             "WHERE dbp.user_id = :userId\n" +
-            "AND ( :expenseCategoriesId IS NULL OR FIND_IN_SET(er.dictionary_expense_id,:expenseCategoriesId))\n" +
+            "AND (FIND_IN_SET(er.dictionary_expense_id,:expenseCategoriesId))\n" +
             "GROUP BY de.id\n" +
             "UNION ALL\n" +
             "SELECT dr.id, dr.name, 'revenue' AS TYPE, COUNT(rr.id) AS totalTransaction, SUM(rr.amount) AS totalAmount\n" +
@@ -1100,7 +1100,7 @@ public interface ReportExpenseRevenueRepository extends JpaRepository<ReportExpe
             "LEFT JOIN revenue_regular rr ON dr.id = rr.dictionary_revenue_id AND ( :startDate IS NULL OR :endDate IS NULL IS NULL OR (date(revenue_date) BETWEEN DATE(:startDate) AND DATE(:endDate)))\n" +
             "LEFT JOIN dictionary_bucket_payment dbp ON dbp.id = rr.dictionary_bucket_payment_id\n" +
             "WHERE dbp.user_id = :userId\n" +
-            "AND ( :revenueCategoriesId IS NULL OR FIND_IN_SET(rr.dictionary_revenue_id,:revenueCategoriesId))\n" +
+            "AND (FIND_IN_SET(rr.dictionary_revenue_id,:revenueCategoriesId))\n" +
             "GROUP BY dr.id\n" +
             ") AS combined\n" +
             "ORDER BY name",

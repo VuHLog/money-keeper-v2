@@ -7,6 +7,8 @@ export const useReportStore = defineStore("report", {
     return {
       totalExpense: 0,
       totalRevenue: 0,
+      expenseCategoriesId: [],
+      revenueCategoriesId: [],
     };
   },
   getters: {
@@ -594,8 +596,8 @@ export const useReportStore = defineStore("report", {
     },
     async getReportCategory(filters, pagination){
       let response = null;
-      let expenseCategoriesId = (filters.expenseCategory === null || filters.expenseCategory.length === 0 || filters.expenseCategory[0] === "all") ? null : filters.expenseCategory.join(",");
-      let revenueCategoriesId = (filters.revenueCategory === null || filters.revenueCategory.length === 0 || filters.revenueCategory[0] === "all") ? null : filters.revenueCategory.join(",");
+      let expenseCategoriesId = (filters.expenseCategory === null || filters.expenseCategory.length === 0) ? null : filters.expenseCategory[0] === "all"? this.expenseCategoriesId.join(",") : filters.expenseCategory.join(",");
+      let revenueCategoriesId = (filters.revenueCategory === null || filters.revenueCategory.length === 0) ? null : filters.revenueCategory[0] === "all"? this.revenueCategoriesId.join(",") : filters.revenueCategory.join(",");
       let request = {
         timeOption: filters.timeOption,
         expenseCategoriesId,
@@ -609,8 +611,8 @@ export const useReportStore = defineStore("report", {
     },
     async getReportCategoryNoPaging(filters){
       let response = null;
-      let expenseCategoriesId = (filters.expenseCategory === null || filters.expenseCategory.length === 0 || filters.expenseCategory[0] === "all") ? null : filters.expenseCategory.join(",");
-      let revenueCategoriesId = (filters.revenueCategory === null || filters.revenueCategory.length === 0 || filters.revenueCategory[0] === "all") ? null : filters.revenueCategory.join(",");
+      let expenseCategoriesId = (filters.expenseCategory === null || filters.expenseCategory.length === 0) ? null : filters.expenseCategory[0] === "all"? this.expenseCategoriesId.join(",") : filters.expenseCategory.join(",");
+      let revenueCategoriesId = (filters.revenueCategory === null || filters.revenueCategory.length === 0) ? null : filters.revenueCategory[0] === "all"? this.revenueCategoriesId.join(",") : filters.revenueCategory.join(",");
       let request = {
         timeOption: filters.timeOption,
         expenseCategoriesId,
@@ -624,8 +626,8 @@ export const useReportStore = defineStore("report", {
     },
     async exportExcelForReportCategory(filters){
       let response = null;
-      let expenseCategoriesId = (filters.expenseCategory === null || filters.expenseCategory.length === 0 || filters.expenseCategory[0] === "all") ? null : filters.expenseCategory.join(",");
-      let revenueCategoriesId = (filters.revenueCategory === null || filters.revenueCategory.length === 0 || filters.revenueCategory[0] === "all") ? null : filters.revenueCategory.join(",");
+      let expenseCategoriesId = (filters.expenseCategory === null || filters.expenseCategory.length === 0) ? null : filters.expenseCategory[0] === "all"? this.expenseCategoriesId.join(",") : filters.expenseCategory.join(",");
+      let revenueCategoriesId = (filters.revenueCategory === null || filters.revenueCategory.length === 0) ? null : filters.revenueCategory[0] === "all"? this.revenueCategoriesId.join(",") : filters.revenueCategory.join(",");
       let request = {
         timeOption: filters.timeOption,
         expenseCategoriesId,
@@ -641,7 +643,7 @@ export const useReportStore = defineStore("report", {
         });
         const link = document.createElement('a');
         link.href = window.URL.createObjectURL(blob);
-        link.download = 'Báo cáo theo tài khoản ' + (filters.timeOption && filters.timeOption !== 'Tùy chọn' ?' ' + filters.timeOption.toLowerCase() : '') + '.xlsx';
+        link.download = 'Báo cáo theo danh mục ' + (filters.timeOption && filters.timeOption !== 'Tùy chọn' ?' ' + filters.timeOption.toLowerCase() : '') + '.xlsx';
         document.body.appendChild(link);
         link.click();
         link.remove();
