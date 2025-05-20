@@ -106,7 +106,7 @@ public class ExpenseLimitServiceImpl implements ExpenseLimitService {
             ExpenseLimitResponse expenseLimitResponse = expenseLimitMapper.toExpenseLimitResponse(expenseLimit);
             String endDateLimitStr = expenseLimit.getEndDateLimit() != null ? expenseLimit.getEndDateLimit().toString().split("\\.")[0] : null;;
             CalculationTime calculationTime = TimestampUtil.calculationTime(expenseLimit.getStartDateLimit().toString().split("\\.")[0], endDateLimitStr);
-            Long totalExpense = reportExpenseRevenueRepository.getTotalExpenseByPeriodOfTime(userId, req.getBucketPaymentIds(), req.getCategoriesId(),calculationTime.getStartDate(), calculationTime.getEndOfStartMonth(), calculationTime.getStartDateBetween(), calculationTime.getEndDateBetween(), calculationTime.getStartDateOfMonthEndDate(), calculationTime.getEndDate());
+            Long totalExpense = reportExpenseRevenueRepository.getTotalExpenseByPeriodOfTime(userId, expenseLimit.getBucketPaymentIds(), req.getCategoriesId(),calculationTime.getStartDate(), calculationTime.getEndOfStartMonth(), calculationTime.getStartDateBetween(), calculationTime.getEndDateBetween(), calculationTime.getStartDateOfMonthEndDate(), calculationTime.getEndDate());
             expenseLimitResponse.setSpentAmount(totalExpense);
             return convertToResponse(expenseLimitResponse, expenseLimit.getBucketPaymentIds(), expenseLimit.getCategoriesId(), expenseLimit.getEndDate());
         });
@@ -156,8 +156,8 @@ public class ExpenseLimitServiceImpl implements ExpenseLimitService {
         Users user = userCommon.getMyUserInfo();
         String userId = user.getId();
         if (bucketPaymentIds != null && !bucketPaymentIds.isEmpty()) {
-            List<DictionaryBucketPayment> bucketPayments = dictionaryBucketPaymentRepository.findAllByIdIn(bucketPaymentIds, userId);
-            res.setBucketPayments(bucketPayments.stream().map(dictionaryBucketPaymentMapper::toDictionaryBucketResponse).collect(Collectors.toList()));
+            DictionaryBucketPayment bucketPayment = dictionaryBucketPaymentRepository.findById(bucketPaymentIds).get();
+            res.setBucketPayments(dictionaryBucketPaymentMapper.toDictionaryBucketResponse(bucketPayment));
         }
         if (categoriesId != null && !categoriesId.isEmpty()) {
             res.setCategories(dictionaryExpenseRepository.findAllByIdIn(categoriesId));

@@ -114,16 +114,16 @@ public interface ExpenseRegularRepository extends JpaRepository<ExpenseRegular, 
             "FROM expense_regular er\n" +
             "JOIN dictionary_bucket_payment dbp ON er.dictionary_bucket_payment_id = dbp.id\n" +
             "JOIN users u ON dbp.user_id = u.id\n" +
-            "JOIN expense_limit el ON u.id = el.user_id\n" +
+            "JOIN expense_limit el ON u.id = el.user_id and el.bucket_payment_ids = :bucketPaymentId\n" +
             "WHERE u.id = :userId\n" +
-            "AND FIND_IN_SET(er.dictionary_bucket_payment_id, el.bucket_payment_ids)\n" +
+            "AND er.dictionary_bucket_payment_id = :bucketPaymentId\n" +
             "AND FIND_IN_SET(er.dictionary_expense_id,el.categories_id)\n" +
             "AND expense_date >= start_date_limit\n" +
             "AND expense_date <= end_date_limit\n" +
             "GROUP BY el.id, el.amount\n" +
             "HAVING SUM(er.amount) > limit_amount\n" +
             "ORDER BY el.name ASC", nativeQuery = true)
-    List<ExpenseLimitNotification> findOverExpenseLimitByUserAndExpense(String userId);
+    List<ExpenseLimitNotification> findOverExpenseLimitByUserAndExpense(@Param("userId") String userId, @Param("bucketPaymentId") String bucketPaymentId);
 
     @Query(value = "SELECT de.name as name, de.icon_url as iconUrl, er.expense_date as expenseDate, er.amount as amount, dbp.account_name AS bucketPaymentName\n" +
             "FROM expense_regular er\n" +

@@ -300,10 +300,10 @@ const style = `
                 Thời gian
               </th>
               <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Danh mục
+                Tài khoản
               </th>
               <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Tài khoản
+                Danh mục
               </th>
               <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Hạn mức
@@ -336,6 +336,17 @@ const style = `
               </td>
               <td class="px-6 py-4">
                 <div class="flex items-center space-x-2">
+                  <!-- Hiển thị tài khoản đầu tiên -->
+                  <div v-if="limit.bucketPayments"
+                    class="flex items-center bg-gray-50 rounded-lg px-2 py-1">
+                    <Avatar :src="limit.bucketPayments.iconUrl" :alt="limit.bucketPayments.accountName" size="m"
+                      class="mr-2" />
+                    {{ limit.bucketPayments.accountName }}
+                  </div>
+                </div>
+              </td>
+              <td class="px-6 py-4">
+                <div class="flex items-center space-x-2">
                   <!-- Hiển thị danh mục đầu tiên -->
                   <div v-if="limit.categories?.length > 0" class="flex items-center bg-gray-50 rounded-lg px-2 py-1">
                     <Avatar :src="limit.categories[0].iconUrl" :alt="limit.categories[0].name" size="m" class="mr-2" />
@@ -344,21 +355,6 @@ const style = `
                   <!-- Hiển thị số lượng danh mục còn lại -->
                   <div v-if="limit.categories?.length > 1" class="text-sm text-gray-500">
                     + {{ limit.categories.length - 1 }} danh mục khác
-                  </div>
-                </div>
-              </td>
-              <td class="px-6 py-4">
-                <div class="flex items-center space-x-2">
-                  <!-- Hiển thị tài khoản đầu tiên -->
-                  <div v-if="limit.bucketPayments?.length > 0"
-                    class="flex items-center bg-gray-50 rounded-lg px-2 py-1">
-                    <Avatar :src="limit.bucketPayments[0].iconUrl" :alt="limit.bucketPayments[0].name" size="m"
-                      class="mr-2" />
-                    {{ limit.bucketPayments[0].accountName }}
-                  </div>
-                  <!-- Hiển thị số lượng tài khoản còn lại -->
-                  <div v-if="limit.bucketPayments?.length > 1" class="text-sm text-gray-500">
-                    + {{ limit.bucketPayments.length - 1 }} tài khoản khác
                   </div>
                 </div>
               </td>

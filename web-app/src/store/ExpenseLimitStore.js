@@ -223,13 +223,13 @@ export const useExpenseLimitStore = defineStore("expenseLimit", {
     },
   },
   actions: {
-    async getExpenseLimits(){
-      let response = null;
-      await base.get(`/expense-limit`).then((res) => {
-        response = res.result;
-      })
-      return response;
-    },
+    // async getExpenseLimits(){
+    //   let response = null;
+    //   await base.get(`/expense-limit`).then((res) => {
+    //     response = res.result;
+    //   })
+    //   return response;
+    // },
     async getExpenseLimitsPagination(){
       let response = null;
       let request = {

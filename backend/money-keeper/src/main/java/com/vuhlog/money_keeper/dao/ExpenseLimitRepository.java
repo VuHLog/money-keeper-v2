@@ -15,13 +15,13 @@ public interface ExpenseLimitRepository extends JpaRepository<ExpenseLimit, Stri
             "FROM expense_regular er\n" +
             "JOIN dictionary_expense de ON er.dictionary_expense_id = de.id\n" +
             "JOIN dictionary_bucket_payment dbp ON er.dictionary_bucket_payment_id = dbp.id\n" +
-            "WHERE (:bucketPaymentIds IS NULL OR FIND_IN_SET(er.dictionary_bucket_payment_id, :bucketPaymentIds))\n" +
+            "WHERE er.dictionary_bucket_payment_id = :bucketPaymentId\n" +
             "AND (:categoriesId IS NULL OR FIND_IN_SET(er.dictionary_expense_id, :categoriesId))\n" +
             "AND DATE(expense_date) >= DATE(:startDate)\n" +
             "AND (DATE(:endDate) IS NULL OR DATE(expense_date) <= DATE(:endDate))\n" +
             "ORDER BY er.expense_date DESC ", nativeQuery = true)
     List<ExpenseLimitDetailResponse> getExpenseByExpenseLimitAndDate(
-            @Param("bucketPaymentIds") String bucketPaymentIds,
+            @Param("bucketPaymentId") String bucketPaymentId,
             @Param("categoriesId") String categoriesId,
             @Param("startDate") Timestamp startDate,
             @Param("endDate") Timestamp endDate
