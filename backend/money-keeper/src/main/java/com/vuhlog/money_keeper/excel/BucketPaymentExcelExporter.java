@@ -429,7 +429,7 @@ public class BucketPaymentExcelExporter {
         Row titleRow = sheet.createRow(0);
         titleRow.setHeightInPoints(30);
         Cell titleCell = titleRow.createCell(0);
-        titleCell.setCellValue("BÁO CÁO THU CHI");
+        titleCell.setCellValue("BÁO CÁO THEO TÀI KHOẢN");
         titleCell.setCellStyle(titleStyle);
         sheet.addMergedRegion(new CellRangeAddress(0, 0, 0, 13));
 
