@@ -57,7 +57,7 @@ public class ExpenseLimitExcelExporter {
         Header header = sheet.getHeader();
         header.setLeft("MONEY KEEPER");
 
-        header.setCenter("BÁO CÁO HẠN MỨC CHI CÓ HIỆU LỰC");
+        header.setCenter("BÁO CÁO HẠN MỨC CHI CÒN HIỆU LỰC");
 
         SimpleDateFormat dateFormat = new SimpleDateFormat("dd/MM/yyyy HH:mm");
         header.setRight("Ngày xuất: " + dateFormat.format(new Date()));
@@ -256,8 +256,7 @@ public class ExpenseLimitExcelExporter {
             cell = row.createCell(2);
             cell.setCellValue(expenseLimit.getCategories().stream().map(DictionaryExpense::getName).collect(Collectors.joining(",")));
             cell.setCellStyle(baseStyle);
-            sheet.setColumnWidth(2, 2000);
-            sheet.autoSizeColumn(2);
+            sheet.setColumnWidth(2, 18000);
 
             cell = row.createCell(3);
             cell.setCellValue(expenseLimit.getAmount());
@@ -368,6 +367,15 @@ public class ExpenseLimitExcelExporter {
         cell.setCellValue("Tổng :");
         cell.setCellStyle(summaryStyle);
 
+        for (int col = 0; col <= 2; col++) {
+            Cell currentCell = row.getCell(col);
+            if (currentCell == null) {
+                currentCell = row.createCell(col);
+            }
+            currentCell.setCellStyle(summaryStyle);
+        }
+
+
         sheet.addMergedRegion(new CellRangeAddress(rowIndex + 2, rowIndex + 2, 0, 2));
 
         cell = row.createCell(3);
@@ -408,7 +416,7 @@ public class ExpenseLimitExcelExporter {
         Row titleRow = sheet.createRow(0);
         titleRow.setHeightInPoints(30);
         Cell titleCell = titleRow.createCell(0);
-        titleCell.setCellValue("BÁO CÁO THEO HẠN MỨC CHI CÓ HIỆU LỰC");
+        titleCell.setCellValue("BÁO CÁO THEO HẠN MỨC CHI CÒN HIỆU LỰC");
         titleCell.setCellStyle(titleStyle);
         sheet.addMergedRegion(new CellRangeAddress(0, 0, 0, 13));
     }
