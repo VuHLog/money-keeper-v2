@@ -25,9 +25,13 @@ public class ExpenseRegular {
     private Timestamp createdDate;
     private Timestamp modifiedDate;
     private String transferType;
-    private long balance;
+    private Double balance;
+    private Double convertedBalance;
     private String tripEvent;
     private String beneficiary;
+    private String currency;
+    private Double exchangeRate;
+    private Long convertedAmount;
 
     @ManyToOne(cascade = {CascadeType.PERSIST, CascadeType.MERGE, CascadeType.DETACH, CascadeType.REFRESH})
     @JoinColumn(name = "beneficiary_account_id")

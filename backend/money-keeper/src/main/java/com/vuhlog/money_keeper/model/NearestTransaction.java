@@ -11,7 +11,7 @@ import lombok.Setter;
 @NoArgsConstructor
 public class NearestTransaction {
     private String id;
-    private long balance;
-    private long amount;
+    private Double balance;
+    private Double amount;
     private String type;
 }

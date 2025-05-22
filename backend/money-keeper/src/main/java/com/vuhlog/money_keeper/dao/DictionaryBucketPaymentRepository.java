@@ -39,27 +39,27 @@ public interface DictionaryBucketPaymentRepository extends JpaRepository<Diction
             @Param("startDate") Timestamp startDate,
             @Param("endDate") Timestamp endDate);
 
-    @Query(value = "SELECT balance\n" +
+    @Query(value = "SELECT converted_balance\n" +
             "FROM (\n" +
-            "\tSELECT id, balance, expense_date AS date\n" +
+            "\tSELECT id, converted_balance, expense_date AS date\n" +
             "\tFROM expense_regular\n" +
             "\tWHERE dictionary_bucket_payment_id = :bucketPaymentId AND expense_date < :date\n" +
             "\tUNION\n" +
-            "\tSELECT id, balance, revenue_date AS date\n" +
+            "\tSELECT id, converted_balance, revenue_date AS date\n" +
             "\tFROM revenue_regular\n" +
             "\tWHERE dictionary_bucket_payment_id = :bucketPaymentId AND revenue_date < :date\n" +
             "\tORDER BY DATE DESC\n" +
             "\tLIMIT 1\n" +
             ") AS NearestTransaction", nativeQuery = true)
-    Long getNearestTransactionByBucketPaymentIdAndLessThanDate(@Param("bucketPaymentId") String bucketPaymentId, @Param("date") Timestamp date);
+    Double getNearestTransactionByBucketPaymentIdAndLessThanDate(@Param("bucketPaymentId") String bucketPaymentId, @Param("date") Timestamp date);
 
-    @Query(value = "SELECT id, balance , amount, type\n" +
+    @Query(value = "SELECT id, converted_balance , converted_amount, type\n" +
             "FROM (\n" +
-            "\tSELECT id,  balance, amount, expense_date AS DATE, 'expense' AS TYPE\n" +
+            "\tSELECT id,  converted_balance, converted_amount, expense_date AS DATE, 'expense' AS TYPE\n" +
             "\tFROM expense_regular\n" +
             "\tWHERE dictionary_bucket_payment_id = :bucketPaymentId AND expense_date > :date\n" +
             "\tUNION\n" +
-            "\tSELECT id,  balance, amount, revenue_date AS DATE, 'revenue' AS TYPE\n" +
+            "\tSELECT id,  converted_balance, converted_amount, revenue_date AS DATE, 'revenue' AS TYPE\n" +
             "\tFROM revenue_regular\n" +
             "\tWHERE dictionary_bucket_payment_id = :bucketPaymentId AND revenue_date > :date\n" +
             "\tORDER BY DATE ASC\n" +

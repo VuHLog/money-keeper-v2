@@ -5,11 +5,13 @@ import com.vuhlog.money_keeper.constants.DictionaryBucketPaymentType;
 import com.vuhlog.money_keeper.dao.BankRepository;
 import com.vuhlog.money_keeper.dao.DictionaryBucketPaymentRepository;
 import com.vuhlog.money_keeper.dao.UsersRepository;
+import com.vuhlog.money_keeper.dao.httpClient.CurrencyClient;
 import com.vuhlog.money_keeper.dao.specification.DictionaryBucketPaymentSpecification;
 import com.vuhlog.money_keeper.dto.request.BucketPaymentUsageStatus;
 import com.vuhlog.money_keeper.dto.request.DictionaryBucketPaymentRequest;
 import com.vuhlog.money_keeper.dto.request.ExpenseRevenueHistoryRequest;
 import com.vuhlog.money_keeper.dto.response.DictionaryBucketPaymentResponse;
+import com.vuhlog.money_keeper.dto.response.ExchangeRateResponse;
 import com.vuhlog.money_keeper.dto.response.ExpenseRevenueHistory;
 import com.vuhlog.money_keeper.entity.DictionaryBucketPayment;
 import com.vuhlog.money_keeper.entity.ExpenseRegular;
@@ -44,6 +46,7 @@ public class DictionaryBucketPaymentServiceImpl implements DictionaryBucketPayme
     private final UsersRepository usersRepository;
     private final UserCommon userCommon;
     private final DictionaryBucketPaymentMapper dictionaryBucketPaymentMapper;
+    private final CurrencyClient currencyClient;
 
     @PersistenceContext
     private EntityManager em;
@@ -63,7 +66,13 @@ public class DictionaryBucketPaymentServiceImpl implements DictionaryBucketPayme
     @Override
     public DictionaryBucketPaymentResponse updateDictionaryBucketPayment(String id, DictionaryBucketPaymentRequest request) {
         DictionaryBucketPayment dictionaryBucketPayment = dictionaryBucketPaymentRepository.findById(id).orElseThrow(() -> new AppException(ErrorCode.BUCKET_PAYMENT_NOT_EXISTED));
+        String oldCurrency = dictionaryBucketPayment.getCurrency();
+        String newCurrency = request.getCurrency();
         dictionaryBucketPaymentMapper.updateDictionaryBucketPaymentFromRequest(request, dictionaryBucketPayment);
+        ExchangeRateResponse exchangeRateResponse = currencyClient.exchangeRate(newCurrency, oldCurrency, 1L);
+        Double rate = exchangeRateResponse.getRate();
+        dictionaryBucketPayment.setBalance(dictionaryBucketPayment.getBalance() * rate);
+        dictionaryBucketPayment.setInitialBalance(dictionaryBucketPayment.getInitialBalance() * rate);
         if(dictionaryBucketPayment.getAccountType().equalsIgnoreCase(DictionaryBucketPaymentType.BANK.getType())
                 || dictionaryBucketPayment.getAccountType().equalsIgnoreCase(DictionaryBucketPaymentType.CREDIT_DEBIT_CARD.getType())){
             dictionaryBucketPayment.setBank(bankRepository.findById(request.getBankId()).orElseThrow(() -> new AppException(ErrorCode.BANK_NOT_EXISTED)));

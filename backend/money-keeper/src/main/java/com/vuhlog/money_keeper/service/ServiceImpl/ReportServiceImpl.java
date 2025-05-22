@@ -7,8 +7,10 @@ import com.vuhlog.money_keeper.dao.DictionaryBucketPaymentRepository;
 import com.vuhlog.money_keeper.dao.ExpenseRegularRepository;
 import com.vuhlog.money_keeper.dao.ReportExpenseRevenueRepository;
 import com.vuhlog.money_keeper.dao.RevenueRegularRepository;
+import com.vuhlog.money_keeper.dao.httpClient.CurrencyClient;
 import com.vuhlog.money_keeper.dao.specification.DictionaryBucketPaymentSpecification;
 import com.vuhlog.money_keeper.dto.request.ReportFilterOptionsRequest;
+import com.vuhlog.money_keeper.dto.response.ExchangeRateResponse;
 import com.vuhlog.money_keeper.dto.response.responseinterface.report.TotalExpenseRevenue;
 import com.vuhlog.money_keeper.dto.response.responseinterface.report.*;
 import com.vuhlog.money_keeper.entity.DictionaryBucketPayment;
@@ -34,11 +36,9 @@ import java.util.List;
 @RequiredArgsConstructor
 public class ReportServiceImpl implements ReportService {
     private final UserCommon userCommon;
-    private final ExpenseRegularRepository expenseRegularRepository;
-    private final RevenueRegularRepository revenueRegularRepository;
     private final DictionaryBucketPaymentRepository dictionaryBucketPaymentRepository;
     private final ReportExpenseRevenueRepository reportExpenseRevenueRepository;
-    private final ReportExpenseRevenueMapper reportExpenseRevenueMapper;
+    private final CurrencyClient currencyClient;
 
     @PersistenceContext
     private EntityManager em;
@@ -287,8 +287,10 @@ public class ReportServiceImpl implements ReportService {
                 
                 // Nếu chưa có dữ liệu cho tháng bắt đầu, thêm dữ liệu từ initial hoặc initialBalance
                 if (!hasDataForStartMonth) {
+                    ExchangeRateResponse exchangeRateResponse = currencyClient.exchangeRate("VND", bucketPayment.getCurrency(), 1L);
+                    Double rate = exchangeRateResponse.getRate();
                     final String bucketPaymentId = bucketPayment.getId();
-                    Long balanceValue = bucketPayment.getInitialBalance();
+                    Long balanceValue = Math.round(bucketPayment.getInitialBalance() * rate);
                     
                     // Tìm giá trị trong initial (nếu có)
                     for (AccountBalanceFluctuation initialItem : initial) {
@@ -323,7 +325,7 @@ public class ReportServiceImpl implements ReportService {
                         
                         @Override
                         public Long getCurrentBalance() {
-                            return bucketPayment.getBalance();
+                            return Math.round(bucketPayment.getBalance() * rate);
                         }
                     });
                 }
@@ -351,8 +353,10 @@ public class ReportServiceImpl implements ReportService {
                 
                 // Nếu chưa có dữ liệu cho năm bắt đầu, thêm dữ liệu từ initial hoặc initialBalance
                 if (!hasDataForStartYear) {
+                    ExchangeRateResponse exchangeRateResponse = currencyClient.exchangeRate("VND", bucketPayment.getCurrency(), 1L);
+                    Double rate = exchangeRateResponse.getRate();
                     final String bucketPaymentId = bucketPayment.getId();
-                    Long balanceValue = bucketPayment.getInitialBalance();
+                    Long balanceValue = Math.round(bucketPayment.getInitialBalance() * rate);
                     
                     // Tìm giá trị trong initial (nếu có)
                     for (AccountBalanceFluctuation initialItem : initial) {
@@ -387,7 +391,7 @@ public class ReportServiceImpl implements ReportService {
                         
                         @Override
                         public Long getCurrentBalance() {
-                            return bucketPayment.getBalance();
+                            return Math.round(bucketPayment.getBalance() * rate);
                         }
                     });
                 }
@@ -415,8 +419,10 @@ public class ReportServiceImpl implements ReportService {
                 
                 // Nếu chưa có dữ liệu cho ngày bắt đầu, thêm dữ liệu từ initial hoặc initialBalance
                 if (!hasDataForStartDate) {
+                    ExchangeRateResponse exchangeRateResponse = currencyClient.exchangeRate("VND", bucketPayment.getCurrency(), 1L);
+                    Double rate = exchangeRateResponse.getRate();
                     final String bucketPaymentId = bucketPayment.getId();
-                    Long balanceValue = bucketPayment.getInitialBalance();
+                    Long balanceValue = Math.round(bucketPayment.getInitialBalance());
                     
                     // Tìm giá trị trong initial (nếu có)
                     for (AccountBalanceFluctuation initialItem : initial) {
@@ -451,7 +457,7 @@ public class ReportServiceImpl implements ReportService {
                         
                         @Override
                         public Long getCurrentBalance() {
-                            return bucketPayment.getBalance();
+                            return Math.round(bucketPayment.getBalance() * rate);
                         }
                     });
                 }

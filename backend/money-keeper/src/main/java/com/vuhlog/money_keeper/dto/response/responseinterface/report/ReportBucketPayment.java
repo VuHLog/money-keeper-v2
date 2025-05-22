@@ -3,17 +3,17 @@ package com.vuhlog.money_keeper.dto.response.responseinterface.report;
 public interface ReportBucketPayment {
     String getId();
 
-String getAccountName();
+    String getAccountName();
 
     String getAccountType();
 
-    Long getInitialBalance();
+    Double getInitialBalance();
 
     Long getTotalExpense();
 
     Long getTotalRevenue();
 
-    Long getBalance();
+    Double getBalance();
 
     Long getDisparity();
 }
