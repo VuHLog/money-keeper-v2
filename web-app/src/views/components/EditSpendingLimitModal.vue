@@ -3,18 +3,20 @@ import { ref, computed, reactive, watch, onMounted, onUnmounted } from 'vue'
 import { useExpenseLimitStore } from '@stores/ExpenseLimitStore.js'
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
 import { library } from '@fortawesome/fontawesome-svg-core'
-import { formatCurrency } from '@/utils/formatters'
+import { formatCurrency, formatCurrencyWithSymbol } from '@/utils/formatters'
 import { faTimes, faChevronDown, faCalendar, faList, faUtensils, faShoppingBag, faHome, faTaxi, faTshirt, faHeartbeat, faGraduationCap, faRepeat, faClock, faCalendarDay, faCalendarWeek, faCalendarAlt } from '@fortawesome/free-solid-svg-icons'
 import { ElDatePicker } from 'element-plus'
 import 'element-plus/theme-chalk/el-date-picker.css'
 import Swal from 'sweetalert2'
 import SelectDropdown from '@components/SelectDropdown.vue'
 import { formatDate } from '@utils/DateUtil'
+import { Currency } from "@constants/Currency.js"
 
 
 library.add(faTimes, faChevronDown, faCalendar, faList, faUtensils, faShoppingBag, faHome, faTaxi, faTshirt, faHeartbeat, faGraduationCap, faRepeat, faClock, faCalendarDay, faCalendarWeek, faCalendarAlt)
 
 const expenseLimitStore = useExpenseLimitStore()
+const currencies = ref(Currency)
 const props = defineProps({
   show: {
     type: Boolean,
@@ -89,16 +91,58 @@ const handleEndDateChange = (date) => {
   formData.end_date = formatDateForForm(date);
 }
 
-// Format amount with currency
+// Helper function to format currency based on currency code
+const formatWithCurrency = (value, currencyCode, currencySymbol) => {
+  if (!value) return ''
+  const numberValue = Number(value)
+  
+  // Format the number with thousand separators
+  const formattedValue = new Intl.NumberFormat().format(numberValue).replace(/,/g, '.')
+  
+  // Return with the proper currency symbol
+  if (currencyCode === 'VND') {
+    return `${formattedValue} ${currencySymbol || '₫'}`
+  } else {
+    return `${currencySymbol || ''}${formattedValue}`
+  }
+}
+
+// Get selected account
+const selectedAccount = computed(() => {
+  return props.accounts.find(acc => acc.id === formData.account_ids)
+})
+
+// Format amount with currency based on selected account
 const formattedAmount = computed({
   get: () => {
     if (!formData.amount) return ''
+    
+    // Format using the currency of the selected account
+    if (selectedAccount.value) {
+      return formatWithCurrency(
+        formData.amount,
+        selectedAccount.value.currency,
+        selectedAccount.value.currencySymbol
+      )
+    }
+    
+    // Fallback to default VND format if no account is selected
     return formatCurrency(Number(formData.amount))
   },
   set: (value) => {
     const numericValue = value.replace(/[^\d]/g, '')
     formData.amount = numericValue ? Number(numericValue) : ''
   }
+})
+
+// Compute placeholder based on selected account currency
+const amountPlaceholder = computed(() => {
+  if (selectedAccount.value) {
+    const symbol = selectedAccount.value.currencySymbol
+    const currencyCode = selectedAccount.value.currency
+    return currencyCode === 'VND' ? `0 ${symbol}` : `${symbol}0`
+  }
+  return '0 ₫' // Default placeholder
 })
 
 // Update watch for limit prop
@@ -431,7 +475,7 @@ const normalizeDateForComparison = (dateStr) => {
                     errors.amount ? 'border-danger/50 focus:border-danger focus:ring-danger/20' : 'border-gray-100 focus:border-primary/50',
                     formattedAmount ? 'bg-white' : 'bg-gray-50'
                   ]"
-                  placeholder="0 ₫"
+                  :placeholder="amountPlaceholder"
                 />
                 <p v-if="errors.amount" class="mt-1 text-sm text-danger">
                   {{ errors.amount }}

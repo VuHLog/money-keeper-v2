@@ -13,6 +13,7 @@ import { library } from '@fortawesome/fontawesome-svg-core'
 import Avatar from '@/views/components/Avatar.vue'
 import { faPlus, faEdit, faTrash, faUtensils, faCar, faHome, faGamepad, faInfoCircle, faCoffee } from '@fortawesome/free-solid-svg-icons'
 import ToastManager from '@/views/components/ToastManager.vue'
+import { formatCurrencyWithSymbol } from '@/utils/formatters'
 
 library.add(faPlus, faEdit, faTrash, faUtensils, faCar, faHome, faGamepad, faInfoCircle, faCoffee)
 
@@ -168,14 +169,6 @@ const handleEditLimit = async (formData) => {
   } catch (error) {
     console.error('Lỗi khi cập nhật hạn mức chi:', error)
   }
-}
-
-// Format currency
-const formatCurrency = (amount) => {
-  return new Intl.NumberFormat('vi-VN', {
-    style: 'currency',
-    currency: 'VND'
-  }).format(amount)
 }
 
 // Check if a limit is expired (endDateLimit < current date)
@@ -359,13 +352,13 @@ const style = `
                 </div>
               </td>
               <td class="px-6 py-4 whitespace-nowrap">
-                {{ formatCurrency(limit.amount) }}
+                {{ formatCurrencyWithSymbol(limit.amount, limit.currency, limit.currencySymbol) }}
               </td>
               <td class="px-6 py-4">
                 <div class="space-y-2">
                   <!-- Số tiền đã chi -->
                   <div class="flex items-center justify-between">
-                    <span class="text-sm font-medium">{{ formatCurrency(calculateSpentAmount(limit)) }}</span>
+                    <span class="text-sm font-medium">{{ formatCurrencyWithSymbol(calculateSpentAmount(limit), limit.currency, limit.currencySymbol) }}</span>
                     <div class="flex items-center space-x-2">
                       <span :class="getStatusClass(calculateSpentAmount(limit), limit.amount)">
                         {{ formatPercentage(calculateSpentAmount(limit), limit.amount) }}%
@@ -398,7 +391,7 @@ const style = `
                   <!-- Legend -->
                   <div class="flex items-center justify-between text-xs text-gray-500 mt-1">
                     <span>0 ₫</span>
-                    <span>{{ formatCurrency(limit.amount) }}</span>
+                    <span>{{ formatCurrencyWithSymbol(limit.amount, limit.currency, limit.currencySymbol) }}</span>
                   </div>
                 </div>
               </td>

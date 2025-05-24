@@ -36,6 +36,7 @@ import org.springframework.stereotype.Service;
 import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 
 @Service
@@ -227,7 +228,14 @@ public class DictionaryBucketPaymentServiceImpl implements DictionaryBucketPayme
 
     @Override
     public Long getMyTotalBalance() {
-        return dictionaryBucketPaymentRepository.getTotalBalanceByUserId(userCommon.getMyUserInfo().getId());
+        List<DictionaryBucketPayment> dictionaryBucketPayments = dictionaryBucketPaymentRepository.findByUser_id(userCommon.getMyUserInfo().getId());
+        AtomicReference<Double> totalBalance = new AtomicReference<>(0.0);
+        dictionaryBucketPayments.forEach(dictionaryBucketPayment -> {
+            ExchangeRateResponse exchangeRateResponse = currencyClient.exchangeRate("VND", dictionaryBucketPayment.getCurrency(), 1L);
+            Double rate = exchangeRateResponse.getRate();
+            totalBalance.updateAndGet(v -> v + (dictionaryBucketPayment.getBalance() * rate));
+        });
+        return Math.round(totalBalance.get());
     }
 
     private List<ExpenseRevenueHistory> convertToExpenseRevenueHistory(List<Object[]> list) {

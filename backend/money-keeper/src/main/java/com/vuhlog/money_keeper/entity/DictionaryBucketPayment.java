@@ -26,6 +26,7 @@ public class DictionaryBucketPayment {
     private boolean haveUse;
     private String iconUrl;
     private String currency;
+    private String currencySymbol;
 
     @ManyToOne
     @JoinColumn(name = "bank_id")

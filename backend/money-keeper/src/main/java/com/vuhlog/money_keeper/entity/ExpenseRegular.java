@@ -30,6 +30,7 @@ public class ExpenseRegular {
     private String tripEvent;
     private String beneficiary;
     private String currency;
+    private String currencySymbol;
     private Double exchangeRate;
     private Long convertedAmount;
 

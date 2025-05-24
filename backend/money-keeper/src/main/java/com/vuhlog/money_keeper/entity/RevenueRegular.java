@@ -31,6 +31,7 @@ public class RevenueRegular {
     private String currency;
     private Double exchangeRate;
     private Long convertedAmount;
+    private String currencySymbol;
 
 
     @ManyToOne(cascade = {CascadeType.PERSIST, CascadeType.MERGE, CascadeType.REFRESH})

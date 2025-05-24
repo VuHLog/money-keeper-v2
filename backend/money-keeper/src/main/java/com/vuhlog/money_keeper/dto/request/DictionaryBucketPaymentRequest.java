@@ -18,4 +18,5 @@ public class DictionaryBucketPaymentRequest {
     private String bankId;
     private String iconUrl;
     private String currency;
+    private String currencySymbol;
 }

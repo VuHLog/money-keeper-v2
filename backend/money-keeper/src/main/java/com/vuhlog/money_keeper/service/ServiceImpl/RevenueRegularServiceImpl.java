@@ -97,11 +97,12 @@ public class RevenueRegularServiceImpl implements RevenueRegularService {
         updateBalance(dictionaryBucketPayment, request.getAmount(), rate, revenueRegular.getRevenueDate(), null, true);
 
         //update report expense revenue
-        updateTotalRevenueReportExpenseRevenue(revenueRegular.getRevenueDate(), request.getDictionaryBucketPaymentId(), revenueRegular.getAmount(), request.getDictionaryRevenueId(), 1);
+        updateTotalRevenueReportExpenseRevenue(revenueRegular.getRevenueDate(), dictionaryBucketPayment, revenueRegular.getAmount(), revenueRegular.getConvertedAmount(), request.getDictionaryRevenueId(), 1);
 
         Double convertedBalance =  getBalanceWhenCreate(dictionaryBucketPayment, revenueRegular.getRevenueDate(), revenueRegular.getConvertedAmount());
         revenueRegular.setConvertedBalance(convertedBalance);
         revenueRegular.setBalance(convertedBalance * rate);
+        revenueRegular.setCurrencySymbol(dictionaryBucketPayment.getCurrencySymbol());
         revenueRegular = revenueRegularRepository.save(revenueRegular);
         notificationService.revenueNotification(revenueRegular, true);
         return revenueRegularMapper.toRevenueRegularResponse(revenueRegular);
@@ -149,6 +150,7 @@ public class RevenueRegularServiceImpl implements RevenueRegularService {
         revenueRegular.setConvertedAmount(request.getAmount());
         revenueRegular.setAmount(Math.round(request.getAmount() * rateNewBucketPayment));
         revenueRegular.setExchangeRate(rateNewBucketPayment);
+        revenueRegular.setCurrencySymbol(dictionaryBucketPayment.getCurrencySymbol());
 
         //create transaction history
         TransactionHistory transactionHistory = TransactionHistory.builder()
@@ -165,9 +167,9 @@ public class RevenueRegularServiceImpl implements RevenueRegularService {
         if(oldCategoryId == null || !oldCategoryId.equals(newCategoryId)){
             //update report expense revenue
             if(oldCategoryId != null){
-                updateTotalRevenueReportExpenseRevenue(oldRevenueDate, oldBucketPaymentId, - oldAmount, oldCategoryId, -1);
+                updateTotalRevenueReportExpenseRevenue(oldRevenueDate, oldBucketPayment, - oldAmountInVND, - oldAmount, oldCategoryId, -1);
             }
-            updateTotalRevenueReportExpenseRevenue(oldRevenueDate, newBucketPaymentId, oldAmount, newCategoryId, 1);
+            updateTotalRevenueReportExpenseRevenue(oldRevenueDate, oldBucketPayment, oldAmountInVND, oldAmount, newCategoryId, 1);
         }
 
         if(oldBucketPaymentId == null || !oldBucketPaymentId.equals(newBucketPaymentId)){
@@ -178,9 +180,9 @@ public class RevenueRegularServiceImpl implements RevenueRegularService {
 
             //update report expense revenue
             if(oldBucketPaymentId != null){
-                updateTotalRevenueReportExpenseRevenue(oldRevenueDate, oldBucketPaymentId, - oldAmountInVND, newCategoryId, -1);
+                updateTotalRevenueReportExpenseRevenue(oldRevenueDate, oldBucketPayment, - oldAmountInVND, -oldAmount, newCategoryId, -1);
             }
-            updateTotalRevenueReportExpenseRevenue(oldRevenueDate, newBucketPaymentId, oldAmountInVND, newCategoryId, 1);
+            updateTotalRevenueReportExpenseRevenue(oldRevenueDate, dictionaryBucketPayment, oldAmountInVND, oldAmount, newCategoryId, 1);
         }
 
         if(newRevenueDate.after(oldRevenueDate)){
@@ -190,7 +192,7 @@ public class RevenueRegularServiceImpl implements RevenueRegularService {
             Double convertedBalance = getBalanceWhenCreate(dictionaryBucketPayment, newRevenueDate, oldAmount);
             revenueRegular.setConvertedBalance(convertedBalance);
             revenueRegular.setBalance(convertedBalance * rateNewBucketPayment);
-        }else {
+        }else if(newRevenueDate.before(oldRevenueDate)) {
             //update balance for all expense, revenue greater than new date, less than old date
             updateBalance(dictionaryBucketPayment, oldAmount, rateNewBucketPayment, newRevenueDate, oldRevenueDate, false);
 
@@ -200,15 +202,15 @@ public class RevenueRegularServiceImpl implements RevenueRegularService {
         }
 
         if((newRevenueDate.getMonth() != oldRevenueDate.getMonth()) || (newRevenueDate.getYear() != oldRevenueDate.getYear())){
-            updateTotalRevenueReportExpenseRevenue(oldRevenueDate, newBucketPaymentId, - oldAmountInVND, newCategoryId,-1);
-            updateTotalRevenueReportExpenseRevenue(newRevenueDate, newBucketPaymentId, oldAmountInVND, newCategoryId, 1);
+            updateTotalRevenueReportExpenseRevenue(oldRevenueDate, dictionaryBucketPayment, - oldAmountInVND, - oldAmount,  newCategoryId,-1);
+            updateTotalRevenueReportExpenseRevenue(newRevenueDate, dictionaryBucketPayment, oldAmountInVND, oldAmount, newCategoryId, 1);
         }
 
         if(oldAmount != newAmount){
             revenueRegular.setBalance(revenueRegular.getBalance() + (newAmountInVND - oldAmountInVND));
             revenueRegular.setConvertedBalance(revenueRegular.getConvertedBalance() + (newAmount - oldAmount));
             updateBalance(dictionaryBucketPayment, newAmount - oldAmount, rateNewBucketPayment, revenueRegular.getRevenueDate(), null, true);
-            updateTotalRevenueReportExpenseRevenue(newRevenueDate, newBucketPaymentId, (newAmountInVND - oldAmountInVND), newCategoryId, 0);
+            updateTotalRevenueReportExpenseRevenue(newRevenueDate, dictionaryBucketPayment, (newAmountInVND - oldAmountInVND), (newAmount - oldAmount), newCategoryId, 0);
         }
 
         revenueRegular = revenueRegularRepository.save(revenueRegular);
@@ -240,32 +242,37 @@ public class RevenueRegularServiceImpl implements RevenueRegularService {
 
         //update report
         if(dictionaryBucketPayment != null && revenueRegular.getDictionaryRevenue() != null){
-            updateTotalRevenueReportExpenseRevenue(revenueRegular.getRevenueDate(), revenueRegular.getDictionaryBucketPayment().getId(), - revenueRegular.getAmount(), revenueRegular.getDictionaryRevenue().getId(), -1);
+            updateTotalRevenueReportExpenseRevenue(revenueRegular.getRevenueDate(), revenueRegular.getDictionaryBucketPayment(), - revenueRegular.getAmount(), - revenueRegular.getConvertedAmount(), revenueRegular.getDictionaryRevenue().getId(), -1);
         }
         notificationService.deleteRevenueNotification(revenueRegular);
     }
 
     @Transactional(rollbackFor = Exception.class)
-    protected void updateTotalRevenueReportExpenseRevenue(Timestamp date, String bucketPaymentId, long amount, String categoryId, long incrementTotalTransaction) {
+    protected void updateTotalRevenueReportExpenseRevenue(Timestamp date, DictionaryBucketPayment bucketPayment, long amount, long convertedAmount, String categoryId, long incrementTotalTransaction) {
         Calendar calendar = Calendar.getInstance();
         calendar.setTime(date);
         int month = calendar.get(Calendar.MONTH) + 1;
 
         int year = calendar.get(Calendar.YEAR);
         ReportExpenseRevenue reportExpenseRevenue;
-        Optional<ReportExpenseRevenue> optionalReportExpenseRevenue = reportExpenseRevenueRepository.findByMonthAndYearAndBucketPaymentIdAndCategoryIdAndType(month, year, bucketPaymentId, categoryId, "revenue");
+        Optional<ReportExpenseRevenue> optionalReportExpenseRevenue = reportExpenseRevenueRepository.findByMonthAndYearAndBucketPaymentIdAndCategoryIdAndType(month, year, bucketPayment.getId(), categoryId, "revenue");
         if(optionalReportExpenseRevenue.isPresent()) {
             reportExpenseRevenue = optionalReportExpenseRevenue.get();
             Long totalTransaction = reportExpenseRevenue.getTotalTransaction() + incrementTotalTransaction;
             reportExpenseRevenue.setTotalRevenue(reportExpenseRevenue.getTotalRevenue() + amount);
+            reportExpenseRevenue.setConvertedTotalRevenue(reportExpenseRevenue.getConvertedTotalRevenue() + convertedAmount);
             reportExpenseRevenue.setTotalTransaction(totalTransaction);
         }else {
             reportExpenseRevenue = ReportExpenseRevenue.builder()
                     .month(month)
                     .year(year)
                     .totalExpense(0)
+                    .convertedTotalExpense(0)
                     .totalRevenue(amount)
-                    .bucketPaymentId(bucketPaymentId)
+                    .convertedTotalRevenue(convertedAmount)
+                    .bucketPaymentId(bucketPayment.getId())
+                    .currency(bucketPayment.getCurrency())
+                    .currencySymbol(bucketPayment.getCurrencySymbol())
                     .categoryId(categoryId)
                     .totalTransaction(1L)
                     .type("revenue")

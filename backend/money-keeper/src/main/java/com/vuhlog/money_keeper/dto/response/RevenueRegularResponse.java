@@ -14,6 +14,7 @@ public class RevenueRegularResponse {
     private String id;
     private Long amount;
     private String currency;
+    private String currencySymbol;
     private Double exchangeRate;
     private Long convertedAmount;
     private Double balance;

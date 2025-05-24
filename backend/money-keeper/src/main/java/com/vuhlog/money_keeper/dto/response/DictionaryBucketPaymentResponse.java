@@ -21,4 +21,5 @@ public class DictionaryBucketPaymentResponse {
     private BankResponse bank;
     private String iconUrl;
     private String currency;
+    private String currencySymbol;
 }
