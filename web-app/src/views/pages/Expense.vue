@@ -2,7 +2,7 @@
 import { ref, computed, onMounted, onUnmounted, watch, inject } from 'vue'
 import { useDictionaryExpenseStore } from '@/store/DictionaryExpenseStore'
 import { useDictionaryBucketPaymentStore } from '@/store/DictionaryBucketPaymentStore'
-import { formatCurrency } from '@/utils/formatters'
+import { formatCurrency, formatCurrencyWithSymbol } from '@/utils/formatters'
 import { ElDatePicker } from 'element-plus'
 import 'element-plus/theme-chalk/el-date-picker.css'
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
@@ -17,6 +17,7 @@ import { useNotificationStore } from '@/store/NotificationStore'
 import { useAuthStore } from '@stores/AuthStore.js'
 import { faWallet, faUtensils, faShoppingBag, faCalendar, faMapMarkerAlt, faPlane, faUser, faStickyNote, faArrowDown, faReceipt, faChevronRight, faEye, faPen, faTrash, faHome, faTaxi, faTshirt, faHeartbeat, faGraduationCap } from '@fortawesome/free-solid-svg-icons'
 import DeleteTransactionModal from '@/views/components/DeleteTransactionModal.vue'
+import { Currency } from "@constants/Currency.js"
 
 library.add(faWallet, faUtensils, faShoppingBag, faCalendar, faMapMarkerAlt, faPlane, faUser, faStickyNote, faArrowDown, faReceipt, faChevronRight, faEye, faPen, faTrash, faHome, faTaxi, faTshirt, faHeartbeat, faGraduationCap)
 
@@ -24,6 +25,7 @@ const dictionaryExpenseStore = useDictionaryExpenseStore()
 const dictionaryBucketPaymentStore = useDictionaryBucketPaymentStore()
 const expenseRegularStore = useExpenseRegularStore()
 const authStore = useAuthStore()
+const currencies = ref(Currency)
 const isEditMode = ref(false)
 const editingTransactionId = ref(null)
 const categories = ref([])
@@ -94,16 +96,53 @@ const errors = ref({
   date: ''
 })
 
-// Format amount with currency
+// Helper function to format currency based on currency code
+const formatWithCurrency = (value, currencyCode, currencySymbol) => {
+  if (!value) return ''
+  const numberValue = Number(value)
+  
+  // Format the number with thousand separators
+  const formattedValue = new Intl.NumberFormat().format(numberValue).replace(/,/g, '.')
+  
+  // Return with the proper currency symbol
+  if (currencyCode === 'VND') {
+    return `${formattedValue} ${currencySymbol || '₫'}`
+  } else {
+    return `${currencySymbol || ''}${formattedValue}`
+  }
+}
+
+// Format amount with currency based on selected account
 const formattedAmount = computed({
   get: () => {
     if (!formData.value.amount) return ''
+    
+    // Format using the currency of the selected account
+    if (selectedAccount.value) {
+      return formatWithCurrency(
+        formData.value.amount,
+        selectedAccount.value.currency,
+        selectedAccount.value.currencySymbol
+      )
+    }
+    
+    // Fallback to default VND format if no account is selected
     return formatCurrency(Number(formData.value.amount))
   },
   set: (value) => {
     const numericValue = value.replace(/[^\d]/g, '')
     formData.value.amount = numericValue ? Number(numericValue) : ''
   }
+})
+
+// Compute placeholder based on selected account currency
+const amountPlaceholder = computed(() => {
+  if (selectedAccount.value) {
+    const symbol = selectedAccount.value.currencySymbol
+    const currencyCode = selectedAccount.value.currency
+    return currencyCode === 'VND' ? `0 ${symbol}` : `${symbol}0`
+  }
+  return '0 ₫' // Default placeholder
 })
 
 // Add function to disable future dates
@@ -435,7 +474,7 @@ const handleConfirmDelete = async () => {
                 :class="[
                   errors.amount ? 'border-danger/50 focus:border-danger focus:ring-danger/20' : 'border-gray-100 focus:border-primary/50',
                   formattedAmount ? 'bg-white' : 'bg-gray-50'
-                ]" placeholder="0 ₫" />
+                ]" :placeholder="amountPlaceholder" />
               <p v-if="errors.amount" class="mt-1 text-sm text-danger">
                 {{ errors.amount }}
               </p>
@@ -637,7 +676,9 @@ const handleConfirmDelete = async () => {
                     </div>
                   </div>
                   <p class="font-medium text-danger">
-                    {{ formatCurrency(transaction.amount) }}
+                    {{ transaction.currency === 'VND' ?
+                      formatCurrencyWithSymbol(transaction.convertedAmount, transaction.currency, transaction.currencySymbol) :
+                      `${formatCurrencyWithSymbol(transaction.convertedAmount, transaction.currency, transaction.currencySymbol)} ~ ${formatCurrencyWithSymbol(transaction.amount, 'VND', '₫')}`}}
                   </p>
                 </div>
 

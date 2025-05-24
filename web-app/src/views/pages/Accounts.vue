@@ -16,13 +16,14 @@ import {
   faChevronDown,
   faExclamationTriangle
 } from '@fortawesome/free-solid-svg-icons'
-import { formatCurrency } from '@/utils/formatters'
+import { formatCurrency, formatCurrencyWithSymbol } from '@/utils/formatters'
 import AddAccountModal from '@components/AddAccountModal.vue'
 import EditAccountModal from '@components/EditAccountModal.vue'
 import DeleteAccountModal from '@components/DeleteAccountModal.vue'
 import TransferModal from '@components/TransferModal.vue'
 import Avatar from '@/views/components/Avatar.vue'
 import { useDictionaryBucketPaymentStore } from '@stores/DictionaryBucketPaymentStore.js'
+import { useCurrencyStore } from '@stores/CurrencyStore.js'
 
 library.add(
   faWallet,
@@ -40,6 +41,7 @@ library.add(
 )
 
 const dictionaryBucketPaymentStore = useDictionaryBucketPaymentStore()
+const currencyStore = useCurrencyStore()
 const accounts = ref([]);
 const isAddModalOpen = ref(false)
 const isEditModalOpen = ref(false)
@@ -48,13 +50,28 @@ const isTransferModalOpen = ref(false)
 const editingAccount = ref(null)
 const deletingAccount = ref(null)
 const selectedAccount = ref(null)
+const totalBalance = ref(0)
 
 onMounted(async () => {
   accounts.value = await dictionaryBucketPaymentStore.getMyBucketPaymentsPagination();
-})
-
-const totalBalance = computed(() => {
-  return accounts.value.reduce((sum, account) => sum + account.balance, 0)
+  
+  // Calculate total balance by processing each account asynchronously
+  let total = 0;
+  for (const account of accounts.value) {
+    try {
+      if(account.currency !== 'VND') {
+        const exchangeRateResponse = await currencyStore.getExchangeRate('VND', account.currency, 1);
+        if (exchangeRateResponse && exchangeRateResponse.Rate) {
+          total += Math.round(account.balance * exchangeRateResponse.Rate);
+        }
+      } else {
+        total += account.balance;
+      }
+    } catch (error) {
+      console.error(`Error converting currency for account ${account.accountName}:`, error);
+    }
+  }
+  totalBalance.value = total;
 })
 
 const handleTransfer = (account) => {
@@ -116,7 +133,7 @@ const handleTransferConfirm = (data) => {
           <font-awesome-icon :icon="['fas', 'wallet']" class="text-xl sm:text-2xl text-primary" />
           <p class="text-base sm:text-lg text-text-secondary">
             Tổng số dư: 
-            <span class="font-semibold text-text block sm:inline mt-1 sm:mt-0">
+            <span class="font-semibold text-text block sm:inline mt-1 sm:mt-0 text-xl">
               {{ formatCurrency(totalBalance) }}
             </span>
           </p>
@@ -150,7 +167,7 @@ const handleTransferConfirm = (data) => {
                 />
               </div>
               <div class="flex flex-col">
-                <h3 class="text-lg text-start sm:text-xl font-medium text-text">{{ account.accountName }}</h3>
+                <h3 class="text-lg text-start sm:text-lg font-medium text-text">{{ account.accountName }}</h3>
                 <p class="text-sm text-start text-text-secondary">{{ account.interpretation }}</p>
               </div>
             </div>
@@ -159,9 +176,9 @@ const handleTransferConfirm = (data) => {
             <div class="flex items-center justify-between sm:justify-end w-full sm:w-auto space-x-4">
               <p :class="[
                 account.balance >= 0 ? 'text-success' : 'text-danger', 
-                'font-semibold text-lg sm:text-xl'
+                'font-semibold text-lg sm:text-lg'
               ]">
-                {{ formatCurrency(account.balance) }}
+                {{ formatCurrencyWithSymbol(account.balance, account.currency, account.currencySymbol) }}
               </p>
 
               <!-- Action buttons -->

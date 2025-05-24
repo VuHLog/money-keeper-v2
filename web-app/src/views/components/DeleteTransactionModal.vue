@@ -3,7 +3,7 @@ import { defineProps, defineEmits } from 'vue'
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
 import { library } from '@fortawesome/fontawesome-svg-core'
 import { faExclamationTriangle } from '@fortawesome/free-solid-svg-icons'
-import { formatCurrency } from '@/utils/formatters'
+import { formatCurrency, formatCurrencyWithSymbol } from '@/utils/formatters'
 import { formatDateToVietnam } from '@/utils/DateUtil'
 import Avatar from '@/views/components/Avatar.vue'
 
@@ -88,7 +88,9 @@ const handleConfirm = () => {
                 transactionType === 'revenue' ? 'text-success' : 'text-danger',
                 'text-sm font-medium'
               ]">
-                {{ formatCurrency(transaction.amount) }}
+                {{ transaction.currency === 'VND' ?
+                      formatCurrencyWithSymbol(transaction.convertedAmount, transaction.currency, transaction.currencySymbol) :
+                      `${formatCurrencyWithSymbol(transaction.convertedAmount, transaction.currency, transaction.currencySymbol)} ~ ${formatCurrencyWithSymbol(transaction.amount, 'VND', '₫')}`}}
               </p>
             </div>
           </div>

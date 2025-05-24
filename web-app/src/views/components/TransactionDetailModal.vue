@@ -3,7 +3,7 @@ import { ref, computed } from 'vue'
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
 import { library } from '@fortawesome/fontawesome-svg-core'
 import { faWallet, faCalendar, faTimes, faMapMarkerAlt, faPlane, faUser, faStickyNote, faArrowUp, faArrowDown, faTags } from '@fortawesome/free-solid-svg-icons'
-import { formatCurrency } from '@/utils/formatters'
+import { formatCurrency, formatCurrencyWithSymbol } from '@/utils/formatters'
 import Avatar from '@components/Avatar.vue'
 library.add(faWallet, faCalendar, faTimes, faMapMarkerAlt, faPlane, faUser, faStickyNote, faArrowUp, faArrowDown, faTags)
 
@@ -96,7 +96,9 @@ const getCategoryName = computed(() => {
           <div class="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-end">
             <div class="mt-2 sm:mt-0 text-xl font-semibold" :class="isExpense ? 'text-danger' : 'text-success'">
               <font-awesome-icon :icon="['fas', isExpense ? 'arrow-down' : 'arrow-up']" class="mr-2" />
-              {{ formatCurrency(transaction.amount) }}
+              {{ transaction.currency === 'VND' ?
+                      formatCurrencyWithSymbol(transaction.convertedAmount, transaction.currency, transaction.currencySymbol) :
+                      `${formatCurrencyWithSymbol(transaction.convertedAmount, transaction.currency, transaction.currencySymbol)} ~ ${formatCurrencyWithSymbol(transaction.amount, 'VND', '₫')}`}}
             </div>
           </div>
 
@@ -131,7 +133,7 @@ const getCategoryName = computed(() => {
                 </p>
                 <!-- Hiển thị số dư sau giao dịch -->
                 <p class="text-sm text-text-secondary mt-1">
-                  Số dư sau giao dịch: <span class="font-medium">{{ formatCurrency(transaction.balance) }}</span>
+                  Số dư sau giao dịch: <span class="font-medium">{{ formatCurrencyWithSymbol(transaction.convertedBalance, transaction.currency, transaction.currencySymbol)}}</span>
                 </p>
               </div>
             </div>

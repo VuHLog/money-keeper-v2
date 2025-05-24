@@ -35,11 +35,12 @@ public interface RevenueRegularRepository extends JpaRepository<RevenueRegular, 
 
     @Modifying
     @Transactional
-    @Query("UPDATE RevenueRegular r set r.balance = r.balance + :amount\n" +
+    @Query("UPDATE RevenueRegular r set r.balance = r.balance + :amount, r.convertedBalance = r.convertedBalance + :convertedAmount\n" +
             "where r.dictionaryBucketPayment.id = :bucketPaymentId and (:startDate IS NULL OR r.revenueDate > :startDate) and (:endDate IS NULL OR r.revenueDate < :endDate)")
     void updateBalanceByDatetime(
             @Param("bucketPaymentId") String bucketPaymentId,
             @Param("amount") long amount,
+            @Param("convertedAmount") long convertedAmount,
             @Param("startDate") Timestamp startDate,
             @Param("endDate") Timestamp endDate
     );

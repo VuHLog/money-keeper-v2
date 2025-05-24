@@ -7,6 +7,7 @@ import { useBankStore } from "@stores/BankStore.js"
 import { AccountType } from "@constants/AccountType.js"
 import Avatar from '@/views/components/Avatar.vue'
 import Swal from 'sweetalert2'
+import { Currency } from "@constants/Currency.js"
 
 const props = defineProps({
   isOpen: Boolean,
@@ -18,6 +19,9 @@ const bankStore = useBankStore()
 const bankList = ref([]);
 const accountTypes = ref(AccountType);
 
+// Currency options
+const currencies = ref(Currency)
+
 const newAccount = ref({
   balance: "",
   creditLimit: "",
@@ -25,10 +29,39 @@ const newAccount = ref({
   accountType: "",
   interpretation: "",
   bankId: "",
-  iconUrl: ""
+  iconUrl: "",
+  currencyCode: "VND",
+  currencySymbol: "₫"
 })
 
+// Helper function to format currency based on currency code
+const formatWithCurrency = (value, currencyCode) => {
+  if (!value) return ''
+  const numberValue = Number(value)
+  
+  // Get the currency symbol
+  const currency = currencies.value.find(c => c.code === currencyCode) || currencies.value[0]
+  const symbol = currency.symbol
+  
+  // Format the number with thousand separators
+  const formattedValue = new Intl.NumberFormat().format(numberValue).replace(/,/g, '.')
+  
+  // Return with the proper currency symbol
+  if (currencyCode === 'VND') {
+    return `${formattedValue} ${symbol}`
+  } else {
+    return `${symbol}${formattedValue}`
+  }
+}
+
+// Helper to get currency symbol
+const getCurrencySymbol = (currencyCode) => {
+  const currency = currencies.value.find(c => c.code === currencyCode) || currencies.value[0]
+  return currency.symbol
+}
+
 const bankSearchQuery = ref('')
+const currencySearchQuery = ref('')
 const errors = ref({
   accountName: '',
   balance: '',
@@ -38,9 +71,11 @@ const errors = ref({
 
 const isTypeDropdownOpen = ref(false)
 const isBankDropdownOpen = ref(false)
+const isCurrencyDropdownOpen = ref(false)
 
 const typeDropdownPosition = ref({ top: 0, left: 0, width: 0 })
 const bankDropdownPosition = ref({ top: 0, left: 0, width: 0 })
+const currencyDropdownPosition = ref({ top: 0, left: 0, width: 0 })
 
 const updateTypeDropdownPosition = () => {
   const trigger = document.querySelector('.type-dropdown-container')
@@ -66,6 +101,18 @@ const updateBankDropdownPosition = () => {
   }
 }
 
+const updateCurrencyDropdownPosition = () => {
+  const trigger = document.querySelector('.currency-dropdown-container')
+  if (trigger) {
+    const rect = trigger.getBoundingClientRect()
+    currencyDropdownPosition.value = {
+      top: rect.bottom + window.scrollY,
+      left: rect.left + window.scrollX,
+      width: rect.width
+    }
+  }
+}
+
 watch(isTypeDropdownOpen, (newVal) => {
   if (newVal) {
     nextTick(() => {
@@ -82,11 +129,21 @@ watch(isBankDropdownOpen, (newVal) => {
   }
 })
 
+watch(isCurrencyDropdownOpen, (newVal) => {
+  if (newVal) {
+    nextTick(() => {
+      updateCurrencyDropdownPosition()
+    })
+  }
+})
+
 // Thêm và xóa event listener khi component được mount và unmount
 onMounted(async () => {
   let accountTypeInit = accountTypes.value.find(t => t.name === "Tiền mặt");
   newAccount.value.accountType = accountTypeInit.name
   newAccount.value.iconUrl = accountTypeInit.icon
+  newAccount.value.currencyCode = "VND"
+  newAccount.value.currencySymbol = "₫"
   bankList.value = await bankStore.getBanks()
   document.addEventListener('mousedown', handleClickOutside)
 
@@ -97,6 +154,9 @@ onMounted(async () => {
     }
     if (isBankDropdownOpen.value) {
       updateBankDropdownPosition()
+    }
+    if (isCurrencyDropdownOpen.value) {
+      updateCurrencyDropdownPosition()
     }
   })
 })
@@ -110,13 +170,16 @@ onUnmounted(() => {
     if (isBankDropdownOpen.value) {
       updateBankDropdownPosition()
     }
+    if (isCurrencyDropdownOpen.value) {
+      updateCurrencyDropdownPosition()
+    }
   })
 })
 
 const formattedBalance = computed({
   get: () => {
     if (!newAccount.value.balance) return ''
-    return formatCurrency(Number(newAccount.value.balance))
+    return formatWithCurrency(newAccount.value.balance, newAccount.value.currencyCode)
   },
   set: (value) => {
     // Chỉ lấy số từ chuỗi đã format
@@ -134,6 +197,10 @@ const selectedBank = computed(() => {
   return bankList.value.find(bank => bank.id === bankId);
 })
 
+const selectedCurrency = computed(() => {
+  return currencies.value.find(c => c.code === newAccount.value.currencyCode)
+})
+
 const showBankField = computed(() => {
   return ['Tài khoản ngân hàng', 'Thẻ tín dụng'].includes(newAccount.value.accountType)
 })
@@ -145,7 +212,7 @@ const showCreditLimitField = computed(() => {
 const formattedCreditLimit = computed({
   get: () => {
     if (!newAccount.value.creditLimit) return ''
-    return formatCurrency(Number(newAccount.value.creditLimit))
+    return formatWithCurrency(newAccount.value.creditLimit, newAccount.value.currencyCode)
   },
   set: (value) => {
     const numericValue = value.replace(/[^\d]/g, '')
@@ -153,10 +220,29 @@ const formattedCreditLimit = computed({
   }
 })
 
+const balancePlaceholder = computed(() => {
+  const symbol = getCurrencySymbol(newAccount.value.currencyCode)
+  return newAccount.value.currencyCode === 'VND' ? `0 ${symbol}` : `${symbol}0`
+})
+
+const creditLimitPlaceholder = computed(() => {
+  const symbol = getCurrencySymbol(newAccount.value.currencyCode)
+  return newAccount.value.currencyCode === 'VND' ? `0 ${symbol}` : `${symbol}0`
+})
+
 const filteredBanks = computed(() => {
   if (!bankSearchQuery.value) return bankList.value
   const query = bankSearchQuery.value.toLowerCase()
   return bankList.value.filter(bank => bank.shortName.toLowerCase().includes(query) || bank.name.toLowerCase().includes(query))
+})
+
+const filteredCurrencies = computed(() => {
+  if (!currencySearchQuery.value) return currencies.value
+  const query = currencySearchQuery.value.toLowerCase()
+  return currencies.value.filter(currency => 
+    currency.code.toLowerCase().includes(query) || 
+    currency.name.toLowerCase().includes(query)
+  )
 })
 
 const handleBankSelect = (bank) => {
@@ -179,6 +265,14 @@ const handleTypeSelect = (type) => {
     }
   }
   isTypeDropdownOpen.value = false
+}
+
+const handleCurrencySelect = (currency) => {
+  if (newAccount.value) {
+    newAccount.value.currencyCode = currency.code
+    newAccount.value.currencySymbol = currency.symbol
+  }
+  isCurrencyDropdownOpen.value = false
 }
 
 const validateForm = () => {
@@ -235,7 +329,9 @@ const handleClose = () => {
     balance: '',
     interpretation: '',
     bankId: '',
-    creditLimit: ''
+    creditLimit: '',
+    currencyCode: 'VND',
+    currencySymbol: '₫'
   }
   errors.value = {
     accountName: '',
@@ -244,8 +340,10 @@ const handleClose = () => {
     creditLimit: ''
   }
   bankSearchQuery.value = ''
+  currencySearchQuery.value = ''
   isTypeDropdownOpen.value = false
   isBankDropdownOpen.value = false
+  isCurrencyDropdownOpen.value = false
   emit('close')
 }
 
@@ -255,7 +353,7 @@ const handleAdd = async () => {
   }
 
   try {
-    await dictionaryBucketPaymentStore.createBucketPayment(newAccount.value);
+    await dictionaryBucketPaymentStore.createBucketPayment({...newAccount.value, currency: newAccount.value.currencyCode});
     emit('add', {
       accountName: newAccount.value.accountName.trim(),
       accountType: newAccount.value.accountType,
@@ -263,7 +361,9 @@ const handleAdd = async () => {
       interpretation: newAccount.value.interpretation.trim(),
       bankId: showBankField.value ? newAccount.value.bankId : undefined,
       creditLimit: showCreditLimitField.value ? Number(newAccount.value.creditLimit) : undefined,
-      iconUrl: newAccount.value.iconUrl
+      iconUrl: newAccount.value.iconUrl,
+      currency: newAccount.value.currencyCode
+      
     })
     Swal.fire({
       title: "Thành công",
@@ -287,7 +387,8 @@ const handleAdd = async () => {
       interpretation: '',
       bankId: '',
       creditLimit: '',
-      iconUrl: ''
+      iconUrl: '',
+      currencyCode: 'VND'
     }
     errors.value = {
       accountName: '',
@@ -296,8 +397,10 @@ const handleAdd = async () => {
       creditLimit: ''
     }
     bankSearchQuery.value = ''
+    currencySearchQuery.value = ''
     isTypeDropdownOpen.value = false
     isBankDropdownOpen.value = false
+    isCurrencyDropdownOpen.value = false
   }
 }
 
@@ -313,6 +416,12 @@ const handleClickOutside = (event) => {
   const bankDropdownEl = document.querySelector('.bank-dropdown-container')
   if (bankDropdownEl && !bankDropdownEl.contains(event.target) && isBankDropdownOpen.value) {
     isBankDropdownOpen.value = false
+  }
+
+  // Xử lý dropdown tiền tệ
+  const currencyDropdownEl = document.querySelector('.currency-dropdown-container')
+  if (currencyDropdownEl && !currencyDropdownEl.contains(event.target) && isCurrencyDropdownOpen.value) {
+    isCurrencyDropdownOpen.value = false
   }
 }
 </script>
@@ -340,9 +449,8 @@ const handleClickOutside = (event) => {
               <input v-model="formattedBalance" type="text"
                 class="w-full px-3 py-2 border border-gray-100 rounded-lg focus:outline-none focus:ring-1 focus:ring-primary/20"
                 :class="[
-
                   errors.balance ? 'border-danger/50 focus:border-danger focus:ring-danger/20' : 'border-gray-100 focus:border-primary/50'
-                ]" placeholder="0 ₫" min="0" />
+                ]" :placeholder="balancePlaceholder" min="0" />
               <p v-if="errors.balance" class="mt-1 text-sm text-danger">
                 {{ errors.balance }}
               </p>
@@ -355,7 +463,6 @@ const handleClickOutside = (event) => {
               <input v-model="newAccount.accountName" type="text"
                 class="w-full px-3 py-2 border border-gray-100 rounded-lg focus:outline-none focus:ring-1 focus:ring-primary/20"
                 :class="[
-
                   errors.accountName ? 'border-danger/50 focus:border-danger focus:ring-danger/20' : 'border-gray-100 focus:border-primary/50'
                 ]" placeholder="Nhập tên tài khoản" />
               <p v-if="errors.accountName" class="mt-1 text-sm text-danger">
@@ -394,6 +501,51 @@ const handleClickOutside = (event) => {
                     @click="handleTypeSelect(type)">
                     <Avatar :src="type.icon" :alt="type.name" size="m" class="mr-2" />
                     <span>{{ type.name }}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <div class="select-none">
+              <label class="block text-sm font-medium text-text-secondary mb-1">
+                Loại tiền tệ <span class="text-danger">*</span>
+              </label>
+              <div class="relative currency-dropdown-container">
+                <div
+                  class="flex items-center w-full px-3 py-2 border border-gray-100 rounded-lg cursor-pointer hover:border-gray-200"
+                  :class="{ 'ring-1 ring-primary/20 border-primary/50': isCurrencyDropdownOpen }"
+                  @click="isCurrencyDropdownOpen = !isCurrencyDropdownOpen">
+                  <div class="flex items-center flex-1">
+                    <span>{{ selectedCurrency?.name }}</span>
+                  </div>
+                  <font-awesome-icon :icon="['fas', 'chevron-down']" class="text-gray-400 ml-2 transition-transform"
+                    :class="{ 'rotate-180': isCurrencyDropdownOpen }" />
+                </div>
+
+                <div v-if="isCurrencyDropdownOpen"
+                  class="fixed z-[60] w-[calc(100%-2rem)] max-w-md mt-1 bg-white border border-gray-200 rounded-lg shadow-lg divide-y divide-gray-100"
+                  :style="{
+                    top: currencyDropdownPosition.top + 'px',
+                    left: currencyDropdownPosition.left + 'px',
+                    width: currencyDropdownPosition.width + 'px'
+                  }"
+                >
+                  <div class="p-2">
+                    <input v-model="currencySearchQuery" type="text"
+                      class="w-full px-3 py-2 border border-gray-100 rounded-lg focus:outline-none focus:ring-1 focus:ring-primary/20 focus:border-primary/50"
+                      placeholder="Tìm kiếm tiền tệ..." @click.stop />
+                  </div>
+                  <div class="max-h-48 overflow-y-auto py-1">
+                    <div v-for="currency in filteredCurrencies" :key="currency.code"
+                      class="flex items-center px-3 py-2 cursor-pointer hover:bg-gray-50"
+                      :class="{ 'bg-primary/5': currency.code === newAccount.currencyCode }"
+                      @click="handleCurrencySelect(currency)">
+                      <span class="mr-2 font-bold">{{ currency.symbol }}</span>
+                      <span>{{ currency.name }}</span>
+                    </div>
+                    <div v-if="filteredCurrencies.length === 0" class="px-3 py-2 text-text-secondary text-sm">
+                      Không tìm thấy loại tiền tệ
+                    </div>
                   </div>
                 </div>
               </div>
@@ -460,9 +612,8 @@ const handleClickOutside = (event) => {
               <input v-model="formattedCreditLimit" type="text"
                 class="w-full px-3 py-2 border border-gray-100 rounded-lg focus:outline-none focus:ring-1 focus:ring-primary/20"
                 :class="[
-
                   errors.creditLimit ? 'border-danger/50 focus:border-danger focus:ring-danger/20' : 'border-gray-100 focus:border-primary/50'
-                ]" placeholder="0 ₫" min="0" />
+                ]" :placeholder="creditLimitPlaceholder" min="0" />
               <p v-if="errors.creditLimit" class="mt-1 text-sm text-danger">
                 {{ errors.creditLimit }}
               </p>

@@ -2,7 +2,7 @@
 import { ref, onMounted, computed } from 'vue'
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
 import Charts from '@/views/components/Charts.vue'
-import { formatCurrency } from '@/utils/formatters'
+import { formatCurrency, formatCurrencyWithSymbol } from '@/utils/formatters'
 import { useDashboardStore } from '@/store/DashboardStore'
 import { useTransactionHistoryStore } from '@/store/TransactionHistoryStore'
 import Avatar from '@/views/components/Avatar.vue'
@@ -120,13 +120,6 @@ const getTransactionTextClass = (type) => {
   return 'text-primary'
 }
 
-const formatAmountWithSign = (amount, type) => {
-  const formatted = formatCurrency(amount)
-  if (type === 'expense') return '-' + formatted
-  if (type === 'revenue') return '+' + formatted
-  return formatted
-}
-
 // Gọi hàm fetch dữ liệu khi component được mount
 onMounted(() => {
   fetchDashboardData()
@@ -239,7 +232,9 @@ onMounted(() => {
                 </div>
               </div>
               <p :class="[getTransactionTextClass(transaction.transactionType), 'font-medium flex-shrink-0']">
-                {{ formatAmountWithSign(transaction.amount, transaction.transactionType) }}
+                {{ transaction.currency === 'VND' ?
+                formatCurrencyWithSymbol(transaction.convertedAmount, transaction.currency, transaction.currencySymbol) :
+                `${formatCurrencyWithSymbol(transaction.convertedAmount, transaction.currency, transaction.currencySymbol)} ~ ${formatCurrencyWithSymbol(transaction.amount, 'VND', '₫')}`}}
               </p>
             </div>
             

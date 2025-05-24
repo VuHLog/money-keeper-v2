@@ -23,10 +23,15 @@ public class RevenueRegular {
     private Timestamp createdDate;
     private Timestamp modifiedDate;
     private String transferType;
-    private long balance;
+    private Double balance;
+    private Double convertedBalance;
     private String expenseRegularId;
     private String tripEvent;
     private String collectMoneyWho;
+    private String currency;
+    private Double exchangeRate;
+    private Long convertedAmount;
+    private String currencySymbol;
 
 
     @ManyToOne(cascade = {CascadeType.PERSIST, CascadeType.MERGE, CascadeType.REFRESH})

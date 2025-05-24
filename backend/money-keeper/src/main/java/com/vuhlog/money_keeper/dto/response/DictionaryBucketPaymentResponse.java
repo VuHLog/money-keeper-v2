@@ -11,8 +11,8 @@ import lombok.NoArgsConstructor;
 @Builder
 public class DictionaryBucketPaymentResponse {
     private String id;
-    private Long balance;
-    private Long initialBalance;
+    private Double balance;
+    private Double initialBalance;
     private Long creditLimit;
     private String accountName;
     private String accountType;
@@ -20,4 +20,6 @@ public class DictionaryBucketPaymentResponse {
     private boolean haveUse;
     private BankResponse bank;
     private String iconUrl;
+    private String currency;
+    private String currencySymbol;
 }
