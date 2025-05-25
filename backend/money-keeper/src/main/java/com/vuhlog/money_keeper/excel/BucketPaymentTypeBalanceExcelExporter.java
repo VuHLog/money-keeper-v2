@@ -1,6 +1,6 @@
 package com.vuhlog.money_keeper.excel;
 
-import com.vuhlog.money_keeper.dto.response.responseinterface.report.ReportBucketPaymentTypeBalance;
+import com.vuhlog.money_keeper.dto.response.ReportBucketPaymentTypeBalanceDTO;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.ss.util.CellRangeAddress;
 import org.apache.poi.xssf.usermodel.XSSFFont;
@@ -17,9 +17,9 @@ import java.util.List;
 public class BucketPaymentTypeBalanceExcelExporter {
     private XSSFWorkbook workbook;
     private XSSFSheet sheet;
-    private List<ReportBucketPaymentTypeBalance> data;
+    private List<ReportBucketPaymentTypeBalanceDTO> data;
 
-    public BucketPaymentTypeBalanceExcelExporter(List<ReportBucketPaymentTypeBalance> data) {
+    public BucketPaymentTypeBalanceExcelExporter(List<ReportBucketPaymentTypeBalanceDTO> data) {
         this.data = data;
         workbook = new XSSFWorkbook();
         sheet = workbook.createSheet("Loại tài khoản");
@@ -138,7 +138,7 @@ public class BucketPaymentTypeBalanceExcelExporter {
         }
         int rowCount = headerRowIndex;
 
-        for (ReportBucketPaymentTypeBalance reportBucketPaymentTypeBalance : data) {
+        for (ReportBucketPaymentTypeBalanceDTO reportBucketPaymentTypeBalance : data) {
             Row row = sheet.createRow(rowCount++);
 
             Cell cell = row.createCell(0);
@@ -180,7 +180,7 @@ public class BucketPaymentTypeBalanceExcelExporter {
         totalAmountStyle.setDataFormat(format.getFormat("#,##0 [$₫-vi-VN]"));
 
         Long total = 0L;
-        for (ReportBucketPaymentTypeBalance reportBucketPaymentTypeBalance : data) {
+        for (ReportBucketPaymentTypeBalanceDTO reportBucketPaymentTypeBalance : data) {
             total += reportBucketPaymentTypeBalance.getTotalBalance();
         }
 

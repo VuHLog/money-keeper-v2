@@ -13,6 +13,10 @@ import com.vuhlog.money_keeper.entity.DictionaryBucketPayment;
 public interface DictionaryBucketPaymentRepository extends JpaRepository<DictionaryBucketPayment, String>, JpaSpecificationExecutor<DictionaryBucketPayment> {
     List<DictionaryBucketPayment> findByUser_id(@Param("userId") String userId);
 
+    @Query(value = "SELECT * FROM dictionary_bucket_payment WHERE user_id = :userId \n" +
+            "AND (:bucketPaymentIds IS NULL OR FIND_IN_SET(id,:bucketPaymentIds)) \n", nativeQuery = true)
+    List<DictionaryBucketPayment> findByUser_idAndBucketPaymentIds(@Param("userId") String userId,@Param("bucketPaymentIds") String bucketPaymentIds);
+
     @Query(
             value =
                     "SELECT er.id, er.balance, er.expense_date AS date, amount,de.icon_url, de.name AS category_name, 'expense' AS TYPE, er.interpretation, transfer_type, dbp.account_name FROM expense_regular er\n"

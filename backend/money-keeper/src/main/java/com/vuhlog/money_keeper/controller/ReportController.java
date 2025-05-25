@@ -2,8 +2,7 @@ package com.vuhlog.money_keeper.controller;
 
 import com.vuhlog.money_keeper.dto.request.ExpenseLimitSearchRequest;
 import com.vuhlog.money_keeper.dto.request.ReportFilterOptionsRequest;
-import com.vuhlog.money_keeper.dto.response.ApiResponse;
-import com.vuhlog.money_keeper.dto.response.ExpenseLimitResponse;
+import com.vuhlog.money_keeper.dto.response.*;
 import com.vuhlog.money_keeper.dto.response.responseinterface.report.*;
 import com.vuhlog.money_keeper.excel.*;
 import com.vuhlog.money_keeper.service.ExpenseLimitService;
@@ -274,8 +273,8 @@ public class ReportController {
     }
 
     @PostMapping("bucket-payment-balance")
-    public ApiResponse<List<ReportBucketPaymentBalance>> getReportBucketPaymentBalance() {
-        return ApiResponse.<List<ReportBucketPaymentBalance>>builder()
+    public ApiResponse<List<ReportBucketPaymentBalanceDTO>> getReportBucketPaymentBalance() {
+        return ApiResponse.<List<ReportBucketPaymentBalanceDTO>>builder()
                 .result(reportService.getReportBucketPaymentBalance())
                 .build();
     }
@@ -286,7 +285,7 @@ public class ReportController {
         String headerValue = "attachment; filename=bucket-payment-balance.xls";
         HttpHeaders headers = new HttpHeaders();
         headers.add(headerKey, headerValue);
-        List<ReportBucketPaymentBalance> reportBucketPaymentBalance = reportService.getReportBucketPaymentBalance();
+        List<ReportBucketPaymentBalanceDTO> reportBucketPaymentBalance = reportService.getReportBucketPaymentBalance();
 
         BucketPaymentBalanceExcelExporter exporter = new BucketPaymentBalanceExcelExporter(reportBucketPaymentBalance);
         ByteArrayInputStream in = exporter.export();
@@ -298,8 +297,8 @@ public class ReportController {
     }
 
     @PostMapping("bucket-payment-type-balance")
-    public ApiResponse<List<ReportBucketPaymentTypeBalance>> getReportBucketPaymentTypeBalance() {
-        return ApiResponse.<List<ReportBucketPaymentTypeBalance>>builder()
+    public ApiResponse<List<ReportBucketPaymentTypeBalanceDTO>> getReportBucketPaymentTypeBalance() {
+        return ApiResponse.<List<ReportBucketPaymentTypeBalanceDTO>>builder()
                 .result(reportService.getReportBucketPaymentTypeBalance())
                 .build();
     }
@@ -310,7 +309,7 @@ public class ReportController {
         String headerValue = "attachment; filename=bucket-payment-type-balance.xls";
         HttpHeaders headers = new HttpHeaders();
         headers.add(headerKey, headerValue);
-        List<ReportBucketPaymentTypeBalance> reportBucketPaymentTypeBalance = reportService.getReportBucketPaymentTypeBalance();
+        List<ReportBucketPaymentTypeBalanceDTO> reportBucketPaymentTypeBalance = reportService.getReportBucketPaymentTypeBalance();
 
         BucketPaymentTypeBalanceExcelExporter exporter = new BucketPaymentTypeBalanceExcelExporter(reportBucketPaymentTypeBalance);
         ByteArrayInputStream in = exporter.export();
@@ -365,10 +364,10 @@ public class ReportController {
     }
 
     @PostMapping("/total-bucket-payment")
-    public ApiResponse<ReportTotalBucketPayment> getReportTotalBucketPayment(
+    public ApiResponse<ReportTotalBucketPaymentDTO> getReportTotalBucketPayment(
             @RequestBody ReportFilterOptionsRequest request
     ){
-        return ApiResponse.<ReportTotalBucketPayment>builder()
+        return ApiResponse.<ReportTotalBucketPaymentDTO>builder()
                 .result(reportService.getReportTotalBucketPayment(request))
                 .build();
     }
@@ -380,7 +379,7 @@ public class ReportController {
         HttpHeaders headers = new HttpHeaders();
         headers.add(headerKey, headerValue);
         List<ReportBucketPayment> reportBucketPayment = reportService.getBucketPaymentReportNoPaging(request);
-        ReportTotalBucketPayment total = reportService.getReportTotalBucketPayment(request);
+        ReportTotalBucketPaymentDTO total = reportService.getReportTotalBucketPayment(request);
 
         BucketPaymentExcelExporter exporter = new BucketPaymentExcelExporter(reportBucketPayment, total);
         ByteArrayInputStream in = exporter.export(request);

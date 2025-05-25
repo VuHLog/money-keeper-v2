@@ -354,7 +354,7 @@ public class ExpenseRegularServiceImpl implements ExpenseRegularService {
         if(optionalReportExpenseRevenue.isPresent()) {
             reportExpenseRevenue = optionalReportExpenseRevenue.get();
             reportExpenseRevenue.setTotalExpense(reportExpenseRevenue.getTotalExpense() + amount);
-            reportExpenseRevenue.setTotalExpense(reportExpenseRevenue.getConvertedTotalExpense() + convertedAmount);
+            reportExpenseRevenue.setConvertedTotalExpense(reportExpenseRevenue.getConvertedTotalExpense() + convertedAmount);
             Long totalTransaction = reportExpenseRevenue.getTotalTransaction() + incrementTotalTransaction;
             reportExpenseRevenue.setTotalTransaction(totalTransaction);
         }else {

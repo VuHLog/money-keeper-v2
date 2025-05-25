@@ -402,20 +402,11 @@ public interface ReportExpenseRevenueRepository extends JpaRepository<ReportExpe
 
 
 //    REPORT BUCKET PAYMENT
-    @Query(value = "SELECT id, account_name, account_type, balance, initial_balance, icon_url\n" +
+    @Query(value = "SELECT id, account_name, account_type, balance, initial_balance, icon_url, currency, currency_symbol\n" +
             "FROM dictionary_bucket_payment dbp\n" +
             "WHERE dbp.user_id = :userId\n" +
             "ORDER BY account_name", nativeQuery = true)
     List<ReportBucketPaymentBalance> getReportBucketPaymentBalance(
-            @Param("userId") String userId
-    );
-
-    @Query(value = "SELECT COALESCE(SUM(balance),0) AS totalBalance, account_type, icon_url\n" +
-            "FROM dictionary_bucket_payment dbp\n" +
-            "WHERE dbp.user_id = :userId\n" +
-            "GROUP BY account_type, icon_url\n" +
-            "ORDER BY account_type", nativeQuery = true)
-    List<ReportBucketPaymentTypeBalance> getReportBucketPaymentTypeBalance(
             @Param("userId") String userId
     );
 
@@ -957,22 +948,22 @@ public interface ReportExpenseRevenueRepository extends JpaRepository<ReportExpe
             @Param("endDate") LocalDate endDate
     );
 
-    @Query(value = "SELECT combined.id, combined.account_name, combined.account_type, combined.initial_balance, COALESCE(SUM(totalExpense), 0) AS totalExpense, COALESCE(SUM(totalRevenue), 0) AS totalRevenue, combined.balance, (combined.balance - combined.initial_balance) AS disparity FROM(\n" +
-            "SELECT dbp.id, dbp.account_name, dbp.account_type, dbp.initial_balance, COALESCE(SUM(er.amount), 0) AS totalExpense, 0 AS totalRevenue, dbp.balance\n" +
+    @Query(value = "SELECT combined.id, combined.account_name, combined.account_type, combined.initial_balance, combined.currency, combined.currency_symbol, COALESCE(SUM(totalExpense), 0) AS totalExpense, COALESCE(SUM(convertedTotalExpense), 0) AS convertedTotalExpense, COALESCE(SUM(totalRevenue), 0) AS totalRevenue, COALESCE(SUM(convertedTotalRevenue), 0) AS convertedTotalRevenue, combined.balance, (combined.balance - combined.initial_balance) AS disparity FROM(\n" +
+            "SELECT dbp.id, dbp.account_name, dbp.account_type, dbp.initial_balance, COALESCE(SUM(er.amount), 0) AS totalExpense, COALESCE(SUM(er.converted_amount), 0) AS convertedTotalExpense, 0 AS totalRevenue, 0 AS convertedTotalRevenue, dbp.balance, dbp.currency, dbp.currency_symbol\n" +
             "FROM dictionary_bucket_payment dbp\n" +
             "LEFT JOIN expense_regular er ON dbp.id = er.dictionary_bucket_payment_id AND ( :startDate IS NULL OR :endDate IS NULL IS NULL OR (date(expense_date) BETWEEN DATE(:startDate) AND DATE(:endDate)))\n" +
             "WHERE dbp.user_id = :userId\n" +
             "AND ( :bucketPaymentIds IS NULL OR FIND_IN_SET(dbp.id,:bucketPaymentIds)) \n" +
             "GROUP BY dbp.id\n" +
             "UNION ALL\n" +
-            "SELECT dbp.id, dbp.account_name, dbp.account_type, dbp.initial_balance, 0 AS totalExpense, COALESCE(SUM(rr.amount), 0) AS totalRevenue, dbp.balance\n" +
+            "SELECT dbp.id, dbp.account_name, dbp.account_type, dbp.initial_balance, 0 AS totalExpense, 0 AS convertedTotalExpense, COALESCE(SUM(rr.amount), 0) AS totalRevenue, COALESCE(SUM(rr.converted_amount), 0) AS convertedTotalRevenue, dbp.balance, dbp.currency, dbp.currency_symbol\n" +
             "FROM dictionary_bucket_payment dbp\n" +
             "JOIN revenue_regular rr ON dbp.id = rr.dictionary_bucket_payment_id AND ( :startDate IS NULL OR :endDate IS NULL IS NULL OR (date(revenue_date) BETWEEN DATE(:startDate) AND DATE(:endDate)))\n" +
             "WHERE dbp.user_id = :userId\n" +
             "AND ( :bucketPaymentIds IS NULL OR FIND_IN_SET(dbp.id,:bucketPaymentIds)) \n" +
             "GROUP BY dbp.id\n" +
             ") AS combined\n" +
-            "GROUP BY combined.id, combined.account_name, combined.account_type, combined.initial_balance, combined.balance\n" +
+            "GROUP BY combined.id, combined.account_name, combined.account_type, combined.initial_balance, combined.balance, combined.currency, combined.currency_symbol\n" +
             "ORDER BY account_name",
             countQuery = "SELECT COUNT(*)\n" +
                     "FROM dictionary_bucket_payment dbp\n" +
@@ -987,22 +978,22 @@ public interface ReportExpenseRevenueRepository extends JpaRepository<ReportExpe
             Pageable pageable
     );
 
-    @Query(value = "SELECT combined.id, combined.account_name, combined.account_type, combined.initial_balance, COALESCE(SUM(totalExpense), 0) AS totalExpense, COALESCE(SUM(totalRevenue), 0) AS totalRevenue, combined.balance, (combined.balance - combined.initial_balance) AS disparity FROM(\n" +
-            "SELECT dbp.id, dbp.account_name, dbp.account_type, dbp.initial_balance, COALESCE(SUM(er.amount), 0) AS totalExpense, 0 AS totalRevenue, dbp.balance\n" +
+    @Query(value = "SELECT combined.id, combined.account_name, combined.account_type, combined.initial_balance, combined.currency, combined.currency_symbol, COALESCE(SUM(totalExpense), 0) AS totalExpense, COALESCE(SUM(convertedTotalExpense), 0) AS convertedTotalExpense, COALESCE(SUM(totalRevenue), 0) AS totalRevenue, COALESCE(SUM(convertedTotalRevenue), 0) AS convertedTotalRevenue, combined.balance, (combined.balance - combined.initial_balance) AS disparity FROM(\n" +
+            "SELECT dbp.id, dbp.account_name, dbp.account_type, dbp.initial_balance, COALESCE(SUM(er.amount), 0) AS totalExpense, COALESCE(SUM(er.converted_amount), 0) AS convertedTotalExpense, 0 AS totalRevenue, 0 AS convertedTotalRevenue, dbp.balance, dbp.currency, dbp.currency_symbol\n" +
             "FROM dictionary_bucket_payment dbp\n" +
             "LEFT JOIN expense_regular er ON dbp.id = er.dictionary_bucket_payment_id AND ( :startDate IS NULL OR :endDate IS NULL IS NULL OR (date(expense_date) BETWEEN DATE(:startDate) AND DATE(:endDate)))\n" +
             "WHERE dbp.user_id = :userId\n" +
             "AND ( :bucketPaymentIds IS NULL OR FIND_IN_SET(dbp.id,:bucketPaymentIds)) \n" +
             "GROUP BY dbp.id\n" +
             "UNION ALL\n" +
-            "SELECT dbp.id, dbp.account_name, dbp.account_type, dbp.initial_balance, 0 AS totalExpense, COALESCE(SUM(rr.amount), 0) AS totalRevenue, dbp.balance\n" +
+            "SELECT dbp.id, dbp.account_name, dbp.account_type, dbp.initial_balance, 0 AS totalExpense, 0 AS convertedTotalExpense, COALESCE(SUM(rr.amount), 0) AS totalRevenue, COALESCE(SUM(rr.converted_amount), 0) AS convertedTotalRevenue, dbp.balance, dbp.currency, dbp.currency_symbol\n" +
             "FROM dictionary_bucket_payment dbp\n" +
             "JOIN revenue_regular rr ON dbp.id = rr.dictionary_bucket_payment_id AND ( :startDate IS NULL OR :endDate IS NULL IS NULL OR (date(revenue_date) BETWEEN DATE(:startDate) AND DATE(:endDate)))\n" +
             "WHERE dbp.user_id = :userId\n" +
             "AND ( :bucketPaymentIds IS NULL OR FIND_IN_SET(dbp.id,:bucketPaymentIds)) \n" +
             "GROUP BY dbp.id\n" +
             ") AS combined\n" +
-            "GROUP BY combined.id, combined.account_name, combined.account_type, combined.initial_balance, combined.balance\n" +
+            "GROUP BY combined.id, combined.account_name, combined.account_type, combined.initial_balance, combined.balance, combined.currency, combined.currency_symbol\n" +
             "ORDER BY account_name",nativeQuery = true)
     List<ReportBucketPayment> getBucketPaymentReportNoPaging(
             @Param("userId") String userId,
@@ -1011,7 +1002,7 @@ public interface ReportExpenseRevenueRepository extends JpaRepository<ReportExpe
             @Param("endDate") LocalDate endDate
     );
 
-    @Query(value = "SELECT COALESCE(SUM(combined.initial_balance), 0) AS totalInitialBalance, COALESCE(SUM(totalExpense), 0) AS totalExpense, COALESCE(SUM(totalRevenue), 0) AS totalRevenue, COALESCE(SUM(combined.balance), 0) AS totalBalance \n" +
+    @Query(value = "SELECT 0 AS totalInitialBalance, COALESCE(SUM(totalExpense), 0) AS totalExpense, COALESCE(SUM(totalRevenue), 0) AS totalRevenue, 0 AS totalBalance \n" +
             "FROM( \n" +
             "SELECT combined.id, combined.account_name, combined.account_type, combined.initial_balance, COALESCE(SUM(totalExpense), 0) AS totalExpense, COALESCE(SUM(totalRevenue), 0) AS totalRevenue, combined.balance, (combined.balance - combined.initial_balance) AS disparity FROM(\n" +
             "SELECT dbp.id, dbp.account_name, dbp.account_type, dbp.initial_balance, COALESCE(SUM(er.amount), 0) AS totalExpense, 0 AS totalRevenue, dbp.balance\n" +

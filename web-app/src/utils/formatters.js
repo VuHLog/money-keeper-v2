@@ -8,7 +8,7 @@ export const formatCurrency = (amount) => {
 }
 
 export const formatCurrencyWithSymbol = (value, currencyCode, symbol) => {
-  if (!value) return ''
+  if (value === null || value === undefined || value === '') return ''
   const numberValue = Number(value)
   
   const formattedValue = new Intl.NumberFormat().format(numberValue).replace(/,/g, '.')

@@ -7,4 +7,6 @@ public interface ReportBucketPaymentBalance {
     Long getBalance();
     Long getInitialBalance();
     String getIconUrl();
+    String getCurrency();
+    String getCurrencySymbol();
 }

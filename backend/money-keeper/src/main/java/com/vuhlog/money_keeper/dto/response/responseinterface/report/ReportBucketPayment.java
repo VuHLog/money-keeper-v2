@@ -9,9 +9,17 @@ public interface ReportBucketPayment {
 
     Double getInitialBalance();
 
+    String getCurrency();
+
+    String getCurrencySymbol();
+
     Long getTotalExpense();
 
+    Long getConvertedTotalExpense();
+
     Long getTotalRevenue();
+
+    Long getConvertedTotalRevenue();
 
     Double getBalance();
 

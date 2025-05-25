@@ -93,7 +93,7 @@ const handleEndDateChange = (date) => {
 
 // Helper function to format currency based on currency code
 const formatWithCurrency = (value, currencyCode, currencySymbol) => {
-  if (!value) return ''
+  if (value === null || value === undefined || value === '') return ''
   const numberValue = Number(value)
   
   // Format the number with thousand separators
