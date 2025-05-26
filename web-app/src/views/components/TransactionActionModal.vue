@@ -8,8 +8,9 @@ import { useDictionaryRevenueStore } from '@/store/DictionaryRevenueStore'
 import { useDictionaryBucketPaymentStore } from '@/store/DictionaryBucketPaymentStore'
 import { ElDatePicker } from 'element-plus'
 import 'element-plus/theme-chalk/el-date-picker.css'
-import { formatCurrency } from '@/utils/formatters'
+import { formatCurrency, formatCurrencyWithSymbol } from '@/utils/formatters'
 import Avatar from '@/views/components/Avatar.vue'
+import { Currency } from "@constants/Currency.js"
 
 library.add(faWallet, faLocationDot, faCalendarDays, faArrowUp, faArrowDown, faXmark, faChevronDown, faList)
 
@@ -34,6 +35,7 @@ const emit = defineEmits(['close', 'save'])
 const dictionaryExpenseStore = useDictionaryExpenseStore()
 const dictionaryRevenueStore = useDictionaryRevenueStore()
 const dictionaryBucketPaymentStore = useDictionaryBucketPaymentStore()
+const currencies = ref(Currency)
 
 // Data for edit form
 const categories = ref([])
@@ -123,7 +125,7 @@ const populateFormData = (transaction) => {
   
   // Populate form
   formData.value = {
-    amount: transaction.amount || 0,
+    amount: transaction.convertedAmount || 0,
     categoryId,
     accountId,
     date: transaction.transactionType === 'revenue' ? transaction.revenueDate : transaction.expenseDate,
@@ -136,16 +138,53 @@ const populateFormData = (transaction) => {
   }
 }
 
-// Format currency for input
+// Helper function to format currency based on currency code
+const formatWithCurrency = (value, currencyCode, currencySymbol) => {
+  if (value === null || value === undefined || value === '') return ''
+  const numberValue = Number(value)
+  
+  // Format the number with thousand separators
+  const formattedValue = new Intl.NumberFormat().format(numberValue).replace(/,/g, '.')
+  
+  // Return with the proper currency symbol
+  if (currencyCode === 'VND') {
+    return `${formattedValue} ${currencySymbol || '₫'}`
+  } else {
+    return `${currencySymbol || ''}${formattedValue}`
+  }
+}
+
+// Format currency for input based on selected account
 const formattedAmount = computed({
   get: () => {
     if (!formData.value.amount) return ''
+    
+    // Format using the currency of the selected account
+    if (selectedAccount.value) {
+      return formatWithCurrency(
+        formData.value.amount,
+        selectedAccount.value.currency,
+        selectedAccount.value.currencySymbol
+      )
+    }
+    
+    // Fallback to default VND format if no account is selected
     return formatCurrency(Number(formData.value.amount))
   },
   set: (value) => {
     const numericValue = value.replace(/[^\d]/g, '')
     formData.value.amount = numericValue ? Number(numericValue) : ''
   }
+})
+
+// Compute placeholder based on selected account currency
+const amountPlaceholder = computed(() => {
+  if (selectedAccount.value) {
+    const symbol = selectedAccount.value.currencySymbol
+    const currencyCode = selectedAccount.value.currency
+    return currencyCode === 'VND' ? `0 ${symbol}` : `${symbol}0`
+  }
+  return '0 ₫' // Default placeholder
 })
 
 // Compute the selected category
@@ -325,7 +364,7 @@ onUnmounted(() => {
               :class=" [
                 errors.amount ? 'border-danger/50 focus:border-danger focus:ring-danger/20' : 'border-gray-100 focus:border-primary/50',
                 formattedAmount ? 'bg-white' : 'bg-gray-50'
-              ]" placeholder="0 ₫" />
+              ]" :placeholder="amountPlaceholder" />
             <p v-if="errors.amount" class="mt-1 text-sm text-danger">
               {{ errors.amount }}
             </p>

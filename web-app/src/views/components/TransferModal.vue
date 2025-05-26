@@ -1,13 +1,14 @@
 <script setup>
 import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
-import { formatCurrency } from '@/utils/formatters'
+import { formatCurrency, formatCurrencyWithSymbol } from '@/utils/formatters'
 import { ElDatePicker } from 'element-plus'
 import 'element-plus/theme-chalk/el-date-picker.css'
 import Avatar from '@/views/components/Avatar.vue'
 import { getVietnamDateTime } from '@/utils/DateUtil'
 import { useExpenseRegularStore } from '@/store/ExpenseRegularStore'
 import Swal from 'sweetalert2'
+import { Currency } from "@constants/Currency.js"
 
 const props = defineProps({
   isOpen: Boolean,
@@ -22,6 +23,7 @@ const props = defineProps({
 })
 
 const expenseRegularStore = useExpenseRegularStore()
+const currencies = ref(Currency)
 
 const emit = defineEmits(['close', 'transfer'])
 
@@ -32,6 +34,22 @@ const transferData = ref({
   interpretation: '',
   transferDate: getVietnamDateTime()
 })
+
+// Helper function to format currency based on currency code
+const formatWithCurrency = (value, currencyCode, currencySymbol) => {
+  if (value === null || value === undefined || value === '') return ''
+  const numberValue = Number(value)
+  
+  // Format the number with thousand separators
+  const formattedValue = new Intl.NumberFormat().format(numberValue).replace(/,/g, '.')
+  
+  // Return with the proper currency symbol
+  if (currencyCode === 'VND') {
+    return `${formattedValue} ${currencySymbol || '₫'}`
+  } else {
+    return `${currencySymbol || ''}${formattedValue}`
+  }
+}
 
 const errors = ref({
   amount: '',
@@ -53,6 +71,15 @@ watch(() => props.initialFromAccount, (newVal) => {
 const formattedTransferAmount = computed({
   get: () => {
     if (!transferData.value.amount) return ''
+    // Format using the currency of the selected "from" account
+    if (transferData.value.fromAccount) {
+      return formatWithCurrency(
+        transferData.value.amount,
+        transferData.value.fromAccount.currency,
+        transferData.value.fromAccount.currencySymbol
+      )
+    }
+    // Fallback to default VND format if no account is selected
     return formatCurrency(Number(transferData.value.amount))
   },
   set: (value) => {
@@ -60,6 +87,16 @@ const formattedTransferAmount = computed({
     const numericValue = value.replace(/[^\d]/g, '')
     transferData.value.amount = numericValue ? Number(numericValue) : ''
   }
+})
+
+// Compute placeholder based on selected account currency
+const amountPlaceholder = computed(() => {
+  if (transferData.value.fromAccount) {
+    const symbol = transferData.value.fromAccount.currencySymbol
+    const currencyCode = transferData.value.fromAccount.currency
+    return currencyCode === 'VND' ? `0 ${symbol}` : `${symbol}0`
+  }
+  return '0 ₫' // Default placeholder
 })
 
 const validateForm = () => {
@@ -222,11 +259,10 @@ onUnmounted(() => {
                 type="text"
                 class="w-full px-3 py-2 border border-gray-100 rounded-lg focus:outline-none focus:ring-1 focus:ring-primary/20 transition-colors"
                 :class="[
-
                   errors.amount ? 'border-danger/50 focus:border-danger focus:ring-danger/20' : 'border-gray-100 focus:border-primary/50',
                   formattedTransferAmount ? 'bg-white' : 'bg-gray-50'
                 ]"
-                placeholder="0 ₫"
+                :placeholder="amountPlaceholder"
               />
               <p v-if="errors.amount" class="mt-1 text-sm text-danger">
                 {{ errors.amount }}
@@ -252,7 +288,7 @@ onUnmounted(() => {
                     <div class="flex items-center space-x-2">
                       <div v-if="transferData.fromAccount" class="flex items-center space-x-2">
                         <Avatar :src="transferData.fromAccount.iconUrl" :alt="transferData.fromAccount.accountName" size="m" />
-                        <span>{{ transferData.fromAccount.accountName }} ({{ formatCurrency(transferData.fromAccount.balance) }})</span>
+                        <span>{{ transferData.fromAccount.accountName }} ({{ formatCurrencyWithSymbol(transferData.fromAccount.balance, transferData.fromAccount.currency, transferData.fromAccount.currencySymbol) }})</span>
                       </div>
                       <span v-else class="text-text-secondary">Chọn tài khoản chuyển</span>
                     </div>
@@ -285,7 +321,7 @@ onUnmounted(() => {
                     }"
                   >
                     <Avatar :src="account.iconUrl" :alt="account.accountName" size="m" />
-                    <span>{{ account.accountName }} ({{ formatCurrency(account.balance) }})</span>
+                    <span>{{ account.accountName }} ({{ formatCurrencyWithSymbol(account.balance, account.currency, account.currencySymbol) }})</span>
                   </div>
                 </div>
               </div>

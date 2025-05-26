@@ -1,7 +1,7 @@
 <script setup>
 import { ref, computed, watch } from 'vue'
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
-import { formatCurrency } from '@/utils/formatters'
+import { formatCurrency, formatCurrencyWithSymbol } from '@/utils/formatters'
 import { useExpenseLimitStore } from '@/store/ExpenseLimitStore'
 import Avatar from '@/views/components/Avatar.vue'
 
@@ -34,7 +34,7 @@ watch(() => props.limit, async (newLimit) => {
 }, { immediate: true })
 
 const totalSpent = computed(() => {
-  return details.value.reduce((sum, item) => sum + (item.amount || 0), 0)
+  return details.value.reduce((sum, item) => sum + (item.convertedAmount || 0), 0)
 })
 
 const percentageUsed = computed(() => {
@@ -75,7 +75,7 @@ const percentageUsed = computed(() => {
               <div class="text-right">
                 <div class="text-sm text-text-secondary">Đã chi tiêu</div>
                 <div class="text-lg font-semibold text-text">
-                  {{ formatCurrency(totalSpent) }} / {{ formatCurrency(limit?.amount) }}
+                  {{ formatCurrencyWithSymbol(totalSpent, limit.currency, limit.currencySymbol) }} / {{ formatCurrencyWithSymbol(limit?.amount, limit?.currency, limit?.currencySymbol) }}
                 </div>
               </div>
             </div>
@@ -105,7 +105,9 @@ const percentageUsed = computed(() => {
                   </div>
                 </div>
                 <div class="text-right flex-shrink-0 ml-4">
-                  <div class="font-medium text-text">{{ formatCurrency(item.amount) }}</div>
+                    <div class="font-medium text-text">{{ item.currency === 'VND' ?
+                        formatCurrencyWithSymbol(item.convertedAmount, item.currency, item.currencySymbol) :
+                        `${formatCurrencyWithSymbol(item.convertedAmount, item.currency, item.currencySymbol)} ~ ${formatCurrencyWithSymbol(item.amount, 'VND', '₫')}`}}</div>
                   <div class="text-sm text-text-secondary">{{ item.bucketPaymentName }}</div>
                 </div>
               </div>

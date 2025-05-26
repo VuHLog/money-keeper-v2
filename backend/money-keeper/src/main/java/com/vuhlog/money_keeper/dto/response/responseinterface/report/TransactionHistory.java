@@ -7,6 +7,12 @@ public interface TransactionHistory {
 
     Long getAmount();
 
+    Long getConvertedAmount();
+
+    String getCurrencySymbol();
+
+    String getCurrency();
+
     String getCategoryName();
 
     String getCategoryIconUrl();

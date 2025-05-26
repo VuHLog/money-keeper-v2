@@ -13,7 +13,12 @@ import lombok.NoArgsConstructor;
 public class ExpenseRegularResponse {
     private String id;
     private Long amount;
-    private Long balance;
+    private String currency;
+    private String currencySymbol;
+    private Double exchangeRate;
+    private Long convertedAmount;
+    private Double balance;
+    private Double convertedBalance;
     private String location;
     private String interpretation;
     private String expenseDate;

@@ -14,6 +14,7 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.text.DecimalFormat;
+import java.text.DecimalFormatSymbols;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
@@ -222,6 +223,11 @@ public class CategoryExcelExporter {
         rightStyle.cloneStyleFrom(createBaseStyle());
         rightStyle.setAlignment(HorizontalAlignment.RIGHT);
 
+        DecimalFormatSymbols symbols = new DecimalFormatSymbols();
+        symbols.setGroupingSeparator('.');
+        symbols.setDecimalSeparator(',');
+        DecimalFormat formatter = new DecimalFormat("#,###.##", symbols);
+
         int headerRowIndex = 0;
         while (sheet.getRow(headerRowIndex) != null) {
             headerRowIndex++;
@@ -248,7 +254,7 @@ public class CategoryExcelExporter {
             sheet.autoSizeColumn(2);
 
             cell = row.createCell(3);
-            cell.setCellValue(category.getTotalAmount());
+            cell.setCellValue(formatter.format(category.getTotalAmount())+ " ₫");
             cell.setCellStyle(isExpense? amountExpenseStyle : amountRevenueStyle);
             sheet.autoSizeColumn(3);
 
@@ -289,7 +295,7 @@ public class CategoryExcelExporter {
         Cell titleCell = titleRow.createCell(0);
         titleCell.setCellValue("BÁO CÁO THEO DANH MỤC");
         titleCell.setCellStyle(titleStyle);
-        sheet.addMergedRegion(new CellRangeAddress(0, 0, 0, 13));
+        sheet.addMergedRegion(new CellRangeAddress(0, 0, 0, 4));
 
         // Nếu có request, tạo dòng phụ đề với thông tin khoảng thời gian
         if (request != null && request.getCustomTimeRange() != null) {
@@ -312,7 +318,7 @@ public class CategoryExcelExporter {
 
             subtitleCell.setCellValue(timeRangeTitle);
             subtitleCell.setCellStyle(subtitleStyle);
-            sheet.addMergedRegion(new CellRangeAddress(1, 1, 0, 13));
+            sheet.addMergedRegion(new CellRangeAddress(1, 1, 0, 4));
 
             // Thêm dòng trống sau tiêu đề
             sheet.createRow(2);

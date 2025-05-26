@@ -29,6 +29,8 @@ public class ExpenseLimit {
     private Timestamp endDate;
     private Timestamp startDateLimit;
     private Timestamp endDateLimit;
+    private String currency;
+    private String currencySymbol;
 
     @ManyToOne
     @JoinColumn(name = "user_id")

@@ -40,11 +40,11 @@
           <thead class="bg-gray-50 sticky top-0">
             <tr>
               <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tài khoản</th>
-              <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Số dư ban đầu</th>
-              <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tổng thu</th>
-              <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tổng chi</th>
-              <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Số dư hiện tại</th>
-              <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Chênh lệch</th>
+              <th class="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Số dư ban đầu</th>
+              <th class="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Tổng thu</th>
+              <th class="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Tổng chi</th>
+              <th class="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Số dư hiện tại</th>
+              <th class="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Chênh lệch</th>
             </tr>
           </thead>
           <tbody class="bg-white divide-y divide-gray-200">
@@ -59,10 +59,14 @@
                   {{ account.accountName }}
                 </div>
               </td>
-              <td class="px-4 py-3 text-end whitespace-nowrap text-sm text-gray-600">{{ formatAmount(account.initialBalance) }}</td>
-              <td class="px-4 py-3 text-end whitespace-nowrap text-sm font-medium text-green-600">{{ formatAmount(account.totalRevenue) }}</td>
-              <td class="px-4 py-3 text-end whitespace-nowrap text-sm font-medium text-red-500">{{ formatAmount(account.totalExpense) }}</td>
-              <td class="px-4 py-3 text-end whitespace-nowrap text-sm font-medium text-blue-600">{{ formatAmount(account.balance) }}</td>
+              <td class="px-4 py-3 text-end whitespace-nowrap text-sm text-gray-600">{{formatCurrencyWithSymbol(account.initialBalance, account.currency, account.currencySymbol)}}</td>
+              <td class="px-4 py-3 text-end whitespace-nowrap text-sm font-medium text-green-600">{{ account.currency === 'VND' ?
+                      formatCurrencyWithSymbol(account.convertedTotalRevenue, account.currency, account.currencySymbol) :
+                      `${formatCurrencyWithSymbol(account.convertedTotalRevenue, account.currency, account.currencySymbol)} ~ ${formatCurrencyWithSymbol(account.totalRevenue, 'VND', '₫')}`}}</td>
+              <td class="px-4 py-3 text-end whitespace-nowrap text-sm font-medium text-red-500">{{ account.currency === 'VND' ?
+                      formatCurrencyWithSymbol(account.convertedTotalExpense, account.currency, account.currencySymbol) :
+                      `${formatCurrencyWithSymbol(account.convertedTotalExpense, account.currency, account.currencySymbol)} ~ ${formatCurrencyWithSymbol(account.totalExpense, 'VND', '₫')}`}}</td>
+              <td class="px-4 py-3 text-end whitespace-nowrap text-sm font-medium text-blue-600">{{formatCurrencyWithSymbol(account.balance, account.currency, account.currencySymbol)}}</td>
               <td 
                 class="px-4 py-3 text-end whitespace-nowrap text-sm font-medium"
                 :class="{
@@ -70,7 +74,7 @@
                   'text-green-600': account.disparity >= 0
                 }"
               >
-                {{ formatAmount(account.disparity) }}
+                {{ formatCurrencyWithSymbol(account.disparity, account.currency, account.currencySymbol) }}
                 <span class="text-xs ml-1">
                   ({{ account.initialBalance !== 0 ? ((account.disparity / account.initialBalance) * 100).toFixed(1) : 0 }}%)
                 </span>
@@ -183,6 +187,7 @@ import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome';
 import { library } from '@fortawesome/fontawesome-svg-core';
 import { faFileExcel, faWallet, faChevronLeft, faChevronRight } from '@fortawesome/free-solid-svg-icons';
 import { useReportStore } from '@/store/ReportStore';
+import { formatCurrencyWithSymbol } from '@/utils/formatters'
 
 // Register Font Awesome icons
 library.add(faFileExcel, faWallet, faChevronLeft, faChevronRight);

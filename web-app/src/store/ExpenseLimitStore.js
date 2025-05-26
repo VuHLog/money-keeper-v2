@@ -123,7 +123,7 @@ export const useExpenseLimitStore = defineStore("expenseLimit", {
           case "weekly":
           case "Hàng tuần":
             nextEndDate = new Date(currentStartDate);
-            nextEndDate.setDate(nextEndDate.getDate() + 7);
+            nextEndDate.setDate(nextEndDate.getDate() + 6);
             break;
           case "monthly":
           case "Hàng tháng":

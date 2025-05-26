@@ -3,9 +3,11 @@ import { ref, computed, watch, onMounted, onUnmounted, nextTick } from 'vue'
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
 import { formatCurrency } from '@/utils/formatters'
 import { AccountType } from "@constants/AccountType.js"
+import { Currency } from "@constants/Currency.js"
 import { useDictionaryBucketPaymentStore } from '@stores/DictionaryBucketPaymentStore.js'
 import { useBankStore } from "@stores/BankStore.js"
 import Avatar from '@/views/components/Avatar.vue'
+import { useCurrencyStore } from '@stores/CurrencyStore.js'
 
 
 const props = defineProps({
@@ -18,9 +20,10 @@ const props = defineProps({
 
 const dictionaryBucketPaymentStore = useDictionaryBucketPaymentStore();
 const bankStore = useBankStore()
-
+const currencyStore = useCurrencyStore()
 const emit = defineEmits(['close', 'update'])
 const accountTypes = ref(AccountType)
+const currencies = ref(Currency)
 
 const bankList = ref([])
 
@@ -32,8 +35,36 @@ const newAccount = ref({
   initialBalance: '',
   description: '',
   bankId: '',
-  creditLimit: ''
+  creditLimit: '',
+  currencyCode: 'VND',
+  currencySymbol: '₫'
 })
+
+// Helper function to format currency based on currency code
+const formatWithCurrency = (value, currencyCode) => {
+  if (!value) return ''
+  const numberValue = Number(value)
+  
+  // Get the currency symbol
+  const currency = currencies.value.find(c => c.code === currencyCode) || currencies.value[0]
+  const symbol = currency.symbol
+  
+  // Format the number with thousand separators
+  const formattedValue = new Intl.NumberFormat().format(numberValue).replace(/,/g, '.')
+  
+  // Return with the proper currency symbol
+  if (currencyCode === 'VND') {
+    return `${formattedValue} ${symbol}`
+  } else {
+    return `${symbol}${formattedValue}`
+  }
+}
+
+// Helper to get currency symbol
+const getCurrencySymbol = (currencyCode) => {
+  const currency = currencies.value.find(c => c.code === currencyCode) || currencies.value[0]
+  return currency.symbol
+}
 
 const errors = ref({
   name: '',
@@ -44,10 +75,14 @@ const errors = ref({
 const isConfirmingClose = ref(false)
 const isTypeDropdownOpen = ref(false)
 const isBankDropdownOpen = ref(false)
+const isCurrencyDropdownOpen = ref(false)
+
 const bankSearchQuery = ref('')
+const currencySearchQuery = ref('')
 
 const typeDropdownPosition = ref({ top: 0, left: 0, width: 0 })
 const bankDropdownPosition = ref({ top: 0, left: 0, width: 0 })
+const currencyDropdownPosition = ref({ top: 0, left: 0, width: 0 })
 
 const updateTypeDropdownPosition = () => {
   const trigger = document.querySelector('.edit-type-dropdown-container')
@@ -73,6 +108,18 @@ const updateBankDropdownPosition = () => {
   }
 }
 
+const updateCurrencyDropdownPosition = () => {
+  const trigger = document.querySelector('.edit-currency-dropdown-container')
+  if (trigger) {
+    const rect = trigger.getBoundingClientRect()
+    currencyDropdownPosition.value = {
+      top: rect.bottom + window.scrollY,
+      left: rect.left + window.scrollX,
+      width: rect.width
+    }
+  }
+}
+
 watch(isTypeDropdownOpen, (newVal) => {
   if (newVal) {
     nextTick(() => {
@@ -89,8 +136,17 @@ watch(isBankDropdownOpen, (newVal) => {
   }
 })
 
+watch(isCurrencyDropdownOpen, (newVal) => {
+  if (newVal) {
+    nextTick(() => {
+      updateCurrencyDropdownPosition()
+    })
+  }
+})
+
 // Add window resize handler
 onMounted(async () => {
+  // await currencyStore.getExchangeRate("EUR", 'VND', 1)
   bankList.value = await bankStore.getBanks()
   accountTypes.value = AccountType
   if(props.account){
@@ -99,12 +155,18 @@ onMounted(async () => {
       accountName: props.account.accountName,
       accountType: props.account.accountType,
       balance: props.account.balance,
-      initialBalance: props.account.initialBalance,
+      initialBalance: props.account.initialBalance || props.account.balance,
       interpretation: props.account.interpretation || '',
       bankId: props.account.bank?.id || '',
       creditLimit: props.account.creditLimit || '',
-      iconUrl: props.account.iconUrl || ''
+      iconUrl: props.account.iconUrl || '',
+      currencyCode: props.account.currency || 'VND',
+      currencySymbol: props.account.currencySymbol || '₫'
     }
+    
+    // Log for debugging
+    console.log('Account loaded in mounted:', props.account)
+    console.log('Initial balance in mounted:', newAccount.value.initialBalance)
   }
   window.addEventListener('resize', () => {
     if (isTypeDropdownOpen.value) {
@@ -112,6 +174,9 @@ onMounted(async () => {
     }
     if (isBankDropdownOpen.value) {
       updateBankDropdownPosition()
+    }
+    if (isCurrencyDropdownOpen.value) {
+      updateCurrencyDropdownPosition()
     }
   })
 })
@@ -124,6 +189,9 @@ onUnmounted(() => {
     if (isBankDropdownOpen.value) {
       updateBankDropdownPosition()
     }
+    if (isCurrencyDropdownOpen.value) {
+      updateCurrencyDropdownPosition()
+    }
   })
 })
 
@@ -135,17 +203,27 @@ watch(() => props.account, (newVal) => {
       accountName: newVal.accountName,
       accountType: newVal.accountType,
       balance: newVal.balance,
-      initialBalance: newVal.initialBalance,
+      initialBalance: newVal.initialBalance || newVal.balance,
       interpretation: newVal.interpretation || '',
       bankId: newVal.bank?.id || '',
       creditLimit: newVal.creditLimit || '',
-      iconUrl: newVal.iconUrl || ''
+      iconUrl: newVal.iconUrl || '',
+      currencyCode: newVal.currency || 'VND',
+      currencySymbol: newVal.currencySymbol || '₫'
     }
+    
+    // Log for debugging
+    console.log('Account loaded:', newVal)
+    console.log('Initial balance:', newAccount.value.initialBalance)
   }
 }, { immediate: true })
 
 const selectedBank = computed(() => {
   return bankList.value.find(bank => bank.id === newAccount.value.bankId)
+})
+
+const selectedCurrency = computed(() => {
+  return currencies.value.find(c => c.code === newAccount.value.currencyCode)
 })
 
 const showBankField = computed(() => {
@@ -156,10 +234,29 @@ const showCreditLimitField = computed(() => {
   return newAccount.value.accountType === 'Thẻ tín dụng'
 })
 
+const balancePlaceholder = computed(() => {
+  const symbol = getCurrencySymbol(newAccount.value.currencyCode)
+  return newAccount.value.currencyCode === 'VND' ? `0 ${symbol}` : `${symbol}0`
+})
+
+const creditLimitPlaceholder = computed(() => {
+  const symbol = getCurrencySymbol(newAccount.value.currencyCode)
+  return newAccount.value.currencyCode === 'VND' ? `0 ${symbol}` : `${symbol}0`
+})
+
+const filteredCurrencies = computed(() => {
+  if (!currencySearchQuery.value) return currencies.value
+  const query = currencySearchQuery.value.toLowerCase()
+  return currencies.value.filter(currency => 
+    currency.code.toLowerCase().includes(query) || 
+    currency.name.toLowerCase().includes(query)
+  )
+})
+
 const formattedCreditLimit = computed({
   get: () => {
     if (!newAccount.value.creditLimit) return ''
-    return formatCurrency(Number(newAccount.value.creditLimit))
+    return formatWithCurrency(newAccount.value.creditLimit, newAccount.value.currencyCode)
   },
   set: (value) => {
     const numericValue = value.replace(/[^\d]/g, '')
@@ -169,8 +266,19 @@ const formattedCreditLimit = computed({
 
 const formattedBalance = computed({
   get: () => {
-    if (!newAccount.value.initialBalance) return ''
-    return formatCurrency(Number(newAccount.value.initialBalance))
+    // First check if newAccount.value exists to avoid errors
+    if (!newAccount.value) return ''
+    
+    // Try to use initialBalance, fall back to balance if needed
+    const balanceValue = newAccount.value.initialBalance !== undefined && newAccount.value.initialBalance !== null
+      ? newAccount.value.initialBalance
+      : newAccount.value.balance
+      
+    // Return empty string if no value is found
+    if (balanceValue === undefined || balanceValue === null) return ''
+    
+    // Format with currency
+    return formatWithCurrency(balanceValue, newAccount.value.currencyCode)
   },
   set: (value) => {
     // Chỉ lấy số từ chuỗi đã format
@@ -190,7 +298,8 @@ const hasChanges = computed(() => {
     editingAccount.value.accountName !== newAccount.value.accountName.trim() ||
     editingAccount.value.accountType !== newAccount.value.accountType ||
     editingAccount.value.interpretation !== newAccount.value.interpretation.trim() ||
-    editingAccount.value.iconUrl !== newAccount.value.iconUrl
+    editingAccount.value.iconUrl !== newAccount.value.iconUrl ||
+    (editingAccount.value.currency || 'VND') !== newAccount.value.currencyCode
 
   const bankFieldChanged = 
     ((editingAccount.value.bankId || editingAccount.value.bank?.id) || '') !== (newAccount.value.bankId || '')
@@ -258,7 +367,8 @@ const resetAndClose = () => {
     interpretation: '',
     bankId: '',
     creditLimit: '',
-    iconUrl: ''
+    iconUrl: '',
+    currencyCode: 'VND'
   }
   errors.value = {
     accountName: '',
@@ -268,7 +378,18 @@ const resetAndClose = () => {
   isConfirmingClose.value = false
   isTypeDropdownOpen.value = false
   isBankDropdownOpen.value = false
+  isCurrencyDropdownOpen.value = false
+  currencySearchQuery.value = ''
   emit('close')
+}
+
+const handleCurrencySelect = (currency) => {
+  if (newAccount.value) {
+    newAccount.value.currencyCode = currency.code
+    newAccount.value.currencySymbol = currency.symbol
+  }
+  isCurrencyDropdownOpen.value = false
+  currencySearchQuery.value = ''
 }
 
 const handleUpdate = async () => {
@@ -290,7 +411,9 @@ const handleUpdate = async () => {
       interpretation: newAccount.value.interpretation.trim(),
       iconUrl: newAccount.value.iconUrl,
       bankId: showBankField.value ? newAccount.value.bankId : undefined,
-      creditLimit: showCreditLimitField.value ? Number(newAccount.value.creditLimit) : undefined
+      creditLimit: showCreditLimitField.value ? Number(newAccount.value.creditLimit) : undefined,
+      currency: newAccount.value.currencyCode,
+      currencySymbol: newAccount.value.currencySymbol
     };
     await dictionaryBucketPaymentStore.update(data.id, data);
     emit('update', {
@@ -302,7 +425,8 @@ const handleUpdate = async () => {
       interpretation: newAccount.value.interpretation.trim(),
       iconUrl: newAccount.value.iconUrl,
       bankId: showBankField.value ? newAccount.value.bankId : undefined,
-      creditLimit: showCreditLimitField.value ? Number(newAccount.value.creditLimit) : undefined
+      creditLimit: showCreditLimitField.value ? Number(newAccount.value.creditLimit) : undefined,
+      currency: newAccount.value.currencyCode
     })
   } catch (err) {
     console.log(err)
@@ -333,6 +457,12 @@ const handleClickOutside = (event) => {
   const bankDropdownEl = document.querySelector('.edit-bank-dropdown-container')
   if (bankDropdownEl && !bankDropdownEl.contains(event.target) && isBankDropdownOpen.value) {
     isBankDropdownOpen.value = false
+  }
+  
+  // Xử lý dropdown tiền tệ
+  const currencyDropdownEl = document.querySelector('.edit-currency-dropdown-container')
+  if (currencyDropdownEl && !currencyDropdownEl.contains(event.target) && isCurrencyDropdownOpen.value) {
+    isCurrencyDropdownOpen.value = false
   }
 }
 
@@ -422,8 +552,12 @@ onUnmounted(() => {
                 :class="[
                   errors.balance ? 'border-danger/50 focus:border-danger focus:ring-danger/20' : 'border-gray-100 focus:border-primary/50'
                 ]"
-                placeholder="0 ₫"
+                :placeholder="balancePlaceholder"
               />
+              <!-- Add debug info during development -->
+              <p v-if="false" class="mt-1 text-xs text-gray-500">
+                Raw value: {{ newAccount?.initialBalance || 'none' }} ({{ typeof newAccount?.initialBalance }})
+              </p>
               <p class="mt-1 text-xs text-gray-500 italic">
                 Số dư ban đầu không thể thay đổi sau khi tài khoản đã được tạo
               </p>
@@ -505,6 +639,67 @@ onUnmounted(() => {
                   >
                     <Avatar :src="type.icon" :alt="type.name" size="m" class="mr-2" />
                     <span>{{ type.name }}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <!-- Currency Dropdown -->
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">
+                Loại tiền tệ <span class="text-danger">*</span>
+              </label>
+              <div class="relative edit-currency-dropdown-container">
+                <div
+                  class="flex items-center w-full px-3 py-2 border border-gray-100 rounded-lg cursor-pointer hover:border-gray-200"
+                  :class="{ 'ring-1 ring-primary/20 border-primary/50': isCurrencyDropdownOpen }"
+                  @click="isCurrencyDropdownOpen = !isCurrencyDropdownOpen"
+                >
+                  <div class="flex items-center flex-1">
+                    <span>{{ selectedCurrency?.name }}</span>
+                  </div>
+                  <font-awesome-icon
+                    :icon="['fas', 'chevron-down']"
+                    class="text-gray-400 ml-2 transition-transform"
+                    :class="{ 'rotate-180': isCurrencyDropdownOpen }"
+                  />
+                </div>
+
+                <div
+                  v-if="isCurrencyDropdownOpen"
+                  class="fixed z-[60] w-[calc(100%-2rem)] max-w-md mt-1 bg-white border border-gray-200 rounded-lg shadow-lg divide-y divide-gray-100"
+                  :style="{
+                    top: currencyDropdownPosition.top + 'px',
+                    left: currencyDropdownPosition.left + 'px',
+                    width: currencyDropdownPosition.width + 'px'
+                  }"
+                >
+                  <div class="p-2">
+                    <input
+                      v-model="currencySearchQuery"
+                      type="text"
+                      class="w-full px-3 py-2 border border-gray-100 rounded-lg focus:outline-none focus:ring-1 focus:ring-primary/20 focus:border-primary/50"
+                      placeholder="Tìm kiếm tiền tệ..."
+                      @click.stop
+                    />
+                  </div>
+                  <div class="max-h-48 overflow-y-auto py-1">
+                    <div
+                      v-for="currency in filteredCurrencies"
+                      :key="currency.code"
+                      class="flex items-center px-3 py-2 cursor-pointer hover:bg-gray-50"
+                      :class="{ 'bg-primary/5': currency.code === newAccount.currencyCode }"
+                      @click="handleCurrencySelect(currency)"
+                    >
+                      <span class="mr-2 font-bold">{{ currency.symbol }}</span>
+                      <span>{{ currency.name }}</span>
+                    </div>
+                    <div
+                      v-if="filteredCurrencies.length === 0"
+                      class="px-3 py-2 text-text-secondary text-sm"
+                    >
+                      Không tìm thấy loại tiền tệ
+                    </div>
                   </div>
                 </div>
               </div>
@@ -606,7 +801,7 @@ onUnmounted(() => {
                   errors.creditLimit ? 'border-danger/50 focus:border-danger focus:ring-danger/20' : 'border-gray-100 focus:border-primary/50',
                   formattedCreditLimit ? 'bg-white' : 'bg-gray-50'
                 ]"
-                placeholder="0 ₫"
+                :placeholder="creditLimitPlaceholder"
               />
               <p v-if="errors.creditLimit" class="mt-1 text-sm text-danger">
                 {{ errors.creditLimit }}

@@ -1,6 +1,6 @@
 <script setup>
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
-import { formatCurrency } from '@/utils/formatters'
+import { formatCurrency, formatCurrencyWithSymbol } from '@/utils/formatters'
 import { useExpenseLimitStore } from '@/store/expenseLimitStore'
 
 const props = defineProps({
@@ -55,7 +55,7 @@ const emit = defineEmits(['close', 'confirm'])
             <div class="flex-1">
               <h4 class="font-medium text-text">{{ limit?.name }}</h4>
               <div class="text-sm text-text-secondary space-y-1 mt-1">
-                <p>Số tiền: {{ formatCurrency(limit?.amount) }}</p>
+                <p>Số tiền: {{formatCurrencyWithSymbol(limit.amount, limit.currency, limit.currencySymbol)}}</p>
                 <p>Thời gian: {{ limit?.startDateLimit }} -> {{ limit?.endDateLimit }}</p>
                 <p>Lặp lại: {{ limit?.repeatTime }}</p>
               </div>

@@ -17,14 +17,16 @@ public class DictionaryBucketPayment {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     private String id;
-    private Long balance; // so du ban dau
-    private Long initialBalance;
+    private Double balance; // so du ban dau
+    private Double initialBalance;
     private Long creditLimit; // han muc tin dung
     private String accountName;
     private String accountType;
     private String interpretation; // dien giai
     private boolean haveUse;
     private String iconUrl;
+    private String currency;
+    private String currencySymbol;
 
     @ManyToOne
     @JoinColumn(name = "bank_id")

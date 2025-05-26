@@ -25,4 +25,6 @@ public class ExpenseLimitResponse {
     private String startDateLimit;
     private String endDateLimit;
     private Long spentAmount;
+    private String currency;
+    private String currencySymbol;
 }

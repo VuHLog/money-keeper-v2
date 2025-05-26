@@ -16,7 +16,7 @@
       <div class="flex justify-between items-center mb-4">
         <h2 class="text-lg font-medium text-gray-800">Báo cáo thu chi</h2>
         <div class="flex items-center space-x-4">
-          <div class="flex items-center">
+          <!-- <div class="flex items-center">
             <label for="currencyUnit" class="mr-2 text-sm text-gray-600">Đơn vị:</label>
             <select 
               id="currencyUnit" 
@@ -28,7 +28,7 @@
               <option value="1000000">Triệu đồng</option>
               <option value="1000000000">Tỷ đồng</option>
             </select>
-          </div>
+          </div> -->
           <button 
             @click="exportExcel" 
             class="px-3 py-2 bg-green-50 text-green-600 rounded-lg hover:bg-green-100 transition-colors flex items-center text-sm"
@@ -54,11 +54,11 @@
               <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Ngày
               </th>
-              <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th class="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Số tiền
               </th>
               <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Loại
+                Loại giao dịch
               </th>
               <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Danh mục
@@ -99,7 +99,9 @@
               </td>
               <td class="px-4 py-3 whitespace-nowrap text-sm text-end">
                 <span :class="getTransactionTypeClass(transaction.transactionType)" >
-                  {{ formatCurrency(transaction.amount) }}
+                  {{ transaction.currency === 'VND' ?
+                      formatCurrencyWithSymbol(transaction.amount, transaction.currency, transaction.currencySymbol) :
+                      `${formatCurrencyWithSymbol(transaction.convertedAmount, transaction.currency, transaction.currencySymbol)} ~ ${formatCurrencyWithSymbol(transaction.amount, 'VND', '₫')}`}}
                 </span>
               </td>
               <td class="px-4 py-3 whitespace-nowrap text-sm">
@@ -282,7 +284,7 @@ library.add(faArrowUp, faArrowDown, faEye, faWallet, faBuildingColumns, faList, 
 import { useTransactionHistoryStore } from '@stores/TransactionHistoryStore'
 import { useReportStore } from '@stores/ReportStore'
 import Avatar from '@/views/components/Avatar.vue'
-import { formatCurrency as baseFormatCurrency } from '@/utils/formatters.js'
+import { formatCurrency as baseFormatCurrency, formatCurrencyWithSymbol } from '@/utils/formatters.js'
 
 const filters = ref({
   timeOption: '',

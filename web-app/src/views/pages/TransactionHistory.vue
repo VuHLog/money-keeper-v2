@@ -15,6 +15,7 @@ import { useExpenseRegularStore } from '@/store/ExpenseRegularStore'
 import { useRevenueRegularStore } from '@/store/RevenueRegularStore'
 import Avatar from '@/views/components/Avatar.vue'
 import ToastManager from '@/views/components/ToastManager.vue'
+import { formatCurrencyWithSymbol } from '@/utils/formatters'
 
 // Reference to ToastManager component
 const toastManagerRef = ref(null)
@@ -200,6 +201,15 @@ const closeDetailModal = () => {
   }, 300);
 }
 
+const closeDeleteModal = () => {
+  showDeleteModal.value = false;
+  // Đảm bảo xóa dữ liệu sau khi modal đóng để tránh lỗi khi mở lại
+  // Đợi một chút để animation đóng hoàn thành
+  setTimeout(() => {
+    selectedTransaction.value = null;
+  }, 300);
+}
+
 const openTransactionModal = (transaction, mode = 'view') => {
   // Nếu là chế độ xem chi tiết, sử dụng TransactionDetailModal
   if (mode === 'view') {
@@ -378,14 +388,6 @@ const handleSaveTransaction = async (transaction) => {
     }
   }
 }
-
-// Format currency
-const formatCurrency = (amount) => {
-  return new Intl.NumberFormat('vi-VN', {
-    style: 'currency',
-    currency: 'VND'
-  }).format(amount)
-}
 // Format datetime
 const formatDateTime = (datetime) => {
   return new Date(datetime).toLocaleString('vi-VN')
@@ -527,7 +529,9 @@ const exportExcel = async () => {
               </td>
               <td class="px-6 py-4 whitespace-nowrap">
                 <span :class="getTransactionTypeClass(transaction.transactionType)">
-                  {{ formatCurrency(transaction.amount) }}
+                  {{ transaction.currency === 'VND' ?
+                      formatCurrencyWithSymbol(transaction.amount, transaction.currency, transaction.currencySymbol) :
+                      `${formatCurrencyWithSymbol(transaction.convertedAmount, transaction.currency, transaction.currencySymbol)} ~ ${formatCurrencyWithSymbol(transaction.amount, 'VND', '₫')}`}}
                 </span>
               </td>
               <td class="px-6 py-4 whitespace-nowrap">
@@ -689,7 +693,7 @@ const exportExcel = async () => {
       :transaction="selectedTransaction"
       :transactionType="selectedTransaction?.transactionType || 'expense'"
       :isOpen="showDeleteModal"
-      @close="closeTransactionModal"
+      @close="closeDeleteModal"
       @confirm="confirmDeleteTransaction"
     />
   </div>

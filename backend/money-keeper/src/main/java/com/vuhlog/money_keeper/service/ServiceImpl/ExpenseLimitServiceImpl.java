@@ -140,6 +140,10 @@ public class ExpenseLimitServiceImpl implements ExpenseLimitService {
                 throw new AppException(ErrorCode.EXPENSE_LIMIT_END_DATE_INVALID, endDateMinimum.toString());
             }
         }
+        DictionaryBucketPayment bucketPayment = dictionaryBucketPaymentRepository.findById(request.getBucketPaymentIds())
+                .orElseThrow(() -> new AppException(ErrorCode.BUCKET_PAYMENT_NOT_EXISTED));
+        expenseLimit.setCurrency(bucketPayment.getCurrency());
+        expenseLimit.setCurrencySymbol(bucketPayment.getCurrencySymbol());
         expenseLimitRepository.save(expenseLimit);
         return convertToResponse(expenseLimitMapper.toExpenseLimitResponse(expenseLimit), request.getBucketPaymentIds(), request.getCategoriesId(), expenseLimit.getEndDate());
     }
@@ -158,6 +162,10 @@ public class ExpenseLimitServiceImpl implements ExpenseLimitService {
         }else{
             expenseLimit.setEndDate(null);
         }
+        DictionaryBucketPayment bucketPayment = dictionaryBucketPaymentRepository.findById(request.getBucketPaymentIds())
+                .orElseThrow(() -> new AppException(ErrorCode.BUCKET_PAYMENT_NOT_EXISTED));
+        expenseLimit.setCurrency(bucketPayment.getCurrency());
+        expenseLimit.setCurrencySymbol(bucketPayment.getCurrencySymbol());
         expenseLimitRepository.save(expenseLimit);
         return convertToResponse(expenseLimitMapper.toExpenseLimitResponse(expenseLimit), request.getBucketPaymentIds(), request.getCategoriesId(),expenseLimit.getEndDate());
     }

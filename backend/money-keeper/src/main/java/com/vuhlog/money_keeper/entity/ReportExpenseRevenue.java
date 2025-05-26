@@ -21,6 +21,10 @@ public class ReportExpenseRevenue {
     private String type;
     private long totalExpense;
     private long totalRevenue;
+    private long convertedTotalExpense;
+    private long convertedTotalRevenue;
+    private String currency;
+    private String currencySymbol;
     private Timestamp createdAt;
     private Timestamp updatedAt;
     private String bucketPaymentId;

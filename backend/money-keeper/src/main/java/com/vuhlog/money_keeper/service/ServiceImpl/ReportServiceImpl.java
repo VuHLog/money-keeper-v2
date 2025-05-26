@@ -7,8 +7,13 @@ import com.vuhlog.money_keeper.dao.DictionaryBucketPaymentRepository;
 import com.vuhlog.money_keeper.dao.ExpenseRegularRepository;
 import com.vuhlog.money_keeper.dao.ReportExpenseRevenueRepository;
 import com.vuhlog.money_keeper.dao.RevenueRegularRepository;
+import com.vuhlog.money_keeper.dao.httpClient.CurrencyClient;
 import com.vuhlog.money_keeper.dao.specification.DictionaryBucketPaymentSpecification;
 import com.vuhlog.money_keeper.dto.request.ReportFilterOptionsRequest;
+import com.vuhlog.money_keeper.dto.response.ExchangeRateResponse;
+import com.vuhlog.money_keeper.dto.response.ReportBucketPaymentBalanceDTO;
+import com.vuhlog.money_keeper.dto.response.ReportBucketPaymentTypeBalanceDTO;
+import com.vuhlog.money_keeper.dto.response.ReportTotalBucketPaymentDTO;
 import com.vuhlog.money_keeper.dto.response.responseinterface.report.TotalExpenseRevenue;
 import com.vuhlog.money_keeper.dto.response.responseinterface.report.*;
 import com.vuhlog.money_keeper.entity.DictionaryBucketPayment;
@@ -29,16 +34,16 @@ import java.time.YearMonth;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
 public class ReportServiceImpl implements ReportService {
     private final UserCommon userCommon;
-    private final ExpenseRegularRepository expenseRegularRepository;
-    private final RevenueRegularRepository revenueRegularRepository;
     private final DictionaryBucketPaymentRepository dictionaryBucketPaymentRepository;
     private final ReportExpenseRevenueRepository reportExpenseRevenueRepository;
-    private final ReportExpenseRevenueMapper reportExpenseRevenueMapper;
+    private final CurrencyClient currencyClient;
 
     @PersistenceContext
     private EntityManager em;
@@ -241,15 +246,63 @@ public class ReportServiceImpl implements ReportService {
     }
 
     @Override
-    public List<ReportBucketPaymentBalance> getReportBucketPaymentBalance() {
+    public List<ReportBucketPaymentBalanceDTO> getReportBucketPaymentBalance() {
         String userId = userCommon.getMyUserInfo().getId();
-        return reportExpenseRevenueRepository.getReportBucketPaymentBalance(userId);
+        List<ReportBucketPaymentBalance> reportBucketPaymentBalances = reportExpenseRevenueRepository.getReportBucketPaymentBalance(userId);
+        List<ReportBucketPaymentBalanceDTO> reportBucketPaymentBalanceDTOs = new ArrayList<>();
+        for (ReportBucketPaymentBalance reportBucketPaymentBalance : reportBucketPaymentBalances) {
+            Double rate = 1.0;
+            if(!reportBucketPaymentBalance.getCurrency().equals("VND")){
+                ExchangeRateResponse exchangeRateResponse = currencyClient.exchangeRate("VND", reportBucketPaymentBalance.getCurrency(), 1L);
+                rate = exchangeRateResponse.getRate();
+            }
+            ReportBucketPaymentBalanceDTO reportBucketPaymentBalanceDTO = ReportBucketPaymentBalanceDTO.builder()
+                    .id(reportBucketPaymentBalance.getId())
+                    .accountName(reportBucketPaymentBalance.getAccountName())
+                    .accountType(reportBucketPaymentBalance.getAccountType())
+                    .balance(Math.round(reportBucketPaymentBalance.getBalance() * rate))
+                    .initialBalance(reportBucketPaymentBalance.getInitialBalance())
+                    .iconUrl(reportBucketPaymentBalance.getIconUrl())
+                    .currency(reportBucketPaymentBalance.getCurrency())
+                    .currencySymbol(reportBucketPaymentBalance.getCurrencySymbol())
+                    .build();
+            reportBucketPaymentBalanceDTOs.add(reportBucketPaymentBalanceDTO);
+        }
+        return reportBucketPaymentBalanceDTOs;
     }
 
     @Override
-    public List<ReportBucketPaymentTypeBalance> getReportBucketPaymentTypeBalance() {
+    public List<ReportBucketPaymentTypeBalanceDTO> getReportBucketPaymentTypeBalance() {
         String userId = userCommon.getMyUserInfo().getId();
-        return reportExpenseRevenueRepository.getReportBucketPaymentTypeBalance(userId);
+        List<DictionaryBucketPayment> bucketPayments = dictionaryBucketPaymentRepository.findByUser_id(userId);
+        Map<String, Map<String, Long>> grouped = bucketPayments.stream()
+                .collect(Collectors.groupingBy(
+                        DictionaryBucketPayment::getAccountType,
+                        Collectors.groupingBy(
+                                DictionaryBucketPayment::getIconUrl,
+                                Collectors.summingLong(bp -> {
+                                    Double rate = 1.0;
+                                    if(!bp.getCurrency().equals("VND")) {
+                                        ExchangeRateResponse exchangeRateResponse = currencyClient.exchangeRate("VND", bp.getCurrency(), 1L);
+                                        rate = exchangeRateResponse.getRate();
+                                    }
+                                    return bp.getBalance() != null ? Math.round(bp.getBalance() * rate) : 0;
+                                })
+                        )
+                ));
+
+        List<ReportBucketPaymentTypeBalanceDTO> result = new ArrayList<>();
+        for (Map.Entry<String, Map<String, Long>> accountTypeEntry : grouped.entrySet()) {
+            String accountType = accountTypeEntry.getKey();
+            Map<String, Long> iconMap = accountTypeEntry.getValue();
+
+            for (Map.Entry<String, Long> iconEntry : iconMap.entrySet()) {
+                String iconUrl = iconEntry.getKey();
+                Long totalBalance = iconEntry.getValue();
+                result.add(new ReportBucketPaymentTypeBalanceDTO(totalBalance, accountType, iconUrl));
+            }
+        }
+        return result;
     }
 
     @Override
@@ -287,8 +340,10 @@ public class ReportServiceImpl implements ReportService {
                 
                 // Nếu chưa có dữ liệu cho tháng bắt đầu, thêm dữ liệu từ initial hoặc initialBalance
                 if (!hasDataForStartMonth) {
+                    ExchangeRateResponse exchangeRateResponse = currencyClient.exchangeRate("VND", bucketPayment.getCurrency(), 1L);
+                    Double rate = exchangeRateResponse.getRate();
                     final String bucketPaymentId = bucketPayment.getId();
-                    Long balanceValue = bucketPayment.getInitialBalance();
+                    Long balanceValue = Math.round(bucketPayment.getInitialBalance() * rate);
                     
                     // Tìm giá trị trong initial (nếu có)
                     for (AccountBalanceFluctuation initialItem : initial) {
@@ -323,7 +378,7 @@ public class ReportServiceImpl implements ReportService {
                         
                         @Override
                         public Long getCurrentBalance() {
-                            return bucketPayment.getBalance();
+                            return Math.round(bucketPayment.getBalance() * rate);
                         }
                     });
                 }
@@ -351,8 +406,10 @@ public class ReportServiceImpl implements ReportService {
                 
                 // Nếu chưa có dữ liệu cho năm bắt đầu, thêm dữ liệu từ initial hoặc initialBalance
                 if (!hasDataForStartYear) {
+                    ExchangeRateResponse exchangeRateResponse = currencyClient.exchangeRate("VND", bucketPayment.getCurrency(), 1L);
+                    Double rate = exchangeRateResponse.getRate();
                     final String bucketPaymentId = bucketPayment.getId();
-                    Long balanceValue = bucketPayment.getInitialBalance();
+                    Long balanceValue = Math.round(bucketPayment.getInitialBalance() * rate);
                     
                     // Tìm giá trị trong initial (nếu có)
                     for (AccountBalanceFluctuation initialItem : initial) {
@@ -387,7 +444,7 @@ public class ReportServiceImpl implements ReportService {
                         
                         @Override
                         public Long getCurrentBalance() {
-                            return bucketPayment.getBalance();
+                            return Math.round(bucketPayment.getBalance() * rate);
                         }
                     });
                 }
@@ -415,8 +472,10 @@ public class ReportServiceImpl implements ReportService {
                 
                 // Nếu chưa có dữ liệu cho ngày bắt đầu, thêm dữ liệu từ initial hoặc initialBalance
                 if (!hasDataForStartDate) {
+                    ExchangeRateResponse exchangeRateResponse = currencyClient.exchangeRate("VND", bucketPayment.getCurrency(), 1L);
+                    Double rate = exchangeRateResponse.getRate();
                     final String bucketPaymentId = bucketPayment.getId();
-                    Long balanceValue = bucketPayment.getInitialBalance();
+                    Long balanceValue = Math.round(bucketPayment.getInitialBalance());
                     
                     // Tìm giá trị trong initial (nếu có)
                     for (AccountBalanceFluctuation initialItem : initial) {
@@ -451,7 +510,7 @@ public class ReportServiceImpl implements ReportService {
                         
                         @Override
                         public Long getCurrentBalance() {
-                            return bucketPayment.getBalance();
+                            return Math.round(bucketPayment.getBalance() * rate);
                         }
                     });
                 }
@@ -610,7 +669,7 @@ public class ReportServiceImpl implements ReportService {
     }
 
     @Override
-    public ReportTotalBucketPayment getReportTotalBucketPayment(ReportFilterOptionsRequest request){
+    public ReportTotalBucketPaymentDTO getReportTotalBucketPayment(ReportFilterOptionsRequest request){
         String userId = userCommon.getMyUserInfo().getId();
         String timeOption = request.getTimeOption();
         String bucketPaymentIds = request.getBucketPaymentIds();
@@ -637,7 +696,25 @@ public class ReportServiceImpl implements ReportService {
             startDate = LocalDate.parse(start);
             endDate = LocalDate.parse(end);
         }
-        return reportExpenseRevenueRepository.getTotalBucketPayment(userId, bucketPaymentIds, startDate, endDate);
+        ReportTotalBucketPayment reportTotalBucketPayment = reportExpenseRevenueRepository.getTotalBucketPayment(userId, bucketPaymentIds, startDate, endDate);
+        Long totalInitialBalance = 0L;
+        Long totalBalance = 0L;
+        List<DictionaryBucketPayment> bucketPayments = dictionaryBucketPaymentRepository.findByUser_idAndBucketPaymentIds(userId, bucketPaymentIds);
+        for(DictionaryBucketPayment bucketPayment : bucketPayments){
+            Double rate = 1.0;
+            if(!bucketPayment.getCurrency().equals("VND")){
+                ExchangeRateResponse exchangeRateResponse = currencyClient.exchangeRate("VND", bucketPayment.getCurrency(), 1L);
+                rate = exchangeRateResponse.getRate();
+            }
+            totalInitialBalance += Math.round(bucketPayment.getInitialBalance() * rate);
+            totalBalance += Math.round(bucketPayment.getBalance() * rate);
+        }
+        return ReportTotalBucketPaymentDTO.builder()
+                .totalInitialBalance(totalInitialBalance)
+                .totalExpense(reportTotalBucketPayment.getTotalExpense())
+                .totalRevenue(reportTotalBucketPayment.getTotalRevenue())
+                .totalBalance(totalBalance)
+                .build();
     }
 
     @Override

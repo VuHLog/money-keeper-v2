@@ -12,6 +12,8 @@ import org.apache.poi.xssf.usermodel.*;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.text.DecimalFormat;
+import java.text.DecimalFormatSymbols;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
@@ -191,7 +193,7 @@ public class TransactionHistoryExcelExporter {
 
         String[] headers = {
                 "Ngày giao dịch", "Số tiền", "Loại giao dịch",
-                "Tên danh mục", "Tài khoản", "Loại chuyển khoản", "Người thụ hưởng",
+                "Danh mục", "Tài khoản", "Loại chuyển khoản", "Người thụ hưởng",
                 "Nhận tiền từ", "Tài khoản thụ hưởng", "Tài khoản gửi tiền",
                 "Chuyến đi/Sự kiện", "Địa điểm", "Ghi chú"
         };
@@ -217,9 +219,18 @@ public class TransactionHistoryExcelExporter {
         }
         int rowCount = headerRowIndex;
 
+        DecimalFormatSymbols symbols = new DecimalFormatSymbols();
+        symbols.setGroupingSeparator('.');
+        symbols.setDecimalSeparator(',');
+        DecimalFormat formatter = new DecimalFormat("#,###.##", symbols);
+
         for (TransactionHistory transaction : transactionHistories) {
             Row row = sheet.createRow(rowCount);
             boolean isExpense = transaction.getTransactionType().equals(TransactionType.EXPENSE.getType());
+
+            String currency = transaction.getCurrency();
+            String currencySymbol = transaction.getCurrencySymbol();
+            Boolean isVND = currency.equals("VND");
 
             // Ngày giao dịch
             Cell cell = row.createCell(0);
@@ -229,7 +240,7 @@ public class TransactionHistoryExcelExporter {
 
             // Số tiền
             cell = row.createCell(1);
-            cell.setCellValue(transaction.getAmount());
+            cell.setCellValue(isVND? (formatter.format(transaction.getConvertedAmount()) + " ₫") : (currencySymbol + formatter.format(transaction.getConvertedAmount()) + " ~ " + formatter.format(transaction.getAmount()) + " ₫"));
             cell.setCellStyle(isExpense ? amountExpenseStyle : amountRevenueStyle);
             sheet.autoSizeColumn(1);
 
@@ -241,7 +252,7 @@ public class TransactionHistoryExcelExporter {
 
             // Tên danh mục
             cell = row.createCell(3);
-            cell.setCellValue(transaction.getCategoryName());
+            cell.setCellValue(transaction.getCategoryName() != null ? transaction.getCategoryName() : "Danh mục không xác định");
             cell.setCellStyle(baseStyle);
             sheet.autoSizeColumn(3);
 
@@ -251,24 +262,25 @@ public class TransactionHistoryExcelExporter {
             cell.setCellStyle(baseStyle);
             sheet.autoSizeColumn(4);
 
-            // Người thụ hưởng
-            cell = row.createCell(5);
-            cell.setCellValue(transaction.getBeneficiary());
-            cell.setCellStyle(baseStyle);
-            sheet.autoSizeColumn(5);
-
-            // Nhận tiền từ
-            cell = row.createCell(6);
-            cell.setCellValue(transaction.getCollectMoneyWho());
-            cell.setCellStyle(baseStyle);
-            sheet.autoSizeColumn(6);
-
             // Loại chuyển khoản
-            cell = row.createCell(7);
+            cell = row.createCell(5);
             cell.setCellValue(transaction.getTransferType().equals(TransferType.NORMAL.getType()) ?
                     "Thông thường" : "Chuyển khoản");
             cell.setCellStyle(baseStyle);
+            sheet.autoSizeColumn(5);
+
+            // Người thụ hưởng
+            cell = row.createCell(6);
+            cell.setCellValue(transaction.getBeneficiary());
+            cell.setCellStyle(baseStyle);
+            sheet.autoSizeColumn(6);
+
+            // Nhận tiền từ
+            cell = row.createCell(7);
+            cell.setCellValue(transaction.getCollectMoneyWho());
+            cell.setCellStyle(baseStyle);
             sheet.autoSizeColumn(7);
+
 
             // Tên tài khoản thụ hưởng
             cell = row.createCell(8);
@@ -324,12 +336,9 @@ public class TransactionHistoryExcelExporter {
         summaryStyle.setFillForegroundColor(IndexedColors.GREY_25_PERCENT.getIndex());
         summaryStyle.setFillPattern(FillPatternType.SOLID_FOREGROUND);
 
-        DataFormat format = workbook.createDataFormat();
-
         CellStyle totalAmountExpenseStyle = workbook.createCellStyle();
         totalAmountExpenseStyle.cloneStyleFrom(summaryStyle);
         totalAmountExpenseStyle.setAlignment(HorizontalAlignment.RIGHT);
-        totalAmountExpenseStyle.setDataFormat(format.getFormat("#,##0 [$₫-vi-VN]"));
         XSSFFont fontExpense = workbook.createFont();
         fontExpense.setFontHeight(12);
         fontExpense.setFontName("Arial");
@@ -341,7 +350,6 @@ public class TransactionHistoryExcelExporter {
         CellStyle totalAmountRevenueStyle = workbook.createCellStyle();
         totalAmountRevenueStyle.cloneStyleFrom(summaryStyle);
         totalAmountRevenueStyle.setAlignment(HorizontalAlignment.RIGHT);
-        totalAmountRevenueStyle.setDataFormat(format.getFormat("#,##0 [$₫-vi-VN]"));
         XSSFFont fontRevenue = workbook.createFont();
         fontRevenue.setFontHeight(12);
         fontRevenue.setFontName("Arial");
@@ -352,13 +360,17 @@ public class TransactionHistoryExcelExporter {
         CellStyle summaryAmountStyle = workbook.createCellStyle();
         summaryAmountStyle.cloneStyleFrom(summaryStyle);
         summaryAmountStyle.setAlignment(HorizontalAlignment.RIGHT);
-        summaryAmountStyle.setDataFormat(format.getFormat("#,##0 [$₫-vi-VN]"));
         XSSFFont fontSummary = workbook.createFont();
         fontSummary.setFontHeight(12);
         fontSummary.setFontName("Arial");
         fontSummary.setBold(true);
         fontSummary.setColor(IndexedColors.BLACK.getIndex());
         summaryAmountStyle.setFont(fontSummary);
+
+        DecimalFormatSymbols symbols = new DecimalFormatSymbols();
+        symbols.setGroupingSeparator('.');
+        symbols.setDecimalSeparator(',');
+        DecimalFormat formatter = new DecimalFormat("#,###.##", symbols);
 
         double totalExpense = 0;
         double totalRevenue = 0;
@@ -383,8 +395,9 @@ public class TransactionHistoryExcelExporter {
         cell.setCellStyle(totalRevenueStyle);
 
         cell = row.createCell(1);
-        cell.setCellValue(totalRevenue);
+        cell.setCellValue(formatter.format(totalRevenue) + " ₫");
         cell.setCellStyle(totalAmountRevenueStyle);
+        sheet.autoSizeColumn(1);
 
         row = sheet.createRow(rowIndex + 3);
         cell = row.createCell(0);
@@ -392,8 +405,9 @@ public class TransactionHistoryExcelExporter {
         cell.setCellStyle(totalExpenseStyle);
 
         cell = row.createCell(1);
-        cell.setCellValue(totalExpense);
+        cell.setCellValue(formatter.format(totalExpense) + " ₫");
         cell.setCellStyle(totalAmountExpenseStyle);
+        sheet.autoSizeColumn(1);
 
 
         row = sheet.createRow(rowIndex + 4);
@@ -402,8 +416,9 @@ public class TransactionHistoryExcelExporter {
         cell.setCellStyle(summaryStyle);
 
         cell = row.createCell(1);
-        cell.setCellValue(totalRevenue - totalExpense);
+        cell.setCellValue(formatter.format(totalRevenue - totalExpense) + " ₫");
         cell.setCellStyle(summaryAmountStyle);
+        sheet.autoSizeColumn(1);
     }
 
     private void addTitleToSheet(ReportFilterOptionsRequest request) {

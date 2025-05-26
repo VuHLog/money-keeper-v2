@@ -4,6 +4,7 @@ import com.vuhlog.money_keeper.constants.ReportTimeOptionType;
 import com.vuhlog.money_keeper.constants.TransactionType;
 import com.vuhlog.money_keeper.constants.TransferType;
 import com.vuhlog.money_keeper.dto.request.ReportFilterOptionsRequest;
+import com.vuhlog.money_keeper.dto.response.ReportTotalBucketPaymentDTO;
 import com.vuhlog.money_keeper.dto.response.responseinterface.report.ReportBucketPayment;
 import com.vuhlog.money_keeper.dto.response.responseinterface.report.ReportTotalBucketPayment;
 import com.vuhlog.money_keeper.dto.response.responseinterface.report.TransactionHistory;
@@ -17,6 +18,7 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.text.DecimalFormat;
+import java.text.DecimalFormatSymbols;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
@@ -25,9 +27,9 @@ public class BucketPaymentExcelExporter {
     private XSSFWorkbook workbook;
     private XSSFSheet sheet;
     private List<ReportBucketPayment> data;
-    private ReportTotalBucketPayment totalData;
+    private ReportTotalBucketPaymentDTO totalData;
 
-    public BucketPaymentExcelExporter(List<ReportBucketPayment> data, ReportTotalBucketPayment totalData) {
+    public BucketPaymentExcelExporter(List<ReportBucketPayment> data, ReportTotalBucketPaymentDTO totalData) {
         this.data = data;
         this.totalData = totalData;
         workbook = new XSSFWorkbook();
@@ -216,7 +218,6 @@ public class BucketPaymentExcelExporter {
         CellStyle totalAmountExpenseStyle = workbook.createCellStyle();
         totalAmountExpenseStyle.cloneStyleFrom(baseStyle);
         totalAmountExpenseStyle.setAlignment(HorizontalAlignment.RIGHT);
-        totalAmountExpenseStyle.setDataFormat(format.getFormat("#,##0 [$₫-vi-VN]"));
         XSSFFont fontExpense = workbook.createFont();
         fontExpense.setFontHeight(12);
         fontExpense.setFontName("Arial");
@@ -228,7 +229,6 @@ public class BucketPaymentExcelExporter {
         CellStyle totalAmountRevenueStyle = workbook.createCellStyle();
         totalAmountRevenueStyle.cloneStyleFrom(baseStyle);
         totalAmountRevenueStyle.setAlignment(HorizontalAlignment.RIGHT);
-        totalAmountRevenueStyle.setDataFormat(format.getFormat("#,##0 [$₫-vi-VN]"));
         XSSFFont fontRevenue = workbook.createFont();
         fontRevenue.setFontHeight(12);
         fontRevenue.setFontName("Arial");
@@ -239,7 +239,6 @@ public class BucketPaymentExcelExporter {
         CellStyle summaryAmountStyle = workbook.createCellStyle();
         summaryAmountStyle.cloneStyleFrom(baseStyle);
         summaryAmountStyle.setAlignment(HorizontalAlignment.RIGHT);
-        summaryAmountStyle.setDataFormat(format.getFormat("#,##0 [$₫-vi-VN]"));
         XSSFFont fontSummary = workbook.createFont();
         fontSummary.setFontHeight(12);
         fontSummary.setFontName("Arial");
@@ -250,7 +249,6 @@ public class BucketPaymentExcelExporter {
         CellStyle totalBalanceStyle = workbook.createCellStyle();
         totalBalanceStyle.cloneStyleFrom(baseStyle);
         totalBalanceStyle.setAlignment(HorizontalAlignment.RIGHT);
-        totalBalanceStyle.setDataFormat(format.getFormat("#,##0 [$₫-vi-VN]"));
         XSSFFont fontTotalBalance = workbook.createFont();
         fontTotalBalance.setFontHeight(12);
         fontTotalBalance.setFontName("Arial");
@@ -264,10 +262,17 @@ public class BucketPaymentExcelExporter {
         }
         int rowCount = headerRowIndex;
 
-        DecimalFormat formatter = new DecimalFormat("#,###");
+        DecimalFormatSymbols symbols = new DecimalFormatSymbols();
+        symbols.setGroupingSeparator('.');
+        symbols.setDecimalSeparator(',');
+        DecimalFormat formatter = new DecimalFormat("#,###.##", symbols);
         
         for (ReportBucketPayment bucketPayment : data) {
             Row row = sheet.createRow(rowCount);
+
+            String currency = bucketPayment.getCurrency();
+            String currencySymbol = bucketPayment.getCurrencySymbol();
+            Boolean isVND = currency.equals("VND");
 
             Cell cell = row.createCell(0);
             cell.setCellValue(bucketPayment.getAccountName());
@@ -275,29 +280,29 @@ public class BucketPaymentExcelExporter {
             sheet.autoSizeColumn(0);
 
             cell = row.createCell(1);
-            cell.setCellValue(bucketPayment.getInitialBalance());
+            cell.setCellValue(isVND? (formatter.format(bucketPayment.getInitialBalance()) + " ₫") : (currencySymbol + formatter.format(bucketPayment.getInitialBalance())));
             cell.setCellStyle(summaryAmountStyle);
             sheet.autoSizeColumn(1);
 
             cell = row.createCell(2);
-            cell.setCellValue(bucketPayment.getTotalRevenue());
+            cell.setCellValue(isVND? (formatter.format(bucketPayment.getTotalRevenue()) + " ₫") : (currencySymbol + formatter.format(bucketPayment.getConvertedTotalRevenue()) + " ~ " + formatter.format(bucketPayment.getTotalRevenue()) + " ₫"));
             cell.setCellStyle(totalAmountRevenueStyle);
             sheet.autoSizeColumn(2);
 
             cell = row.createCell(3);
-            cell.setCellValue(bucketPayment.getTotalExpense());
+            cell.setCellValue(isVND? (formatter.format(bucketPayment.getTotalExpense()) + " ₫") : (currencySymbol + formatter.format(bucketPayment.getConvertedTotalExpense()) + " ~ " + formatter.format(bucketPayment.getTotalExpense()) + " ₫"));
             cell.setCellStyle(totalAmountExpenseStyle);
             sheet.autoSizeColumn(3);
 
             cell = row.createCell(4);
-            cell.setCellValue(bucketPayment.getBalance());
+            cell.setCellValue(isVND? (formatter.format(bucketPayment.getBalance()) + " ₫") : (currencySymbol + formatter.format(bucketPayment.getBalance())));
             cell.setCellStyle(totalBalanceStyle);
             sheet.autoSizeColumn(4);
 
             Double disparityPercent = (double) (bucketPayment.getDisparity())/ bucketPayment.getInitialBalance() * 100;
             disparityPercent = Math.round(disparityPercent*10.0)/10.0;
             cell = row.createCell(5);
-            cell.setCellValue(formatter.format(bucketPayment.getDisparity()) + " ₫" + " (" + disparityPercent + "%)");
+            cell.setCellValue((isVND? (formatter.format(bucketPayment.getDisparity()) + currencySymbol) : (currencySymbol + formatter.format(bucketPayment.getDisparity()))) + " (" + disparityPercent + "%)");
             cell.setCellStyle(bucketPayment.getDisparity() >= 0 ? totalAmountRevenueStyle : totalAmountExpenseStyle);
             sheet.autoSizeColumn(5);
 
@@ -330,7 +335,6 @@ public class BucketPaymentExcelExporter {
         CellStyle totalAmountExpenseStyle = workbook.createCellStyle();
         totalAmountExpenseStyle.cloneStyleFrom(summaryStyle);
         totalAmountExpenseStyle.setAlignment(HorizontalAlignment.RIGHT);
-        totalAmountExpenseStyle.setDataFormat(format.getFormat("#,##0 [$₫-vi-VN]"));
         XSSFFont fontExpense = workbook.createFont();
         fontExpense.setFontHeight(12);
         fontExpense.setFontName("Arial");
@@ -342,7 +346,6 @@ public class BucketPaymentExcelExporter {
         CellStyle totalAmountRevenueStyle = workbook.createCellStyle();
         totalAmountRevenueStyle.cloneStyleFrom(summaryStyle);
         totalAmountRevenueStyle.setAlignment(HorizontalAlignment.RIGHT);
-        totalAmountRevenueStyle.setDataFormat(format.getFormat("#,##0 [$₫-vi-VN]"));
         XSSFFont fontRevenue = workbook.createFont();
         fontRevenue.setFontHeight(12);
         fontRevenue.setFontName("Arial");
@@ -353,7 +356,6 @@ public class BucketPaymentExcelExporter {
         CellStyle summaryAmountStyle = workbook.createCellStyle();
         summaryAmountStyle.cloneStyleFrom(summaryStyle);
         summaryAmountStyle.setAlignment(HorizontalAlignment.RIGHT);
-        summaryAmountStyle.setDataFormat(format.getFormat("#,##0 [$₫-vi-VN]"));
         XSSFFont fontSummary = workbook.createFont();
         fontSummary.setFontHeight(12);
         fontSummary.setFontName("Arial");
@@ -364,13 +366,17 @@ public class BucketPaymentExcelExporter {
         CellStyle totalBalanceStyle = workbook.createCellStyle();
         totalBalanceStyle.cloneStyleFrom(summaryStyle);
         totalBalanceStyle.setAlignment(HorizontalAlignment.RIGHT);
-        totalBalanceStyle.setDataFormat(format.getFormat("#,##0 [$₫-vi-VN]"));
         XSSFFont fontTotalBalance = workbook.createFont();
         fontTotalBalance.setFontHeight(12);
         fontTotalBalance.setFontName("Arial");
         fontTotalBalance.setBold(true);
         fontTotalBalance.setColor(IndexedColors.BLUE.getIndex());
         totalBalanceStyle.setFont(fontTotalBalance);
+
+        DecimalFormatSymbols symbols = new DecimalFormatSymbols();
+        symbols.setGroupingSeparator('.');
+        symbols.setDecimalSeparator(',');
+        DecimalFormat formatter = new DecimalFormat("#,###.##", symbols);
 
         Long totalInitialBalance = totalData.getTotalInitialBalance();
         Long totalExpense = totalData.getTotalExpense();
@@ -389,20 +395,20 @@ public class BucketPaymentExcelExporter {
         cell.setCellStyle(totalRevenueStyle);
 
         cell = row.createCell(1);
-        cell.setCellValue(totalInitialBalance);
+        cell.setCellValue(formatter.format(totalInitialBalance) + " ₫");
         cell.setCellStyle(summaryAmountStyle);
 
 
         cell = row.createCell(2);
-        cell.setCellValue(totalRevenue);
+        cell.setCellValue(formatter.format(totalRevenue) + " ₫");
         cell.setCellStyle(totalAmountRevenueStyle);
 
         cell = row.createCell(3);
-        cell.setCellValue(totalExpense);
+        cell.setCellValue(formatter.format(totalExpense) + " ₫");
         cell.setCellStyle(totalAmountExpenseStyle);
 
         cell = row.createCell(4);
-        cell.setCellValue(totalBalance);
+        cell.setCellValue(formatter.format(totalBalance) + " ₫");
         cell.setCellStyle(totalBalanceStyle);
     }
 
@@ -431,7 +437,7 @@ public class BucketPaymentExcelExporter {
         Cell titleCell = titleRow.createCell(0);
         titleCell.setCellValue("BÁO CÁO THEO TÀI KHOẢN");
         titleCell.setCellStyle(titleStyle);
-        sheet.addMergedRegion(new CellRangeAddress(0, 0, 0, 13));
+        sheet.addMergedRegion(new CellRangeAddress(0, 0, 0, 5));
 
         // Nếu có request, tạo dòng phụ đề với thông tin khoảng thời gian
         if (request != null && request.getCustomTimeRange() != null) {
@@ -454,7 +460,7 @@ public class BucketPaymentExcelExporter {
 
             subtitleCell.setCellValue(timeRangeTitle);
             subtitleCell.setCellStyle(subtitleStyle);
-            sheet.addMergedRegion(new CellRangeAddress(1, 1, 0, 13));
+            sheet.addMergedRegion(new CellRangeAddress(1, 1, 0, 5));
 
             // Thêm dòng trống sau tiêu đề
             sheet.createRow(2);

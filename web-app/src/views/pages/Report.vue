@@ -7,7 +7,6 @@ import IncomeExpenseReport from './report/IncomeExpenseReport.vue';
 import AccountReport from './report/AccountReport.vue';
 import CategoryReport from './report/CategoryReport.vue';
 import SpendingLimitControlReport from './report/SpendingLimitControlReport.vue';
-import TransactionHistoryReport from './report/TransactionHistoryReport.vue';
 
 // Register Font Awesome icons
 library.add(faChartLine, faWallet, faTags, faBalanceScale, faHistory, faListAlt);
@@ -19,7 +18,6 @@ const reports = [
     { title: 'Báo cáo theo tài khoản', component: 'AccountReport', icon: ['fas', 'wallet'] },
     { title: 'Báo cáo theo danh mục', component: 'CategoryReport', icon: ['fas', 'tags'] },
     { title: 'Báo cáo kiểm soát hạn mức chi tiêu', component: 'SpendingLimitControlReport', icon: ['fas', 'balance-scale'] },
-    { title: 'Báo cáo lịch sử giao dịch', component: 'TransactionHistoryReport', icon: ['fas', 'history'] },
 ];
 
 // Map component names to actual component objects
@@ -28,7 +26,6 @@ const componentMap = {
     AccountReport,
     CategoryReport,
     SpendingLimitControlReport,
-    TransactionHistoryReport,
 };
 </script>
 
