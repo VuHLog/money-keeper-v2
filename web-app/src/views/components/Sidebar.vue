@@ -142,17 +142,25 @@ const isActive = (path) => {
               'justify-center': !isOpen
             }"
           >
-            <font-awesome-icon 
-              :icon="item.icon" 
-              class="text-xl transition-colors duration-200" 
+            <!-- Icon container with fixed width for consistent alignment -->
+            <div 
+              class="flex items-center justify-center transition-colors duration-200"
               :class="{ 
-                'mr-3': isOpen,
-                'text-primary': isActive(item.path)
-              }" 
-            />
+                'w-6 h-6 mr-3': isOpen,
+                'w-6 h-6': !isOpen
+              }"
+            >
+              <font-awesome-icon 
+                :icon="item.icon" 
+                class="text-lg transition-colors duration-200" 
+                :class="{ 
+                  'text-primary': isActive(item.path)
+                }" 
+              />
+            </div>
             <span 
               v-if="isOpen" 
-              class="text-base transition-colors duration-200"
+              class="text-base transition-colors duration-200 flex-1"
               :class="{ 'font-medium': isActive(item.path) }"
             >{{ item.label }}</span>
             
