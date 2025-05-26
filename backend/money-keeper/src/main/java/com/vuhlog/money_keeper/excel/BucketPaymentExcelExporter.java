@@ -437,7 +437,7 @@ public class BucketPaymentExcelExporter {
         Cell titleCell = titleRow.createCell(0);
         titleCell.setCellValue("BÁO CÁO THEO TÀI KHOẢN");
         titleCell.setCellStyle(titleStyle);
-        sheet.addMergedRegion(new CellRangeAddress(0, 0, 0, 13));
+        sheet.addMergedRegion(new CellRangeAddress(0, 0, 0, 5));
 
         // Nếu có request, tạo dòng phụ đề với thông tin khoảng thời gian
         if (request != null && request.getCustomTimeRange() != null) {
@@ -460,7 +460,7 @@ public class BucketPaymentExcelExporter {
 
             subtitleCell.setCellValue(timeRangeTitle);
             subtitleCell.setCellStyle(subtitleStyle);
-            sheet.addMergedRegion(new CellRangeAddress(1, 1, 0, 13));
+            sheet.addMergedRegion(new CellRangeAddress(1, 1, 0, 5));
 
             // Thêm dòng trống sau tiêu đề
             sheet.createRow(2);

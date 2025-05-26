@@ -17,6 +17,7 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.text.DecimalFormat;
+import java.text.DecimalFormatSymbols;
 import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
@@ -149,7 +150,7 @@ public class ExpenseLimitExcelExporter {
         headerStyle.setBorderLeft(BorderStyle.MEDIUM);
 
         String[] headers = {
-                "Tên hạn mức", "Tên tài khoản áp dụng", "Danh mục", "Hạn mức",
+                "Tên hạn mức", "Tài khoản áp dụng", "Danh mục", "Hạn mức",
                 "Đã chi tiêu", "Còn lại", "Trạng thái", "Tiến độ", "Thời gian"
         };
 
@@ -162,13 +163,11 @@ public class ExpenseLimitExcelExporter {
 
     private void writeDataRows() {
         CellStyle baseStyle = createBaseStyle();
-        CellStyle dateStyle = createDateStyle();
 
         DataFormat format = workbook.createDataFormat();
         CellStyle totalAmountExpenseStyle = workbook.createCellStyle();
         totalAmountExpenseStyle.cloneStyleFrom(baseStyle);
         totalAmountExpenseStyle.setAlignment(HorizontalAlignment.RIGHT);
-        totalAmountExpenseStyle.setDataFormat(format.getFormat("#,##0 [$₫-vi-VN]"));
         XSSFFont fontExpense = workbook.createFont();
         fontExpense.setFontHeight(12);
         fontExpense.setFontName("Arial");
@@ -180,7 +179,6 @@ public class ExpenseLimitExcelExporter {
         CellStyle totalAmountRevenueStyle = workbook.createCellStyle();
         totalAmountRevenueStyle.cloneStyleFrom(baseStyle);
         totalAmountRevenueStyle.setAlignment(HorizontalAlignment.RIGHT);
-        totalAmountRevenueStyle.setDataFormat(format.getFormat("#,##0 [$₫-vi-VN]"));
         XSSFFont fontRevenue = workbook.createFont();
         fontRevenue.setFontHeight(12);
         fontRevenue.setFontName("Arial");
@@ -191,7 +189,6 @@ public class ExpenseLimitExcelExporter {
         CellStyle summaryAmountStyle = workbook.createCellStyle();
         summaryAmountStyle.cloneStyleFrom(baseStyle);
         summaryAmountStyle.setAlignment(HorizontalAlignment.RIGHT);
-        summaryAmountStyle.setDataFormat(format.getFormat("#,##0 [$₫-vi-VN]"));
         XSSFFont fontSummary = workbook.createFont();
         fontSummary.setFontHeight(12);
         fontSummary.setFontName("Arial");
@@ -202,7 +199,6 @@ public class ExpenseLimitExcelExporter {
         CellStyle redStyle = workbook.createCellStyle();
         redStyle.cloneStyleFrom(baseStyle);
         redStyle.setAlignment(HorizontalAlignment.RIGHT);
-        redStyle.setDataFormat(format.getFormat("#,##0 [$₫-vi-VN]"));
         XSSFFont fontRed = workbook.createFont();
         fontRed.setFontHeight(12);
         fontRed.setFontName("Arial");
@@ -213,7 +209,6 @@ public class ExpenseLimitExcelExporter {
         CellStyle yellowStyle = workbook.createCellStyle();
         yellowStyle.cloneStyleFrom(baseStyle);
         yellowStyle.setAlignment(HorizontalAlignment.RIGHT);
-        yellowStyle.setDataFormat(format.getFormat("#,##0 [$₫-vi-VN]"));
         XSSFFont fontYellow = workbook.createFont();
         fontYellow.setFontHeight(12);
         fontYellow.setFontName("Arial");
@@ -232,16 +227,23 @@ public class ExpenseLimitExcelExporter {
         fontGreen.setColor(IndexedColors.GREEN.getIndex());
         greenStyle.setFont(fontGreen);
 
+        DecimalFormatSymbols symbols = new DecimalFormatSymbols();
+        symbols.setGroupingSeparator('.');
+        symbols.setDecimalSeparator(',');
+        DecimalFormat formatter = new DecimalFormat("#,###.##", symbols);
+
         int headerRowIndex = 0;
         while (sheet.getRow(headerRowIndex) != null) {
             headerRowIndex++;
         }
         int rowCount = headerRowIndex;
 
-        DecimalFormat formatter = new DecimalFormat("#,###");
-
         for (ExpenseLimitResponse expenseLimit : data) {
             Row row = sheet.createRow(rowCount);
+
+            String currency = expenseLimit.getCurrency();
+            String currencySymbol = expenseLimit.getCurrencySymbol();
+            Boolean isVND = currency.equals("VND");
 
             Cell cell = row.createCell(0);
             cell.setCellValue(expenseLimit.getName());
@@ -259,18 +261,18 @@ public class ExpenseLimitExcelExporter {
             sheet.setColumnWidth(2, 18000);
 
             cell = row.createCell(3);
-            cell.setCellValue(expenseLimit.getAmount());
+            cell.setCellValue(isVND? (formatter.format(expenseLimit.getAmount()) + " ₫") : (currencySymbol + formatter.format(expenseLimit.getAmount())));
             cell.setCellStyle(summaryAmountStyle);
             sheet.autoSizeColumn(3);
 
             cell = row.createCell(4);
-            cell.setCellValue(expenseLimit.getSpentAmount());
+            cell.setCellValue(isVND? (formatter.format(expenseLimit.getSpentAmount()) + " ₫") : (currencySymbol + formatter.format(expenseLimit.getSpentAmount())));
             cell.setCellStyle(totalAmountExpenseStyle);
             sheet.autoSizeColumn(4);
 
             Long remainingAmount = expenseLimit.getAmount() - expenseLimit.getSpentAmount();
             cell = row.createCell(5);
-            cell.setCellValue(remainingAmount);
+            cell.setCellValue(isVND? (formatter.format(remainingAmount) + " ₫") : (currencySymbol + formatter.format(remainingAmount)));
             cell.setCellStyle(remainingAmount > 0 ? totalAmountRevenueStyle : totalAmountExpenseStyle);
             sheet.autoSizeColumn(5);
 
@@ -301,95 +303,95 @@ public class ExpenseLimitExcelExporter {
     }
 
     private void addSummaryRow(int rowIndex) {
-        Row row = sheet.createRow(rowIndex);
-        row.setHeightInPoints(25);
-
-        CellStyle summaryStyle = workbook.createCellStyle();
-        summaryStyle.cloneStyleFrom(createBaseStyle());
-
-        XSSFFont boldFont = workbook.createFont();
-        boldFont.setBold(true);
-        boldFont.setFontHeight(12);
-        boldFont.setFontName("Arial");
-        summaryStyle.setFont(boldFont);
-
-        summaryStyle.setFillForegroundColor(IndexedColors.GREY_25_PERCENT.getIndex());
-        summaryStyle.setFillPattern(FillPatternType.SOLID_FOREGROUND);
-
-        DataFormat format = workbook.createDataFormat();
-
-        CellStyle totalAmountExpenseStyle = workbook.createCellStyle();
-        totalAmountExpenseStyle.cloneStyleFrom(summaryStyle);
-        totalAmountExpenseStyle.setAlignment(HorizontalAlignment.RIGHT);
-        totalAmountExpenseStyle.setDataFormat(format.getFormat("#,##0 [$₫-vi-VN]"));
-        XSSFFont fontExpense = workbook.createFont();
-        fontExpense.setFontHeight(12);
-        fontExpense.setFontName("Arial");
-        fontExpense.setBold(true);
-        fontExpense.setColor(IndexedColors.RED.getIndex());
-        totalAmountExpenseStyle.setFont(fontExpense);
-
-
-        CellStyle totalAmountRevenueStyle = workbook.createCellStyle();
-        totalAmountRevenueStyle.cloneStyleFrom(summaryStyle);
-        totalAmountRevenueStyle.setAlignment(HorizontalAlignment.RIGHT);
-        totalAmountRevenueStyle.setDataFormat(format.getFormat("#,##0 [$₫-vi-VN]"));
-        XSSFFont fontRevenue = workbook.createFont();
-        fontRevenue.setFontHeight(12);
-        fontRevenue.setFontName("Arial");
-        fontRevenue.setBold(true);
-        fontRevenue.setColor(IndexedColors.GREEN.getIndex());
-        totalAmountRevenueStyle.setFont(fontRevenue);
-
-        CellStyle summaryAmountStyle = workbook.createCellStyle();
-        summaryAmountStyle.cloneStyleFrom(summaryStyle);
-        summaryAmountStyle.setAlignment(HorizontalAlignment.RIGHT);
-        summaryAmountStyle.setDataFormat(format.getFormat("#,##0 [$₫-vi-VN]"));
-        XSSFFont fontSummary = workbook.createFont();
-        fontSummary.setFontHeight(12);
-        fontSummary.setFontName("Arial");
-        fontSummary.setBold(true);
-        fontSummary.setColor(IndexedColors.BLACK.getIndex());
-        summaryAmountStyle.setFont(fontSummary);
-
-        Long totalAmountLimit = 0L;
-        Long totalSpentAmount = 0L;
-
-        for (ExpenseLimitResponse expenseLimit : data) {
-            totalAmountLimit += expenseLimit.getAmount();
-            totalSpentAmount += expenseLimit.getSpentAmount();
-        }
-
-        Long remainingAmount = totalAmountLimit - totalSpentAmount;
-
-        row = sheet.createRow(rowIndex + 2);
-        Cell cell = row.createCell(0);
-        cell.setCellValue("Tổng :");
-        cell.setCellStyle(summaryStyle);
-
-        for (int col = 0; col <= 2; col++) {
-            Cell currentCell = row.getCell(col);
-            if (currentCell == null) {
-                currentCell = row.createCell(col);
-            }
-            currentCell.setCellStyle(summaryStyle);
-        }
-
-
-        sheet.addMergedRegion(new CellRangeAddress(rowIndex + 2, rowIndex + 2, 0, 2));
-
-        cell = row.createCell(3);
-        cell.setCellValue(totalAmountLimit);
-        cell.setCellStyle(summaryAmountStyle);
-
-
-        cell = row.createCell(4);
-        cell.setCellValue(totalSpentAmount);
-        cell.setCellStyle(totalAmountExpenseStyle);
-
-        cell = row.createCell(5);
-        cell.setCellValue(remainingAmount);
-        cell.setCellStyle(remainingAmount > 0 ? totalAmountRevenueStyle : totalAmountExpenseStyle);
+//        Row row = sheet.createRow(rowIndex);
+//        row.setHeightInPoints(25);
+//
+//        CellStyle summaryStyle = workbook.createCellStyle();
+//        summaryStyle.cloneStyleFrom(createBaseStyle());
+//
+//        XSSFFont boldFont = workbook.createFont();
+//        boldFont.setBold(true);
+//        boldFont.setFontHeight(12);
+//        boldFont.setFontName("Arial");
+//        summaryStyle.setFont(boldFont);
+//
+//        summaryStyle.setFillForegroundColor(IndexedColors.GREY_25_PERCENT.getIndex());
+//        summaryStyle.setFillPattern(FillPatternType.SOLID_FOREGROUND);
+//
+//        DataFormat format = workbook.createDataFormat();
+//
+//        CellStyle totalAmountExpenseStyle = workbook.createCellStyle();
+//        totalAmountExpenseStyle.cloneStyleFrom(summaryStyle);
+//        totalAmountExpenseStyle.setAlignment(HorizontalAlignment.RIGHT);
+//        totalAmountExpenseStyle.setDataFormat(format.getFormat("#,##0 [$₫-vi-VN]"));
+//        XSSFFont fontExpense = workbook.createFont();
+//        fontExpense.setFontHeight(12);
+//        fontExpense.setFontName("Arial");
+//        fontExpense.setBold(true);
+//        fontExpense.setColor(IndexedColors.RED.getIndex());
+//        totalAmountExpenseStyle.setFont(fontExpense);
+//
+//
+//        CellStyle totalAmountRevenueStyle = workbook.createCellStyle();
+//        totalAmountRevenueStyle.cloneStyleFrom(summaryStyle);
+//        totalAmountRevenueStyle.setAlignment(HorizontalAlignment.RIGHT);
+//        totalAmountRevenueStyle.setDataFormat(format.getFormat("#,##0 [$₫-vi-VN]"));
+//        XSSFFont fontRevenue = workbook.createFont();
+//        fontRevenue.setFontHeight(12);
+//        fontRevenue.setFontName("Arial");
+//        fontRevenue.setBold(true);
+//        fontRevenue.setColor(IndexedColors.GREEN.getIndex());
+//        totalAmountRevenueStyle.setFont(fontRevenue);
+//
+//        CellStyle summaryAmountStyle = workbook.createCellStyle();
+//        summaryAmountStyle.cloneStyleFrom(summaryStyle);
+//        summaryAmountStyle.setAlignment(HorizontalAlignment.RIGHT);
+//        summaryAmountStyle.setDataFormat(format.getFormat("#,##0 [$₫-vi-VN]"));
+//        XSSFFont fontSummary = workbook.createFont();
+//        fontSummary.setFontHeight(12);
+//        fontSummary.setFontName("Arial");
+//        fontSummary.setBold(true);
+//        fontSummary.setColor(IndexedColors.BLACK.getIndex());
+//        summaryAmountStyle.setFont(fontSummary);
+//
+//        Long totalAmountLimit = 0L;
+//        Long totalSpentAmount = 0L;
+//
+//        for (ExpenseLimitResponse expenseLimit : data) {
+//            totalAmountLimit += expenseLimit.getAmount();
+//            totalSpentAmount += expenseLimit.getSpentAmount();
+//        }
+//
+//        Long remainingAmount = totalAmountLimit - totalSpentAmount;
+//
+//        row = sheet.createRow(rowIndex + 2);
+//        Cell cell = row.createCell(0);
+//        cell.setCellValue("Tổng :");
+//        cell.setCellStyle(summaryStyle);
+//
+//        for (int col = 0; col <= 2; col++) {
+//            Cell currentCell = row.getCell(col);
+//            if (currentCell == null) {
+//                currentCell = row.createCell(col);
+//            }
+//            currentCell.setCellStyle(summaryStyle);
+//        }
+//
+//
+//        sheet.addMergedRegion(new CellRangeAddress(rowIndex + 2, rowIndex + 2, 0, 2));
+//
+//        cell = row.createCell(3);
+//        cell.setCellValue(totalAmountLimit);
+//        cell.setCellStyle(summaryAmountStyle);
+//
+//
+//        cell = row.createCell(4);
+//        cell.setCellValue(totalSpentAmount);
+//        cell.setCellStyle(totalAmountExpenseStyle);
+//
+//        cell = row.createCell(5);
+//        cell.setCellValue(remainingAmount);
+//        cell.setCellStyle(remainingAmount > 0 ? totalAmountRevenueStyle : totalAmountExpenseStyle);
     }
 
 
@@ -418,7 +420,7 @@ public class ExpenseLimitExcelExporter {
         Cell titleCell = titleRow.createCell(0);
         titleCell.setCellValue("BÁO CÁO THEO HẠN MỨC CHI CÒN HIỆU LỰC");
         titleCell.setCellStyle(titleStyle);
-        sheet.addMergedRegion(new CellRangeAddress(0, 0, 0, 13));
+        sheet.addMergedRegion(new CellRangeAddress(0, 0, 0, 8));
     }
 
     public ByteArrayInputStream export() throws IOException {

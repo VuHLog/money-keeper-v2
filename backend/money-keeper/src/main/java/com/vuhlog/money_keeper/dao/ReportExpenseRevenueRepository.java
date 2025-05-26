@@ -164,7 +164,7 @@ public interface ReportExpenseRevenueRepository extends JpaRepository<ReportExpe
     @Query(value = "SELECT COALESCE(SUM(amount),0) AS totalRevenue, dr.id as categoryId, dr.`name` AS categoryName, dr.icon_url AS iconUrl, DATE(revenue_date) AS time\n" +
             "FROM revenue_regular rr\n" +
             "JOIN dictionary_bucket_payment dbp ON dbp.id = rr.dictionary_bucket_payment_id\n" +
-            "JOIN dictionary_revenue dr ON rr.dictionary_revenue_id = dr.id\n" +
+            "left join dictionary_revenue dr ON rr.dictionary_revenue_id = dr.id\n" +
             "WHERE dbp.user_id = :userId\n" +
             "AND (:bucketPaymentIds IS NULL OR FIND_IN_SET(rr.dictionary_bucket_payment_id, :bucketPaymentIds))\n" +
             "AND( :categoriesId IS NULL OR FIND_IN_SET(rr.dictionary_revenue_id, :categoriesId))\n" +
@@ -181,12 +181,13 @@ public interface ReportExpenseRevenueRepository extends JpaRepository<ReportExpe
 
     @Query(value = "SELECT COALESCE(SUM(total_revenue),0) AS totalRevenue, dr.id as categoryId, dr.`name` AS categoryName, dr.icon_url AS iconUrl, CONCAT(LPAD(rer.`month`, 2, '0'), '/', rer.`year`) AS `time`\n" +
             "FROM report_expense_revenue rer\n" +
-            "JOIN dictionary_revenue dr ON rer.`type` = 'revenue' AND rer.category_id = dr.id\n" +
+            "left join dictionary_revenue dr ON rer.`type` = 'revenue' AND rer.category_id = dr.id\n" +
             "WHERE rer.user_id = :userId\n" +
             "AND ( :bucketPaymentIds IS NULL OR FIND_IN_SET(rer.bucket_payment_id, :bucketPaymentIds))\n" +
             "AND( :categoriesId IS NULL OR FIND_IN_SET(rer.category_id, :categoriesId))\n" +
             "AND (DATE(CONCAT(year, '-', LPAD(month, 2, '0'), '-01')) BETWEEN :startMonth AND :endMonth)\n" +
             "GROUP BY MONTH, YEAR, dr.id, dr.`name`, dr.icon_url\n" +
+            "HAVING totalRevenue > 0\n" +
             "ORDER BY YEAR ASC, MONTH ASC, dr.name", nativeQuery = true)
     List<ReportRevenueCategory> getReportRevenueCategoryByMonth(
             @Param("userId") String userId,
@@ -198,12 +199,13 @@ public interface ReportExpenseRevenueRepository extends JpaRepository<ReportExpe
 
     @Query(value = "SELECT COALESCE(SUM(total_revenue),0) AS totalRevenue, dr.id as categoryId, dr.`name` AS categoryName, dr.icon_url AS iconUrl, rer.`year` AS `time`\n" +
             "FROM report_expense_revenue rer\n" +
-            "JOIN dictionary_revenue dr ON rer.`type` = 'revenue' AND rer.category_id = dr.id\n" +
+            "left join dictionary_revenue dr ON rer.`type` = 'revenue' AND rer.category_id = dr.id\n" +
             "WHERE rer.user_id = :userId\n" +
             "AND ( :bucketPaymentIds IS NULL OR FIND_IN_SET(rer.bucket_payment_id, :bucketPaymentIds))\n" +
             "AND( :categoriesId IS NULL OR FIND_IN_SET(rer.category_id, :categoriesId))\n" +
             "AND year BETWEEN :startYear AND :endYear\n" +
             "GROUP BY YEAR, dr.id, dr.`name`, dr.icon_url\n" +
+            "HAVING totalRevenue > 0\n" +
             "ORDER BY YEAR ASC, dr.name", nativeQuery = true)
     List<ReportRevenueCategory> getReportRevenueCategoryByYear(
             @Param("userId") String userId,
@@ -216,7 +218,7 @@ public interface ReportExpenseRevenueRepository extends JpaRepository<ReportExpe
     @Query(value = "SELECT COALESCE(SUM(amount), 0) AS totalExpense, de.id as categoryId, de.`name` AS categoryName, de.icon_url AS iconUrl, DATE(expense_date) AS time\n" +
             "FROM expense_regular er\n" +
             "JOIN dictionary_bucket_payment dbp ON dbp.id = er.dictionary_bucket_payment_id\n" +
-            "JOIN dictionary_expense de ON de.id = er.dictionary_expense_id\n" +
+            "left join dictionary_expense de ON de.id = er.dictionary_expense_id\n" +
             "WHERE dbp.user_id = :userId\n" +
             "AND (:bucketPaymentIds IS NULL OR FIND_IN_SET(er.dictionary_bucket_payment_id, :bucketPaymentIds))\n" +
             "AND( :categoriesId IS NULL OR FIND_IN_SET(er.dictionary_expense_id,:categoriesId))\n" +
@@ -233,12 +235,13 @@ public interface ReportExpenseRevenueRepository extends JpaRepository<ReportExpe
 
     @Query(value = "SELECT COALESCE(SUM(total_expense),0) AS totalExpense, de.id as categoryId, de.`name` AS categoryName, de.icon_url AS iconUrl, CONCAT(LPAD(rer.`month`, 2, '0'), '/', rer.`year`) AS `time`\n" +
             "FROM report_expense_revenue rer\n" +
-            "JOIN dictionary_expense de ON rer.`type` = 'expense' AND rer.category_id = de.id\n" +
+            "left join dictionary_expense de ON rer.`type` = 'expense' AND rer.category_id = de.id\n" +
             "WHERE rer.user_id = :userId\n" +
             "AND ( :bucketPaymentIds IS NULL OR FIND_IN_SET(rer.bucket_payment_id, :bucketPaymentIds))\n" +
             "AND( :categoriesId IS NULL OR FIND_IN_SET(rer.category_id,:categoriesId))\n" +
             "AND (DATE(CONCAT(year, '-', LPAD(month, 2, '0'), '-01')) BETWEEN :startMonth AND :endMonth)\n" +
             "GROUP BY MONTH, YEAR, de.id, de.`name`, de.icon_url\n" +
+            "HAVING totalExpense > 0\n" +
             "ORDER BY YEAR ASC, MONTH ASC, de.name", nativeQuery = true)
     List<ReportExpenseCategory> getReportExpenseCategoryByMonth(
             @Param("userId") String userId,
@@ -250,13 +253,14 @@ public interface ReportExpenseRevenueRepository extends JpaRepository<ReportExpe
 
     @Query(value = "SELECT COALESCE(SUM(total_expense),0) AS totalExpense, de.id as categoryId, de.`name` AS categoryName, de.icon_url AS iconUrl, rer.`year` AS `time`\n" +
             "FROM report_expense_revenue rer\n" +
-            "JOIN dictionary_expense de ON rer.`type` = 'expense' AND rer.category_id = de.id\n" +
+            "left join dictionary_expense de ON rer.`type` = 'expense' AND rer.category_id = de.id\n" +
             "WHERE rer.user_id = :userId\n" +
             "AND ( :bucketPaymentIds IS NULL OR FIND_IN_SET(rer.bucket_payment_id, :bucketPaymentIds))\n" +
             "AND( :categoriesId IS NULL OR FIND_IN_SET(rer.category_id,:categoriesId))\n" +
             "AND year BETWEEN :startYear AND :endYear\n" +
             "GROUP BY YEAR, de.id, de.`name`, de.icon_url\n" +
             "ORDER BY YEAR ASC" +
+            "HAVING totalExpense > 0\n" +
             "ORDER BY YEAR ASC, de.name", nativeQuery = true)
     List<ReportExpenseCategory> getReportExpenseCategoryByYear(
             @Param("userId") String userId,
@@ -833,7 +837,7 @@ public interface ReportExpenseRevenueRepository extends JpaRepository<ReportExpe
     );
 
     @Query(value = "SELECT * from (" +
-            "SELECT er.id,'expense' AS transactionType ,er.amount, er.converted_amount, de.`name` AS categoryName, de.icon_url AS categoryIconUrl, dbp.account_name as accountName, dbp.icon_url AS bucketPaymentIconUrl, expense_date AS date, er.transfer_type as transferType, er.interpretation, er.trip_event as tripEvent, er.location as location, er.beneficiary as beneficiary, dbp1.account_name as beneficiaryAccountName, dbp1.icon_url AS beneficiaryAccountIconUrl, null as collectMoneyWho, null as senderAccountName, null as senderAccountIconUrl \n" +
+            "SELECT er.id,'expense' AS transactionType ,er.amount, er.converted_amount, dbp.currency_symbol, dbp.currency, de.`name` AS categoryName, de.icon_url AS categoryIconUrl, dbp.account_name as accountName, dbp.icon_url AS bucketPaymentIconUrl, expense_date AS date, er.transfer_type as transferType, er.interpretation, er.trip_event as tripEvent, er.location as location, er.beneficiary as beneficiary, dbp1.account_name as beneficiaryAccountName, dbp1.icon_url AS beneficiaryAccountIconUrl, null as collectMoneyWho, null as senderAccountName, null as senderAccountIconUrl \n" +
             "FROM expense_regular er\n" +
             "JOIN dictionary_bucket_payment dbp ON dbp.id = er.dictionary_bucket_payment_id\n" +
             "LEFT JOIN dictionary_bucket_payment dbp1 ON dbp1.id = er.beneficiary_account_id\n" +

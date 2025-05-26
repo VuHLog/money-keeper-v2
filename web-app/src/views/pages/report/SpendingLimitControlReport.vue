@@ -42,11 +42,11 @@
               <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tên hạn mức</th>
               <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tài khoản áp dụng</th>
               <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Danh mục</th>
-              <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Hạn mức</th>
-              <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Đã chi tiêu</th>
-              <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Còn lại</th>
+              <th class="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Hạn mức</th>
+              <th class="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Đã chi tiêu</th>
+              <th class="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Còn lại</th>
               <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Trạng thái</th>
-              <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tiến độ</th>
+              <th class="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Tiến độ</th>
               <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Thời gian</th>
             </tr>
           </thead>
@@ -63,8 +63,8 @@
                   {{ limit.category }}
                 </div>
               </td>
-              <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-600 text-end">{{ formatAmount(limit.limitAmount) }}</td>
-              <td class="px-4 py-3 whitespace-nowrap text-sm font-medium text-red-500 text-end">{{ formatAmount(limit.spentAmount) }}</td>
+              <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-600 text-end">{{ formatCurrencyWithSymbol(limit.limitAmount, limit.currency, limit.currencySymbol) }}</td>
+              <td class="px-4 py-3 whitespace-nowrap text-sm font-medium text-red-500 text-end">{{ formatCurrencyWithSymbol(limit.spentAmount, limit.currency, limit.currencySymbol) }}</td>
               <td 
                 class="px-4 py-3 whitespace-nowrap text-sm font-medium text-end"
                 :class="{
@@ -72,7 +72,7 @@
                   'text-red-500': limit.remainingAmount <= 0
                 }"
               >
-                {{ formatAmount(limit.remainingAmount) }}
+                {{ formatCurrencyWithSymbol(limit.remainingAmount, limit.currency, limit.currencySymbol) }}
               </td>
               <td class="px-4 py-3 text-sm">
                 <span 
@@ -177,15 +177,15 @@
       </div>
       
       <!-- Summary section -->
-      <div class="mt-4 pt-4 border-t border-gray-100">
+      <!-- <div class="mt-4 pt-4 border-t border-gray-100">
         <div class="grid grid-cols-3 gap-4">
           <div class="bg-blue-50 p-3 rounded-lg">
             <div class="text-sm text-gray-600">Tổng hạn mức</div>
-            <div class="text-lg font-medium text-gray-800">{{ formatAmount(totalLimit) }}</div>
+            <div class="text-lg font-medium text-gray-800">{{ formatCurrencyWithSymbol(totalLimit, 'VND', '₫') }}</div>
           </div>
           <div class="bg-blue-50 p-3 rounded-lg">
             <div class="text-sm text-gray-600">Tổng đã chi tiêu</div>
-            <div class="text-lg font-medium text-red-500">{{ formatAmount(totalSpent) }}</div>
+            <div class="text-lg font-medium text-red-500">{{ formatCurrencyWithSymbol(totalSpent, 'VND', '₫') }}</div>
           </div>
           <div class="bg-blue-50 p-3 rounded-lg">
             <div class="text-sm text-gray-600">Tổng còn lại</div>
@@ -196,11 +196,11 @@
                 'text-red-500': totalRemaining <= 0
               }"
             >
-              {{ formatAmount(totalRemaining) }}
+              {{ formatCurrencyWithSymbol(totalRemaining, 'VND', '₫') }}
             </div>
           </div>
         </div>
-      </div>
+      </div> -->
     </div>
   </div>
 </template>
@@ -212,6 +212,7 @@ import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome';
 import { library } from '@fortawesome/fontawesome-svg-core';
 import { faFileExcel, faChevronLeft, faChevronRight } from '@fortawesome/free-solid-svg-icons';
 import { useExpenseLimitStore } from '@/store/ExpenseLimitStore.js';
+import { formatCurrencyWithSymbol } from '@/utils/formatters.js';
 
 // Register Font Awesome icons
 library.add(faFileExcel, faChevronLeft, faChevronRight);
@@ -296,7 +297,9 @@ const fetchData = async () => {
         status: status,
         percentUsed: percentUsed,
         startDateLimit: limit.startDateLimit,
-        endDateLimit: limit.endDateLimit
+        endDateLimit: limit.endDateLimit,
+        currency: limit.currency,
+        currencySymbol: limit.currencySymbol
       };
     });
   } catch (error) {
@@ -345,17 +348,17 @@ const handleFilterReset = () => {
 };
 
 // Computed properties for summary
-const totalLimit = computed(() => {
-  return spendingLimitsNoPagination.value.reduce((sum, limit) => sum + limit.amount, 0);
-});
+// const totalLimit = computed(() => {
+//   return spendingLimitsNoPagination.value.reduce((sum, limit) => sum + limit.amount, 0);
+// });
 
-const totalSpent = computed(() => {
-  return spendingLimitsNoPagination.value.reduce((sum, limit) => sum + limit.spentAmount, 0);
-});
+// const totalSpent = computed(() => {
+//   return spendingLimitsNoPagination.value.reduce((sum, limit) => sum + limit.spentAmount, 0);
+// });
 
-const totalRemaining = computed(() => {
-  return totalLimit.value - totalSpent.value;
-});
+// const totalRemaining = computed(() => {
+//   return totalLimit.value - totalSpent.value;
+// });
 
 // Add formatDate function
 const formatDate = (dateString) => {
@@ -369,11 +372,6 @@ const formatDate = (dateString) => {
   }
   
   return dateString; // Return original if not in expected format
-};
-
-// Format helpers
-const formatAmount = (amount) => {
-  return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(amount);
 };
 
 // Export to Excel - implement later with real API

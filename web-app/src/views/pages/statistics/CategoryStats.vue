@@ -456,25 +456,29 @@ const handleApplyFilter = async () => {
 const updateTransactionData = () => {
   // Build expense and revenue category sets
   let expenseCategorySet = new Set(
-    expenseCategoryData.value.map(item =>
-      JSON.stringify({
-        categoryKey: `${item.categoryId}_${item.categoryName}`,
-        categoryId: item.categoryId,
-        categoryName: item.categoryName,
+    expenseCategoryData.value.map(item => {
+      const categoryId = item.categoryId ?? 'unknown';
+      const categoryName = item.categoryName ?? 'Không xác định';
+      return JSON.stringify({
+        categoryKey: `${categoryId}_${categoryName}`,
+        categoryId: categoryId,
+        categoryName: categoryName,
         iconUrl: item.iconUrl
-      })
-    )
+      });
+    })
   );
 
   let revenueCategorySet = new Set(
-    revenueCategoryData.value.map(item =>
-      JSON.stringify({
-        categoryKey: `${item.categoryId}_${item.categoryName}`,
-        categoryId: item.categoryId,
-        categoryName: item.categoryName,
+    revenueCategoryData.value.map(item => {
+      const categoryId = item.categoryId ?? 'unknown';
+      const categoryName = item.categoryName ?? 'Không xác định';
+      return JSON.stringify({
+        categoryKey: `${categoryId}_${categoryName}`,
+        categoryId: categoryId,
+        categoryName: categoryName,
         iconUrl: item.iconUrl
-      })
-    )
+      });
+    })
   );
 
   // Assign colors to categories
@@ -500,7 +504,9 @@ const updateTransactionData = () => {
   // Revenue categories chart
   let revenueCategoryWithoutTime = Array.from(
     revenueCategoryData.value.reduce((acc, item) => {
-      const { categoryId, categoryName, iconUrl, totalRevenue } = item;
+      const categoryId = item.categoryId ?? 'unknown';
+      const categoryName = item.categoryName ?? 'Không xác định';
+      const { iconUrl, totalRevenue } = item;
       if (!acc.has(categoryId)) {
         acc.set(categoryId, { categoryId, categoryName, iconUrl, totalRevenue });
       } else {
@@ -533,7 +539,9 @@ const updateTransactionData = () => {
   // Expense categories chart
   let expenseCategoryWithoutTime = Array.from(
     expenseCategoryData.value.reduce((acc, item) => {
-      const { categoryId, categoryName, iconUrl, totalExpense } = item;
+      const categoryId = item.categoryId ?? 'unknown';
+      const categoryName = item.categoryName ?? 'Không xác định';
+      const { iconUrl, totalExpense } = item;
       if (!acc.has(categoryId)) {
         acc.set(categoryId, { categoryId, categoryName, iconUrl, totalExpense });
       } else {
@@ -568,9 +576,10 @@ const updateTransactionData = () => {
   chartCategories.value.forEach((time) => {
     expenseCategorySet.forEach((cStr) => {
       const c = JSON.parse(cStr);
-      let dataItem = expenseCategoryData.value.find((item) =>
-        time === item.time && c.categoryId === item.categoryId
-      );
+      let dataItem = expenseCategoryData.value.find((item) => {
+        const itemCategoryId = item.categoryId ?? 'unknown';
+        return time === item.time && c.categoryId === itemCategoryId;
+      });
       let value = dataItem ? dataItem.totalExpense : 0;
 
       if (!expenseCategoryTrends[c.categoryKey]) {
@@ -605,9 +614,10 @@ const updateTransactionData = () => {
   chartCategories.value.forEach((time) => {
     revenueCategorySet.forEach((cStr) => {
       const c = JSON.parse(cStr);
-      let dataItem = revenueCategoryData.value.find((item) =>
-        time === item.time && c.categoryId === item.categoryId
-      );
+      let dataItem = revenueCategoryData.value.find((item) => {
+        const itemCategoryId = item.categoryId ?? 'unknown';
+        return time === item.time && c.categoryId === itemCategoryId;
+      });
       let value = dataItem ? dataItem.totalRevenue : 0;
 
       if (!revenueCategoryTrends[c.categoryKey]) {
