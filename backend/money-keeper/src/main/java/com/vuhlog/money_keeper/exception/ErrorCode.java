@@ -15,6 +15,8 @@ public enum ErrorCode {
     UNAUTHENTICATED(1006, "Unauthenticated", HttpStatus.UNAUTHORIZED),
     UNAUTHORIZED(1007, "You do not have permission", HttpStatus.FORBIDDEN),
     PASSWORD_NOT_MATCH(1008, "Password does not match", HttpStatus.BAD_REQUEST),
+    EMAIL_EXISTED(1009, "Email existed", HttpStatus.BAD_REQUEST),
+    INVALID_EMAIL(1010, "Invalid email", HttpStatus.NOT_FOUND),
     DICTIONARY_EXPENSE_NOT_EXISTED(2001, "Dictionary expense not existed", HttpStatus.NOT_FOUND),
     DICTIONARY_REVENUE_NOT_EXISTED(3001, "Dictionary revenue not existed", HttpStatus.NOT_FOUND),
     BANK_NOT_EXISTED(4001, "Bank not existed", HttpStatus.NOT_FOUND),
@@ -27,6 +29,9 @@ public enum ErrorCode {
     DATE_LESS_THAN_TOMORROW(10001, "Date less than date tomorrow", HttpStatus.BAD_REQUEST),
     NOT_ENOUGH_MONEY(10002, "Not enough money", HttpStatus.BAD_REQUEST),
     NOTIFICATION_NOT_EXISTED(11001, "Notification not existed", HttpStatus.BAD_REQUEST),
+    INVALID_OTP_EMAIL(12001, "Invalid OTP for email", HttpStatus.NOT_FOUND),
+    OTP_EXPIRED(12002, "OTP has expired!", HttpStatus.BAD_REQUEST),
+    EMAIL_SENDING_FAILED(12003, "Email sending failed!", HttpStatus.BAD_REQUEST),
     ;
     ErrorCode(int code, String message, HttpStatusCode statusCode) {
         this.code = code;

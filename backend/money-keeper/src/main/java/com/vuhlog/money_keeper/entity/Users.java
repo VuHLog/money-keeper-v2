@@ -76,6 +76,10 @@ public class Users {
     @JsonIgnore
     private Set<Notification> notifications;
 
+    @OneToOne(mappedBy = "user")
+    @JsonIgnore
+    private ForgotPassword forgotPassword;
+
     @PrePersist
     public void onCreate() {
         if(oAuth2 == null) {

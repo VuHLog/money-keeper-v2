@@ -212,7 +212,13 @@ const handleUpdateProfile = async () => {
         icon: "success",
       });
     })
-    .catch((error) => console.log(error));
+    .catch((error) => {
+      if(error.response.data.code === 1009){
+        profileErrors.email = "Email đã tồn tại";
+      } else {
+        console.log(error);
+      }
+    });
 }
 
 // Xử lý đổi mật khẩu
