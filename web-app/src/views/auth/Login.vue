@@ -78,8 +78,7 @@ function handleSignUp() {
 }
 
 function handleForgotPassword() {
-  // Xử lý chức năng quên mật khẩu
-  console.log('Forgot password clicked');
+  router.push('/auth/forgot-password');
 }
 </script>
 

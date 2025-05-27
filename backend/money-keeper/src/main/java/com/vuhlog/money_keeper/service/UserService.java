@@ -11,24 +11,29 @@ import org.springframework.data.domain.Pageable;
 import java.io.IOException;
 
 public interface UserService {
-    public Page<UserResponse> getUsers(Pageable pageable);
+    Page<UserResponse> getUsers(Pageable pageable);
 
-    public Page<UserResponse> getUsersContains(String s,Pageable pageable);
-    public UserResponse getById(String id);
+    Page<UserResponse> getUsersContains(String s,Pageable pageable);
+
+    UserResponse getById(String id);
 
     Users getMyUserInfo();
 
-    public UserResponse getByUsername(String username);
+    Users getUserByEmail(String email, Boolean oauth2);
+
+    UserResponse getByUsername(String username);
 
     String changePassword(ChangePasswordRequest request);
 
-    public UserResponse addUser(UserCreationRequest request) throws IOException;
+    String changePasswordForgotPassword(ChangePasswordRequest request, String email);
 
-    public UserResponse updateUser(String userId, UserUpdateRequest request);
+    UserResponse addUser(UserCreationRequest request) throws IOException;
 
-    public void deleteUser(String userId);
+    UserResponse updateUser(String userId, UserUpdateRequest request);
 
-    public UserResponse getMyInfo();
+    void deleteUser(String userId);
+
+    UserResponse getMyInfo();
 
     void executeSqlScriptForUser(String userId) throws IOException;
 }

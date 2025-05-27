@@ -22,7 +22,7 @@ import org.springframework.web.client.RestTemplate;
 public class SecurityConfiguration {
 
     private final String[] PUBLIC_ENDPOINTS =
-            {"/users/registration","/auth/token","/auth/outbound/authentication","/auth/introspect","/auth/logout","/auth/refresh", "/cloudinary/upload/image"};
+            {"/users/registration","/auth/token","/auth/outbound/authentication","/auth/introspect","/auth/logout","/auth/refresh", "/cloudinary/upload/image", "/forgot-password/**"};
 
     @Autowired
     @Lazy

@@ -74,11 +74,24 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    public String changePasswordForgotPassword(ChangePasswordRequest request, String email) {
+        Users user = usersRepository.findByEmailAndOAuth2(email, false);
+        if(user == null) {
+            throw new AppException(ErrorCode.INVALID_EMAIL);
+        }
+        user.setPassword(passwordEncoder.encode(request.getNewPassword()));
+        usersRepository.save(user);
+        return "Password changed successfully";
+    }
+
+    @Override
     @Transactional(rollbackFor = Exception.class)
     public UserResponse addUser(UserCreationRequest request) throws IOException {
         if(usersRepository.existsByUsername(request.getUsername()))
             throw new AppException(ErrorCode.USER_EXISTED);
 
+        if(usersRepository.findByEmailAndOAuth2(request.getEmail(), false) != null)
+            throw new AppException(ErrorCode.EMAIL_EXISTED);
 
         Users user = userMapper.toUser(request);
         user.setPassword(passwordEncoder.encode(user.getPassword()));
@@ -145,10 +158,17 @@ public class UserServiceImpl implements UserService {
         return usersRepository.findByUsername(name).orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
     }
 
+    @Override
+    public Users getUserByEmail(String email, Boolean oauth2) {
+        return usersRepository.findByEmailAndOAuth2(email, oauth2);
+    }
+
 
     @Override
     @Transactional(rollbackFor = Exception.class)
     public UserResponse updateUser(String userId, UserUpdateRequest request) {
+        if(usersRepository.findByEmailAndOAuth2(request.getEmail(), false) != null)
+            throw new AppException(ErrorCode.EMAIL_EXISTED);
         Users user = usersRepository.findById(userId).get();
         userMapper.updateUser(user, request);
 
