@@ -56,6 +56,10 @@ public class DictionaryBucketPayment {
     @JsonIgnore
     private Set<TransactionHistory> transactionHistories;
 
+    @OneToMany(mappedBy = "bucketPayment")
+    @JsonIgnore
+    private Set<FinancialGoal> financialGoals;
+
     @PrePersist
     public void prePersist() {
         this.haveUse = true;

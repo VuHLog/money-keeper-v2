@@ -50,6 +50,7 @@ public class ExpenseRegularServiceImpl implements ExpenseRegularService {
     private final TransactionHistoryRepository transactionHistoryRepository;
     private final ExpenseRegularMapper expenseRegularMapper;
     private final RevenueRegularRepository revenueRegularRepository;
+    private final FinancialGoalRepository financialGoalRepository;
     private final RevenueRegularMapper revenueRegularMapper;
     private final CurrencyClient currencyClient;
 
@@ -75,6 +76,26 @@ public class ExpenseRegularServiceImpl implements ExpenseRegularService {
         Pageable pageable = PageRequest.of(pageNumber, pageSize, sortable);
 
         return expenseRegularRepository.findAll(specs, pageable).map(expenseRegularMapper::toExpenseRegularResponse);
+    }
+
+    @Override
+    public List<ExpenseRegularResponse> getByFinancialGoal(String financialGoalId) {
+        return expenseRegularRepository.findByFinancialGoal_id(financialGoalId).stream().map(expenseRegularMapper::toExpenseRegularResponse).toList();
+    }
+
+    @Override
+    public Page<ExpenseRegularResponse> getByFinancialGoalPagination(String field, Integer pageNumber, Integer pageSize, String sort, String search, String financialGoalId) {
+        Specification<ExpenseRegular> specs = Specification.where(null);
+        String userId = userCommon.getMyUserInfo().getId();
+        specs = specs.and(ExpenseRegularSpecification.filterByUserId(userId));
+
+        if(search != null && !search.isEmpty()) {
+
+        }
+
+        Sort sortable = sort.equals("asc") ? Sort.by(field).ascending() : Sort.by(field).descending();
+        Pageable pageable = PageRequest.of(pageNumber, pageSize, sortable);
+        return expenseRegularRepository.findByFinancialGoal_id(financialGoalId, pageable).map(expenseRegularMapper::toExpenseRegularResponse);
     }
 
     @Override
@@ -108,7 +129,7 @@ public class ExpenseRegularServiceImpl implements ExpenseRegularService {
             throw new AppException(ErrorCode.NOT_ENOUGH_MONEY);
         }
         expenseRegular.setDictionaryBucketPayment(dictionaryBucketPayment);
-        DictionaryExpense dictionaryExpense = dictionaryExpenseRepository.findById(request.getDictionaryExpenseId()).orElseThrow(() -> new AppException(ErrorCode.BUCKET_PAYMENT_NOT_EXISTED));
+        DictionaryExpense dictionaryExpense = dictionaryExpenseRepository.findById(request.getDictionaryExpenseId()).orElseThrow(() -> new AppException(ErrorCode.DICTIONARY_EXPENSE_NOT_EXISTED));
         expenseRegular.setDictionaryExpense(dictionaryExpense);
 
         ExchangeRateResponse exchangeRateResponse = currencyClient.exchangeRate("VND", dictionaryBucketPayment.getCurrency(), 1L);
@@ -137,6 +158,60 @@ public class ExpenseRegularServiceImpl implements ExpenseRegularService {
         }
 
         notificationService.expenseNotification(expenseRegular, true);
+
+        return expenseRegularMapper.toExpenseRegularResponse(expenseRegular);
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public ExpenseRegularResponse createExpenseRegularForGoal(ExpenseRegularRequest request) {
+        FinancialGoal financialGoal = financialGoalRepository.findById(request.getFinancialGoalId()).orElseThrow(() -> new AppException(ErrorCode.FINANCIAL_GOAL_NOT_EXISTED));
+        if(financialGoal.getCurrentAmount() + request.getAmount() >= financialGoal.getTargetAmount()){
+            request.setAmount(financialGoal.getTargetAmount() - financialGoal.getCurrentAmount());
+            financialGoal.setStatus(1);
+        }
+        financialGoal.setCurrentAmount(financialGoal.getCurrentAmount() + request.getAmount());
+        financialGoalRepository.save(financialGoal);
+
+        //save expense
+        ExpenseRegular expenseRegular = expenseRegularMapper.toExpenseRegular(request);
+        expenseRegular.setFinancialGoal(financialGoal);
+        expenseRegular.setExpenseDate(new Timestamp(System.currentTimeMillis()));
+        expenseRegular.setTransferType(TransferType.NORMAL.getType());
+        DictionaryBucketPayment dictionaryBucketPayment = dictionaryBucketPaymentRepository.findById(request.getDictionaryBucketPaymentId()).orElseThrow(() -> new AppException(ErrorCode.BUCKET_PAYMENT_NOT_EXISTED));
+        if(dictionaryBucketPayment.getBalance() - request.getAmount() < 0){
+            throw new AppException(ErrorCode.NOT_ENOUGH_MONEY);
+        }
+        expenseRegular.setDictionaryBucketPayment(dictionaryBucketPayment);
+        DictionaryExpense dictionaryExpense = dictionaryExpenseRepository.findByNameAndUser_Id("Phát triển bản thân",dictionaryBucketPayment.getUser().getId());
+        expenseRegular.setDictionaryExpense(dictionaryExpense);
+
+        ExchangeRateResponse exchangeRateResponse = currencyClient.exchangeRate("VND", dictionaryBucketPayment.getCurrency(), 1L);
+        Double rate = exchangeRateResponse.getRate();
+        expenseRegular.setCurrency(dictionaryBucketPayment.getCurrency());
+        expenseRegular.setConvertedAmount(request.getAmount());
+        expenseRegular.setAmount(Math.round(request.getAmount() * rate));
+        expenseRegular.setExchangeRate(rate);
+
+        //update balance
+        updateBalance(dictionaryBucketPayment, Math.round(expenseRegular.getConvertedAmount()), rate, expenseRegular.getExpenseDate(), null, true);
+
+        //update report expense revenue
+        updateTotalExpenseForReportExpenseRevenue(expenseRegular.getExpenseDate(), dictionaryBucketPayment, expenseRegular.getAmount(), expenseRegular.getConvertedAmount(), request.getDictionaryExpenseId(), 1);
+
+        Double convertedBalance =  getBalanceWhenCreate(dictionaryBucketPayment, expenseRegular.getExpenseDate(), expenseRegular.getConvertedAmount());
+        expenseRegular.setConvertedBalance(convertedBalance);
+        expenseRegular.setBalance(convertedBalance * rate);
+        expenseRegular.setCurrencySymbol(dictionaryBucketPayment.getCurrencySymbol());
+        expenseRegular = expenseRegularRepository.save(expenseRegular);
+
+        //check expense limit
+        List<ExpenseLimitNotification> expenseLimitNotifications = getOverExpenseLimit(request.getDictionaryBucketPaymentId());
+        if(!expenseLimitNotifications.isEmpty()) {
+            notificationService.expenseLimitNotification(expenseLimitNotifications);
+        }
+
+        notificationService.expenseForGoalNotification(expenseRegular);
 
         return expenseRegularMapper.toExpenseRegularResponse(expenseRegular);
     }
@@ -449,11 +524,41 @@ public class ExpenseRegularServiceImpl implements ExpenseRegularService {
             updateBalance(dictionaryBucketPayment, -expenseRegular.getConvertedAmount(), rate, expenseRegular.getExpenseDate(), null, true);
         }
 
+        //update financial goal
+        if(expenseRegular.getFinancialGoal() != null) {
+            FinancialGoal financialGoal = expenseRegular.getFinancialGoal();
+            financialGoal.setCurrentAmount(financialGoal.getCurrentAmount() - expenseRegular.getConvertedAmount());
+            financialGoalRepository.save(financialGoal);
+        }
+
         //update report
         if(expenseRegular.getDictionaryExpense() != null && dictionaryBucketPayment != null){
             updateTotalExpenseForReportExpenseRevenue(expenseRegular.getExpenseDate(), expenseRegular.getDictionaryBucketPayment(), - expenseRegular.getAmount(), - expenseRegular.getConvertedAmount(), expenseRegular.getDictionaryExpense().getId(), -1);
         }
         notificationService.deleteExpenseNotification(expenseRegular);
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public void deleteExpenseRegularNoNotify(String id) {
+        ExpenseRegular expenseRegular = expenseRegularRepository.findById(id).orElseThrow(()-> new AppException(ErrorCode.EXPENSE_REGULAR_NOT_EXISTED));
+        //delete record in transaction history table
+        transactionHistoryRepository.deleteAllByTransactionId(expenseRegular.getId());
+
+        expenseRegularRepository.deleteById(id);
+
+        //update balance
+        DictionaryBucketPayment dictionaryBucketPayment = expenseRegular.getDictionaryBucketPayment();
+        ExchangeRateResponse exchangeRateResponse = currencyClient.exchangeRate("VND", dictionaryBucketPayment.getCurrency(), 1L);
+        Double rate = exchangeRateResponse.getRate();
+        if(dictionaryBucketPayment != null){
+            updateBalance(dictionaryBucketPayment, -expenseRegular.getConvertedAmount(), rate, expenseRegular.getExpenseDate(), null, true);
+        }
+
+        //update report
+        if(expenseRegular.getDictionaryExpense() != null && dictionaryBucketPayment != null){
+            updateTotalExpenseForReportExpenseRevenue(expenseRegular.getExpenseDate(), expenseRegular.getDictionaryBucketPayment(), - expenseRegular.getAmount(), - expenseRegular.getConvertedAmount(), expenseRegular.getDictionaryExpense().getId(), -1);
+        }
     }
 
     @Override

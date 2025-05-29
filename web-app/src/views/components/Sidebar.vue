@@ -17,7 +17,8 @@ import {
   faUtensils,
   faShoppingBag,
   faMoneyBillWave,
-  faFileAlt
+  faFileAlt,
+  faBullseye
 } from '@fortawesome/free-solid-svg-icons'
 import logoFull from '@/assets/img/logo/logo.png'
 import logoIcon from '@/assets/img/logo/logo.png'
@@ -38,7 +39,8 @@ library.add(
   faUtensils,
   faShoppingBag,
   faMoneyBillWave,
-  faFileAlt
+  faFileAlt,
+  faBullseye
 )
 
 const props = defineProps({
@@ -75,6 +77,11 @@ const menuItems = [
     label: 'Hạn Mức Chi',
     path: '/spending-limits',
     icon: ['fas', 'money-bill-wave']
+  },
+  {
+    label: 'Mục tiêu',
+    path: '/goals',
+    icon: ['fas', 'bullseye']
   },
   {
     label: 'Danh Mục',

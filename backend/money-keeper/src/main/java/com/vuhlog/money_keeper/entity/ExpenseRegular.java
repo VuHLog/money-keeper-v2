@@ -46,6 +46,10 @@ public class ExpenseRegular {
     @JoinColumn(name = "dictionary_expense_id")
     private DictionaryExpense dictionaryExpense;
 
+    @ManyToOne(cascade = {CascadeType.PERSIST, CascadeType.MERGE, CascadeType.DETACH, CascadeType.REFRESH})
+    @JoinColumn(name = "financial_goal_id")
+    private FinancialGoal financialGoal;
+
 //    @ManyToOne
 //    @JoinColumn(name = "trip_event_id")
 //    private TripEvent tripEvent;

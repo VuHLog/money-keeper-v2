@@ -67,6 +67,8 @@ const currentPageTitle = computed(() => {
       return 'Ghi Thu'
     case '/expense':
       return 'Ghi Chi'
+    case '/goals':
+      return 'Mục Tiêu'
     case '/spending-limits':
       return 'Hạn Mức Chi'
     case '/transaction-history':

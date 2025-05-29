@@ -16,6 +16,8 @@ public interface NotificationService {
 
     NotificationResponse expenseNotification(ExpenseRegular expenseRegular, Boolean isCreate);
 
+    NotificationResponse expenseForGoalNotification(ExpenseRegular expenseRegular);
+
     NotificationResponse deleteRevenueNotification(RevenueRegular revenueRegular);
 
     NotificationResponse deleteExpenseNotification(ExpenseRegular expenseRegular);

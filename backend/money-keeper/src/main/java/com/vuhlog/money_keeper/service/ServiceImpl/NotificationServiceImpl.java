@@ -112,6 +112,29 @@ public class NotificationServiceImpl implements NotificationService {
     }
 
     @Override
+    public NotificationResponse expenseForGoalNotification(ExpenseRegular expenseRegular) {
+        Users user = userCommon.getMyUserInfo();
+        Notification notification = Notification.builder()
+                .title("Thêm mới chi tiêu")
+                .content("Tài khoản <strong class='text-primary'>" + (expenseRegular.getDictionaryBucketPayment() == null? "không xác định" : expenseRegular.getDictionaryBucketPayment().getAccountName()) + "</strong> đã chi số tiền cho mục tiêu <strong>" + expenseRegular.getFinancialGoal().getName() + "</strong> là " + "<span class='text-danger'>" + formatCurrency(expenseRegular.getAmount()) + "</span>")
+                .type("expense")
+                .readStatus(0)
+                .iconUrl("https://res.cloudinary.com/cloud1412/image/upload/v1745068565/logo_mpkmjj.png")
+                .user(user)
+                .href("/expense")
+                .build();
+
+        NotificationResponse notificationResponse = null;
+        try {
+            notificationResponse = notificationMapper.toNotificationResponse(notificationRepository.save(notification));
+            messagingTemplate.convertAndSend("/topic/notifications/" + user.getId(), notificationResponse);
+        } catch (Exception e) {
+            log.error("WebSocket gửi thất bại: {}", e.getMessage());
+        }
+        return notificationResponse;
+    }
+
+    @Override
     public NotificationResponse deleteExpenseNotification(ExpenseRegular expenseRegular) {
         Users user = userCommon.getMyUserInfo();
         Notification notification = Notification.builder()

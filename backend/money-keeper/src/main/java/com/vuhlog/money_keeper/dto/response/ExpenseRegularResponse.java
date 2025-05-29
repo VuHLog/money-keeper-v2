@@ -1,6 +1,7 @@
 package com.vuhlog.money_keeper.dto.response;
 
 import com.vuhlog.money_keeper.entity.DictionaryExpense;
+import com.vuhlog.money_keeper.entity.FinancialGoal;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -28,6 +29,7 @@ public class ExpenseRegularResponse {
     private DictionaryBucketPaymentResponse beneficiaryAccount;
     private DictionaryBucketPaymentResponse dictionaryBucketPayment;
     private DictionaryExpense dictionaryExpense;
+    private FinancialGoal financialGoal;
     private String tripEvent;
     private String beneficiary;
 }
