@@ -12,5 +12,6 @@ public interface FinancialGoalService {
     Page<FinancialGoalResponse> getAllFinancialGoalPagination(String field, Integer pageNumber, Integer pageSize, String sort, String search, Integer status);
     FinancialGoalResponse createFinancialGoal(FinancialGoalRequest request, String userId);
     FinancialGoalResponse updateFinancialGoal(String id, FinancialGoalRequest request);
+    FinancialGoalResponse updateDeadlineFinancialGoal(String id, FinancialGoalRequest request);
     void deleteFinancialGoal(String id);
 }

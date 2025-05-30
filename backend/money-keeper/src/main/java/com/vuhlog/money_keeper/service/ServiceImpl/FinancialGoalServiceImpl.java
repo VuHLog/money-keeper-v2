@@ -24,6 +24,8 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -83,6 +85,19 @@ public class FinancialGoalServiceImpl implements FinancialGoalService {
     public FinancialGoalResponse updateFinancialGoal(String id, FinancialGoalRequest request) {
         FinancialGoal financialGoal = financialGoalRepository.findById(id).orElseThrow(() -> new AppException(ErrorCode.FINANCIAL_GOAL_NOT_EXISTED));
         financialGoalMapper.updateFinancialGoal(financialGoal, request);
+        return financialGoalMapper.toFinancialGoalResponse(financialGoalRepository.save(financialGoal));
+    }
+
+    @Override
+    public FinancialGoalResponse updateDeadlineFinancialGoal(String id, FinancialGoalRequest request) {
+        FinancialGoal financialGoal = financialGoalRepository.findById(id).orElseThrow(() -> new AppException(ErrorCode.FINANCIAL_GOAL_NOT_EXISTED));
+        String deadlineStr = request.getDeadline();
+        if(deadlineStr != null && !deadlineStr.isEmpty()){
+            financialGoal.setDeadline(LocalDate.parse(deadlineStr, DateTimeFormatter.ISO_DATE));
+        }
+        if(financialGoal.getStatus() == 2){
+            financialGoal.setStatus(0);
+        }
         return financialGoalMapper.toFinancialGoalResponse(financialGoalRepository.save(financialGoal));
     }
 

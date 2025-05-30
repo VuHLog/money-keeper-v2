@@ -91,6 +91,16 @@ public class FinancialGoalController {
                 .build();
     }
 
+    @PutMapping("/{id}/deadline")
+    public ApiResponse<FinancialGoalResponse> updateDeadlineFinancialGoal(
+            @PathVariable String id,
+            @RequestBody FinancialGoalRequest request
+    ){
+        return ApiResponse.<FinancialGoalResponse>builder()
+                .result(financialGoalService.updateDeadlineFinancialGoal(id, request))
+                .build();
+    }
+
     @DeleteMapping("/{id}")
     @Transactional(rollbackFor = Exception.class)
     public ApiResponse<String> deleteFinancialGoal(

@@ -2,9 +2,7 @@ package com.vuhlog.money_keeper.service.ServiceImpl;
 
 import com.vuhlog.money_keeper.common.UserCommon;
 import com.vuhlog.money_keeper.constants.DictionaryBucketPaymentType;
-import com.vuhlog.money_keeper.dao.BankRepository;
-import com.vuhlog.money_keeper.dao.DictionaryBucketPaymentRepository;
-import com.vuhlog.money_keeper.dao.UsersRepository;
+import com.vuhlog.money_keeper.dao.*;
 import com.vuhlog.money_keeper.dao.httpClient.CurrencyClient;
 import com.vuhlog.money_keeper.dao.specification.DictionaryBucketPaymentSpecification;
 import com.vuhlog.money_keeper.dto.request.BucketPaymentUsageStatus;
@@ -43,6 +41,8 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class DictionaryBucketPaymentServiceImpl implements DictionaryBucketPaymentService {
     private final DictionaryBucketPaymentRepository dictionaryBucketPaymentRepository;
+    private final ReportExpenseRevenueRepository reportExpenseRevenueRepository;
+    private final ExpenseLimitRepository expenseLimitRepository;
     private final BankRepository bankRepository;
     private final UsersRepository usersRepository;
     private final UserCommon userCommon;
@@ -91,6 +91,8 @@ public class DictionaryBucketPaymentServiceImpl implements DictionaryBucketPayme
     @Override
     public void deleteDictionaryBucketPayment(String id) {
         DictionaryBucketPayment dictionaryBucketPayment = dictionaryBucketPaymentRepository.findById(id).orElseThrow(() -> new AppException(ErrorCode.BUCKET_PAYMENT_NOT_EXISTED));
+        reportExpenseRevenueRepository.deleteByBucketPaymentId(id);
+        expenseLimitRepository.deleteByBucketPaymentId(id);
         dictionaryBucketPaymentRepository.deleteById(id);
     }
 

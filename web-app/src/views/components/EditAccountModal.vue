@@ -651,58 +651,20 @@ onUnmounted(() => {
               </label>
               <div class="relative edit-currency-dropdown-container">
                 <div
-                  class="flex items-center w-full px-3 py-2 border border-gray-100 rounded-lg cursor-pointer hover:border-gray-200"
-                  :class="{ 'ring-1 ring-primary/20 border-primary/50': isCurrencyDropdownOpen }"
-                  @click="isCurrencyDropdownOpen = !isCurrencyDropdownOpen"
+                  class="flex items-center w-full px-3 py-2 border border-gray-100 rounded-lg cursor-not-allowed bg-gray-100"
                 >
                   <div class="flex items-center flex-1">
                     <span>{{ selectedCurrency?.name }}</span>
                   </div>
                   <font-awesome-icon
                     :icon="['fas', 'chevron-down']"
-                    class="text-gray-400 ml-2 transition-transform"
-                    :class="{ 'rotate-180': isCurrencyDropdownOpen }"
+                    class="text-gray-400 ml-2"
                   />
                 </div>
-
-                <div
-                  v-if="isCurrencyDropdownOpen"
-                  class="fixed z-[60] w-[calc(100%-2rem)] max-w-md mt-1 bg-white border border-gray-200 rounded-lg shadow-lg divide-y divide-gray-100"
-                  :style="{
-                    top: currencyDropdownPosition.top + 'px',
-                    left: currencyDropdownPosition.left + 'px',
-                    width: currencyDropdownPosition.width + 'px'
-                  }"
-                >
-                  <div class="p-2">
-                    <input
-                      v-model="currencySearchQuery"
-                      type="text"
-                      class="w-full px-3 py-2 border border-gray-100 rounded-lg focus:outline-none focus:ring-1 focus:ring-primary/20 focus:border-primary/50"
-                      placeholder="Tìm kiếm tiền tệ..."
-                      @click.stop
-                    />
-                  </div>
-                  <div class="max-h-48 overflow-y-auto py-1">
-                    <div
-                      v-for="currency in filteredCurrencies"
-                      :key="currency.code"
-                      class="flex items-center px-3 py-2 cursor-pointer hover:bg-gray-50"
-                      :class="{ 'bg-primary/5': currency.code === newAccount.currencyCode }"
-                      @click="handleCurrencySelect(currency)"
-                    >
-                      <span class="mr-2 font-bold">{{ currency.symbol }}</span>
-                      <span>{{ currency.name }}</span>
-                    </div>
-                    <div
-                      v-if="filteredCurrencies.length === 0"
-                      class="px-3 py-2 text-text-secondary text-sm"
-                    >
-                      Không tìm thấy loại tiền tệ
-                    </div>
-                  </div>
-                </div>
               </div>
+              <p class="mt-1 text-xs text-gray-500 italic">
+                Loại tiền tệ không thể thay đổi sau khi tài khoản đã được tạo
+              </p>
             </div>
 
             <div v-if="showBankField">

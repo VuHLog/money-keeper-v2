@@ -49,6 +49,10 @@ const props = defineProps({
   goal: {
     type: Object,
     default: null
+  },
+  activeTab: {
+    type: Number,
+    default: 0
   }
 })
 
@@ -391,7 +395,7 @@ defineExpose({
         </div>
 
         <!-- Add Money Button -->
-        <div class="flex justify-center" v-if="!isCompleted && !isStatusCompleted">
+        <div class="flex justify-center" v-if="!isCompleted && !isStatusCompleted && activeTab !== 2">
           <button 
             @click="handleAddMoney"
             class="bg-success text-white font-medium px-6 py-3 rounded-lg hover:bg-success/90 transition-colors flex items-center space-x-2"
@@ -446,7 +450,7 @@ defineExpose({
                     <span class="text-text-secondary text-sm">{{ formatDate(deposit.date) }}</span>
                     <!-- Undo Button - Only show for incomplete goals -->
                     <button 
-                      v-if="!isStatusCompleted"
+                      v-if="!isStatusCompleted && activeTab !== 2"
                       @click="handleDeleteDeposit(deposit)"
                       :disabled="deletingDepositId === deposit.id"
                       class="opacity-0 group-hover:opacity-100 transition-opacity p-1.5 rounded-lg hover:bg-danger/10 text-danger hover:text-danger/80 disabled:opacity-50 disabled:cursor-not-allowed"
@@ -505,9 +509,9 @@ defineExpose({
 
       <!-- Modal Footer -->
       <div class="px-6 py-4 bg-gray-50 rounded-b-lg flex justify-end space-x-3 sticky bottom-0">
-        <!-- Only show Edit button for incomplete goals -->
+        <!-- Only show Edit button for incomplete goals (not completed and not expired) -->
         <button 
-          v-if="!isStatusCompleted"
+          v-if="!isStatusCompleted && activeTab !== 2"
           @click="handleEdit" 
           class="px-4 py-2 bg-warning text-white rounded-lg hover:bg-warning/90 transition-colors flex items-center space-x-2"
         >

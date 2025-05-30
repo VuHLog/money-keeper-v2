@@ -5,10 +5,7 @@ import com.vuhlog.money_keeper.dao.NotificationRepository;
 import com.vuhlog.money_keeper.dto.request.NotificationRequest;
 import com.vuhlog.money_keeper.dto.response.NotificationResponse;
 import com.vuhlog.money_keeper.dto.response.responseinterface.ExpenseLimitNotification;
-import com.vuhlog.money_keeper.entity.ExpenseRegular;
-import com.vuhlog.money_keeper.entity.Notification;
-import com.vuhlog.money_keeper.entity.RevenueRegular;
-import com.vuhlog.money_keeper.entity.Users;
+import com.vuhlog.money_keeper.entity.*;
 import com.vuhlog.money_keeper.exception.AppException;
 import com.vuhlog.money_keeper.exception.ErrorCode;
 import com.vuhlog.money_keeper.mapper.NotificationMapper;
@@ -132,6 +129,21 @@ public class NotificationServiceImpl implements NotificationService {
             log.error("WebSocket gửi thất bại: {}", e.getMessage());
         }
         return notificationResponse;
+    }
+
+    @Override
+    public NotificationResponse financialGoalDeadlineExpired(FinancialGoal financialGoal) {
+        Notification notification = Notification.builder()
+                .title("Mục tiêu tài chính hết hạn")
+                .content("Mục tiêu <strong class='text-primary'>" + financialGoal.getName() + "</strong> đã hết hạn để hoàn thành. Hãy gia hạn để tiếp tục nhé!")
+                .type("financial_goal")
+                .readStatus(0)
+                .iconUrl("https://res.cloudinary.com/cloud1412/image/upload/v1745068565/logo_mpkmjj.png")
+                .user(financialGoal.getBucketPayment().getUser())
+                .href("/goals")
+                .build();
+
+        return notificationMapper.toNotificationResponse(notificationRepository.save(notification));
     }
 
     @Override

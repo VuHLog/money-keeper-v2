@@ -98,6 +98,18 @@ export const useFinancialGoalStore = defineStore("FinancialGoal", {
         });
       return response;
     },
+    async updateDeadline(id, data) {
+      let response = null;
+      await base
+        .put("/financial-goal/" + id + "/deadline", data)
+        .then((res) => {
+          response = res.result;
+        })
+        .catch((err) => {
+          console.log(err);
+        });
+      return response;
+    },
     async deleteById(id) {
       let response = null;
       await base

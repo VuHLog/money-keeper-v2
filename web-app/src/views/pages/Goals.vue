@@ -3,16 +3,17 @@ import { ref, computed, onMounted, watch } from 'vue'
 import { formatCurrencyWithSymbol } from '@/utils/formatters'
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
 import { library } from '@fortawesome/fontawesome-svg-core'
-import { faBullseye, faPlus, faMapMarkerAlt, faMotorcycle, faHome,faGraduationCap,faHeart,faCalendarAlt,faExclamationTriangle,faInfoCircle,faPlusCircle,faArrowLeft} from '@fortawesome/free-solid-svg-icons'
+import { faBullseye, faPlus, faMapMarkerAlt, faMotorcycle, faHome,faGraduationCap,faHeart,faCalendarAlt,faExclamationTriangle,faInfoCircle,faPlusCircle,faArrowLeft,faCalendarPlus} from '@fortawesome/free-solid-svg-icons'
 import GoalFormModal from '@/views/components/GoalFormModal.vue'
 import GoalDetailModal from '@/views/components/GoalDetailModal.vue'
 import AddMoneyModal from '@/views/components/AddMoneyModal.vue'
+import ExtendGoalModal from '@/views/components/ExtendGoalModal.vue'
 import ToastManager from '@/views/components/ToastManager.vue'
 import ConfettiAnimation from '@/views/components/ConfettiAnimation.vue'
 import { useFinancialGoalStore } from '@/store/FinancialGoalStore'
 import { useAuthStore } from '@/store/AuthStore'
 
-library.add(faBullseye,faPlus,faMapMarkerAlt,faMotorcycle,faHome,faGraduationCap,faHeart,faCalendarAlt,faExclamationTriangle,faInfoCircle,faPlusCircle,faArrowLeft)
+library.add(faBullseye,faPlus,faMapMarkerAlt,faMotorcycle,faHome,faGraduationCap,faHeart,faCalendarAlt,faExclamationTriangle,faInfoCircle,faPlusCircle,faArrowLeft,faCalendarPlus)
 
 // Store
 const financialGoalStore = useFinancialGoalStore()
@@ -39,7 +40,7 @@ const isLoading = ref(false)
 const totalElements = ref(0)
 
 // Tab state
-const activeTab = ref(0) // 0: Chưa hoàn thành, 1: Đã hoàn thành
+const activeTab = ref(0) // 0: Chưa hoàn thành, 1: Đã hoàn thành, 2: Hết hạn
 
 // Confetti animation state
 const showConfetti = ref(false)
@@ -49,6 +50,7 @@ const isGoalModalOpen = ref(false)
 const goalModalMode = ref('create') // 'create' or 'edit'
 const isDetailModalOpen = ref(false)
 const isAddMoneyModalOpen = ref(false)
+const isExtendModalOpen = ref(false)
 const selectedGoal = ref(null)
 const goalDetailModalRef = ref(null)
 const isStompConnected = computed(() => authStore.stompClient !== null)
@@ -289,12 +291,44 @@ const handleDeleteGoal = async (goal) => {
 const handleAddMoney = (goal) => {
   isDetailModalOpen.value = false
   selectedGoal.value = goal
-  isAddMoneyModalOpen.value = true
+  
+  // If it's expired goal (activeTab === 2), show extend modal, otherwise show add money modal
+  if (activeTab.value === 2) {
+    isExtendModalOpen.value = true
+  } else {
+    isAddMoneyModalOpen.value = true
+  }
 }
 
 const handleCloseAddMoneyModal = () => {
   isAddMoneyModalOpen.value = false
   selectedGoal.value = null
+}
+
+const handleCloseExtendModal = () => {
+  isExtendModalOpen.value = false
+  selectedGoal.value = null
+}
+
+const handleExtendSuccess = async (data) => {
+  isExtendModalOpen.value = false
+  
+  addToast({
+    type: 'success',
+    title: 'Thành công!',
+    content: data.message
+  }, 3000)
+  
+  // Refresh goals list to show updated status
+  await refreshGoalsList()
+}
+
+const handleExtendError = (data) => {
+  addToast({
+    type: 'error',
+    title: 'Lỗi!',
+    content: data.message
+  }, 4000)
 }
 
 const handleDeposit = async (data) => {
@@ -394,6 +428,14 @@ const handleTabChange = (tabIndex) => {
             Đã hoàn thành
             <span v-if="activeTab === 1" class="absolute bottom-0 left-0 right-0 h-0.5 bg-primary"></span>
           </button>
+          <button 
+            @click="handleTabChange(2)"
+            class="relative py-3 text-sm font-medium transition-colors"
+            :class="activeTab === 2 ? 'text-primary border-b-2 border-primary' : 'text-text-secondary hover:text-text'"
+          >
+            Hết hạn
+            <span v-if="activeTab === 2" class="absolute bottom-0 left-0 right-0 h-0.5 bg-primary"></span>
+          </button>
         </div>
       </div>
     </div>
@@ -466,7 +508,7 @@ const handleTabChange = (tabIndex) => {
             <button 
               @click="handleGoalDetail(goal)"
               class="bg-gray-100 text-text-secondary font-medium py-2 px-4 rounded-lg hover:bg-gray-200 transition-colors flex items-center justify-center space-x-2"
-              :class="activeTab === 1 ? 'flex-1' : 'flex-1'"
+              :class="activeTab === 1 || activeTab === 2 ? 'flex-1' : 'flex-1'"
             >
               <font-awesome-icon :icon="['fas', 'info-circle']" class="text-sm" />
               <span>Chi tiết</span>
@@ -480,6 +522,15 @@ const handleTabChange = (tabIndex) => {
               <font-awesome-icon :icon="['fas', 'plus-circle']" class="text-sm" />
               <span>Nạp thêm</span>
             </button>
+            <!-- Show "Gia hạn" for expired goals -->
+            <button 
+              v-if="activeTab === 2"
+              @click="handleAddMoney(goal)"
+              class="flex-1 bg-warning text-white font-medium py-2 px-4 rounded-lg hover:bg-warning/90 transition-colors flex items-center justify-center space-x-2"
+            >
+              <font-awesome-icon :icon="['fas', 'calendar-plus']" class="text-sm" />
+              <span>Gia hạn</span>
+            </button>
           </div>
         </div>
       </div>
@@ -489,8 +540,8 @@ const handleTabChange = (tabIndex) => {
         <div class="bg-gray-100 p-6 rounded-full w-24 h-24 mx-auto mb-4 flex items-center justify-center">
           <font-awesome-icon :icon="['fas', 'bullseye']" class="text-text-secondary text-3xl" />
         </div>
-        <h3 class="text-xl font-semibold text-text mb-2">{{ activeTab === 0 ? 'Chưa có mục tiêu nào' : 'Chưa có mục tiêu nào đã hoàn thành' }}</h3>
-        <p class="text-text-secondary mb-6">{{ activeTab === 0 ? 'Hãy tạo mục tiêu tài chính đầu tiên của bạn' : 'Hãy hoàn thành mục tiêu tài chính đầu tiên của bạn' }}</p>
+        <h3 class="text-xl font-semibold text-text mb-2">{{ activeTab === 0 ? 'Chưa có mục tiêu nào' : activeTab === 1 ? 'Chưa có mục tiêu nào đã hoàn thành' : 'Chưa có mục tiêu nào đã hết hạn' }}</h3>
+        <p class="text-text-secondary mb-6">{{ activeTab === 0 ? 'Hãy tạo mục tiêu tài chính đầu tiên của bạn' : activeTab === 1 ? 'Hãy hoàn thành mục tiêu tài chính đầu tiên của bạn' : 'Hãy hoàn thành mục tiêu tài chính đầu tiên của bạn' }}</p>
         <button
           v-if="activeTab === 0"
           @click="handleCreateGoal"
@@ -506,6 +557,14 @@ const handleTabChange = (tabIndex) => {
         >
           <font-awesome-icon :icon="['fas', 'arrow-left']" class="text-sm" />
           <span>Quay lại để hoàn thành mục tiêu</span>
+        </button>
+        <button 
+          v-if="activeTab === 2"
+          @click="handleTabChange(0)"
+          class="bg-primary text-white font-medium px-6 py-3 rounded-lg hover:bg-primary/90 transition-colors inline-flex items-center space-x-2"
+        >
+          <font-awesome-icon :icon="['fas', 'arrow-left']" class="text-sm" />
+          <span>Quay lại để tạo mục tiêu mới</span>
         </button>
       </div>
 
@@ -537,6 +596,7 @@ const handleTabChange = (tabIndex) => {
       ref="goalDetailModalRef"
       :is-open="isDetailModalOpen"
       :goal="selectedGoal"
+      :active-tab="activeTab"
       @close="handleCloseDetailModal"
       @edit="handleEditGoal"
       @delete="handleDeleteGoal"
@@ -550,6 +610,15 @@ const handleTabChange = (tabIndex) => {
       :goal="selectedGoal"
       @close="handleCloseAddMoneyModal"
       @deposit="handleDeposit"
+    />
+
+    <!-- Extend Goal Modal -->
+    <ExtendGoalModal 
+      :is-open="isExtendModalOpen"
+      :goal="selectedGoal"
+      @close="handleCloseExtendModal"
+      @success="handleExtendSuccess"
+      @error="handleExtendError"
     />
 
     <!-- Confetti Animation -->
