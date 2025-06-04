@@ -1,11 +1,22 @@
 <script setup>
-import { ref, getCurrentInstance, onUnmounted } from "vue";
-import { useRouter } from "vue-router";
+import { ref, getCurrentInstance, onUnmounted, onMounted } from "vue";
+import { useRouter, useRoute } from "vue-router";
 import ToastManager from '@/views/components/ToastManager.vue';
+import { useAuthStore } from "@/store/AuthStore.js";
 
 const { proxy } = getCurrentInstance();
 const router = useRouter();
+const route = useRoute();
 const toastManagerRef = ref(null);
+const store = useAuthStore();
+
+
+const redirect = route.query.redirect ? route.query.redirect : "/home";
+onMounted(() => {
+  if (store.username !== "" && store.isLoggedIn) {
+    router.push(redirect);
+  }
+});
 
 // Function to add toast using ref to ToastManager component
 const addToast = (notification, duration) => {
