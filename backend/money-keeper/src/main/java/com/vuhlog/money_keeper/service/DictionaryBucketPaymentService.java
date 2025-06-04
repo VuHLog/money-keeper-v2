@@ -35,4 +35,6 @@ public interface DictionaryBucketPaymentService {
     Long getBalanceByBucketPaymentId(String bucketPaymentId);
 
     Long getMyTotalBalance();
+
+    Long getTotalBalanceBySearch(String search);
 }

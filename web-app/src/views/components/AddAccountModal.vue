@@ -354,17 +354,7 @@ const handleAdd = async () => {
 
   try {
     await dictionaryBucketPaymentStore.createBucketPayment({...newAccount.value, currency: newAccount.value.currencyCode});
-    emit('add', {
-      accountName: newAccount.value.accountName.trim(),
-      accountType: newAccount.value.accountType,
-      balance: Number(newAccount.value.balance),
-      interpretation: newAccount.value.interpretation.trim(),
-      bankId: showBankField.value ? newAccount.value.bankId : undefined,
-      creditLimit: showCreditLimitField.value ? Number(newAccount.value.creditLimit) : undefined,
-      iconUrl: newAccount.value.iconUrl,
-      currency: newAccount.value.currencyCode
-      
-    })
+    emit('add')
     Swal.fire({
       title: "Thành công",
       text: "Bạn đã thêm tài khoản thành công!",

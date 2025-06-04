@@ -383,15 +383,6 @@ const resetAndClose = () => {
   emit('close')
 }
 
-const handleCurrencySelect = (currency) => {
-  if (newAccount.value) {
-    newAccount.value.currencyCode = currency.code
-    newAccount.value.currencySymbol = currency.symbol
-  }
-  isCurrencyDropdownOpen.value = false
-  currencySearchQuery.value = ''
-}
-
 const handleUpdate = async () => {
   if (!validateForm()) {
     return
@@ -416,18 +407,7 @@ const handleUpdate = async () => {
       currencySymbol: newAccount.value.currencySymbol
     };
     await dictionaryBucketPaymentStore.update(data.id, data);
-    emit('update', {
-      ...editingAccount.value,
-      accountName: newAccount.value.accountName.trim(),
-      accountType: newAccount.value.accountType,
-      balance: Number(newAccount.value.balance),
-      initialBalance: Number(newAccount.value.initialBalance),
-      interpretation: newAccount.value.interpretation.trim(),
-      iconUrl: newAccount.value.iconUrl,
-      bankId: showBankField.value ? newAccount.value.bankId : undefined,
-      creditLimit: showCreditLimitField.value ? Number(newAccount.value.creditLimit) : undefined,
-      currency: newAccount.value.currencyCode
-    })
+    emit('update')
   } catch (err) {
     console.log(err)
   }

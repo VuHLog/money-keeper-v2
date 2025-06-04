@@ -8,6 +8,16 @@ export const useDictionaryBucketPaymentStore = defineStore("dictionaryBucketPaym
     return {
       totalExpense: 0,
       totalRevenue: 0,
+      accounts: [],
+      pagination: {
+        field: "accountName",
+        pageNumber: 1,
+        pageSize: 5,
+        sort: "ASC",
+        search: "",
+        totalElements: 0,
+        totalPages: 0,
+      }
     };
   },
   getters: {},
@@ -60,26 +70,65 @@ export const useDictionaryBucketPaymentStore = defineStore("dictionaryBucketPaym
         });
       return response;
     },
-    async getMyBucketPaymentsPagination(field = "accountName", pageNumber = 1, pageSize = 5, sort = 'ASC', search='') {
-      if(search === null){
-        search = '';
+    async getMyBucketPaymentsPagination(field = null, pageNumber = null, pageSize = null, sort = null, search = null) {
+      // Sử dụng giá trị từ store nếu không có tham số truyền vào
+      const queryParams = {
+        field: field || this.pagination.field,
+        pageNumber: (pageNumber !== null ? pageNumber : this.pagination.pageNumber) - 1, // API sử dụng 0-indexed
+        pageSize: pageSize || this.pagination.pageSize,
+        sort: sort || this.pagination.sort,
+        search: search !== null ? search : this.pagination.search
+      };
+
+      // Đảm bảo search không phải null
+      if (queryParams.search === null) {
+        queryParams.search = '';
       }
+
       let response = null;
       await base
         .get("/dictionary-bucket-payment/pagination?"
-          + "field="+ field
-          + "&pageNumber="+ (pageNumber - 1)
-          + "&pageSize=" + pageSize
-          + "&sort=" + sort
-          + "&search=" + search
+          + "field=" + queryParams.field
+          + "&pageNumber=" + queryParams.pageNumber
+          + "&pageSize=" + queryParams.pageSize
+          + "&sort=" + queryParams.sort
+          + "&search=" + queryParams.search
         )
         .then((res) => {
-          response = res.result.content;
+          response = res.result;
+          // Cập nhật state pagination
+          this.accounts = response.content;
+          this.pagination.totalElements = response.totalElements;
+          this.pagination.totalPages = response.totalPages;
+          this.pagination.pageNumber = response.number + 1; // Chuyển về 1-indexed
         })
         .catch((err) => {
           console.log(err);
         });
       return response;
+    },
+    async getTotalBalance(search = null){
+      let response = null;
+      if(search === null){
+        search = "";
+      }
+      await base
+        .get("/dictionary-bucket-payment/total-balance?search=" + search)
+        .then((res) => {
+          response = res.result;
+        })
+        .catch((err) => {
+          console.log(err);
+        });
+      return response;
+    },
+    resetPagination() {
+      this.pagination.pageNumber = 1;
+      this.pagination.pageSize = 5;
+      this.pagination.sort = "ASC";
+      this.pagination.search = "";
+      this.pagination.totalElements = 0;
+      this.pagination.totalPages = 0;
     },
     async getBucketPaymentById(id) {
       let response = null;

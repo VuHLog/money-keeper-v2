@@ -597,7 +597,7 @@ const exportExcel = async () => {
       </div>
       
       <!-- Pagination section -->
-      <div class="mt-4 flex justify-between items-center px-6 py-3 border-t border-gray-200">
+      <div class="mt-4 flex justify-between items-center px-6 py-3 border-t border-gray-200" v-if="paginationInfo.total > 0">
         <!-- Pagination info -->
         <div class="text-sm text-gray-500">
           Hiển thị {{ paginationInfo.start }} đến {{ paginationInfo.end }}
