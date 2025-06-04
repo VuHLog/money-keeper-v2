@@ -387,7 +387,7 @@ const handleTabChange = (tabIndex) => {
 </script>
 
 <template>
-  <div class="p-6">
+  <div class="p-4">
     <!-- Toast Manager Component -->
     <ToastManager ref="toastManagerRef" />
     
@@ -395,10 +395,34 @@ const handleTabChange = (tabIndex) => {
     <div class="bg-surface rounded-2xl shadow-sm mb-6">
       <div class="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
         <div class="flex items-center space-x-3">
-          <div class="bg-primary/10 p-3 rounded-lg">
-            <font-awesome-icon :icon="['fas', 'bullseye']" class="text-primary text-xl" />
-          </div>
-          <h1 class="text-2xl font-bold text-text">Mục tiêu tài chính</h1>
+          <div class="py-0">
+            <div class="flex space-x-8">
+              <button 
+                @click="handleTabChange(0)"
+                class="relative py-3 text-sm font-medium transition-colors"
+                :class="activeTab === 0 ? 'text-primary border-b-2 border-primary' : 'text-text-secondary hover:text-text'"
+              >
+                Chưa hoàn thành
+                <span v-if="activeTab === 0" class="absolute bottom-0 left-0 right-0 h-0.5 bg-primary"></span>
+              </button>
+              <button 
+                @click="handleTabChange(1)"
+                class="relative py-3 text-sm font-medium transition-colors"
+                :class="activeTab === 1 ? 'text-primary border-b-2 border-primary' : 'text-text-secondary hover:text-text'"
+              >
+                Đã hoàn thành
+                <span v-if="activeTab === 1" class="absolute bottom-0 left-0 right-0 h-0.5 bg-primary"></span>
+              </button>
+              <button 
+                @click="handleTabChange(2)"
+                class="relative py-3 text-sm font-medium transition-colors"
+                :class="activeTab === 2 ? 'text-primary border-b-2 border-primary' : 'text-text-secondary hover:text-text'"
+              >
+                Hết hạn
+                <span v-if="activeTab === 2" class="absolute bottom-0 left-0 right-0 h-0.5 bg-primary"></span>
+              </button>
+            </div>
+      </div>
         </div>
         <button 
           @click="handleCreateGoal"
@@ -410,34 +434,7 @@ const handleTabChange = (tabIndex) => {
       </div>
       
       <!-- Tabs -->
-      <div class="px-6 py-0 border-b border-gray-100">
-        <div class="flex space-x-8">
-          <button 
-            @click="handleTabChange(0)"
-            class="relative py-3 text-sm font-medium transition-colors"
-            :class="activeTab === 0 ? 'text-primary border-b-2 border-primary' : 'text-text-secondary hover:text-text'"
-          >
-            Chưa hoàn thành
-            <span v-if="activeTab === 0" class="absolute bottom-0 left-0 right-0 h-0.5 bg-primary"></span>
-          </button>
-          <button 
-            @click="handleTabChange(1)"
-            class="relative py-3 text-sm font-medium transition-colors"
-            :class="activeTab === 1 ? 'text-primary border-b-2 border-primary' : 'text-text-secondary hover:text-text'"
-          >
-            Đã hoàn thành
-            <span v-if="activeTab === 1" class="absolute bottom-0 left-0 right-0 h-0.5 bg-primary"></span>
-          </button>
-          <button 
-            @click="handleTabChange(2)"
-            class="relative py-3 text-sm font-medium transition-colors"
-            :class="activeTab === 2 ? 'text-primary border-b-2 border-primary' : 'text-text-secondary hover:text-text'"
-          >
-            Hết hạn
-            <span v-if="activeTab === 2" class="absolute bottom-0 left-0 right-0 h-0.5 bg-primary"></span>
-          </button>
-        </div>
-      </div>
+      
     </div>
 
     <!-- Goals List -->

@@ -24,7 +24,7 @@ const changeTab = (tabId) => {
     
     <!-- Tabs -->
     <div class="bg-surface rounded-xl p-4 shadow-sm mb-6">
-      <div class="border-b border-gray-200">
+      <div>
         <div class="flex space-x-4">
           <button 
             v-for="tab in tabs" 

@@ -32,6 +32,7 @@
           <button 
             @click="exportExcel" 
             class="px-3 py-2 bg-green-50 text-green-600 rounded-lg hover:bg-green-100 transition-colors flex items-center text-sm"
+            v-if="transactions.length > 0"
           >
             <font-awesome-icon :icon="['fas', 'file-excel']" class="mr-2" />
             Xuất Excel
@@ -45,8 +46,12 @@
           <div class="animate-spin rounded-full h-10 w-10 border-b-2 border-primary"></div>
         </div>
       </div>
+      <!-- No data state -->
+      <div v-else-if="transactions.length === 0" class="py-10 text-center text-gray-500">
+        Không có dữ liệu thu chi phù hợp với bộ lọc
+      </div>
       <!-- Transactions List -->
-    <div class="mt-6 bg-white rounded-lg shadow-sm">
+    <div v-else class="mt-6 bg-white rounded-lg shadow-sm">
       <div class="overflow-x-auto">
         <table class="min-w-full divide-y divide-gray-200">
           <thead class="bg-gray-50">
@@ -164,7 +169,7 @@
             </tr>
             
             <!-- Hiển thị khi không có dữ liệu -->
-            <tr v-if="transactions.length === 0">
+            <tr v-if="transactions.length === 0" class="flex justify-center items-center w-full">
               <td colspan="7" class="px-6 py-8 text-center text-gray-500">
                 <div class="flex flex-col items-center justify-center">
                   <font-awesome-icon :icon="['fas', 'wallet']" class="text-3xl mb-2 text-gray-300" />
@@ -251,7 +256,7 @@
     </div>
       
       <!-- Summary section -->
-      <div class="mt-4 pt-4 border-t border-gray-100">
+      <div v-if="transactions.length > 0" class="mt-4 pt-4 border-t border-gray-100" >
         <div class="grid grid-cols-3 gap-4">
           <div class="bg-blue-50 p-3 rounded-lg">
             <div class="text-sm text-gray-600">Tổng thu</div>

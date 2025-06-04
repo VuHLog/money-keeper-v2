@@ -32,19 +32,18 @@ const componentMap = {
 <template>
     <div class="flex h-full">
         <div class="w-1/4 border-r border-gray-200 bg-white p-4">
-            <h2 class="text-lg font-semibold text-purple-700 mb-4 px-2">Báo cáo</h2>
             <ul class="list-none p-0 m-0">
                 <li v-for="(report, index) in reports" 
                     :key="index" 
                     @click="selectedReport = report.component" 
                     :class="[
-                        'py-4 px-4 cursor-pointer flex items-center border-b border-gray-100 transition-all duration-200 text-purple-700',
+                        'py-4 px-4 cursor-pointer flex items-center border-b border-gray-100 transition-all duration-200 text-[#c56cf0]',
                         selectedReport === report.component 
                             ? 'bg-purple-50 font-bold border-l-4 border-l-purple-500 pl-3' 
                             : 'hover:bg-purple-50'
                     ]"
                 >
-                    <font-awesome-icon :icon="report.icon" class="mr-3 text-purple-500" /> 
+                    <font-awesome-icon :icon="report.icon" class="mr-3 text-[#c56cf0]" /> 
                     {{ report.title }}
                 </li>
             </ul>

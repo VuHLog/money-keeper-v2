@@ -336,7 +336,7 @@ const handleDeleteCategory = async () => {
   <div class="p-4">
     <!-- Tabs -->
     <div class="bg-surface rounded-xl p-4 shadow-sm">
-      <div class="flex justify-between items-center border-b border-gray-200 mb-4">
+      <div class="flex justify-between items-center mb-4">
         <div class="flex space-x-4">
           <button v-for="tab in tabs" :key="tab.id" @click="changeTab(tab.id)"
             class="py-2 px-4 border-b-2 transition-colors" :class="[
