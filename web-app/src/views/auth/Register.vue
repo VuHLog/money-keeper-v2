@@ -27,7 +27,7 @@ const user = ref({
 
 const redirect = route.query.redirect ? route.query.redirect : "/home";
 onMounted(() => {
-  if (store.username !== "") {
+  if (store.username !== "" && store.isLoggedIn) {
     router.push(redirect);
   }
 });

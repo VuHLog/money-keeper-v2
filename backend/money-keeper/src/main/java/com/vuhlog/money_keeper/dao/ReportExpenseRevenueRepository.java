@@ -26,6 +26,11 @@ public interface ReportExpenseRevenueRepository extends JpaRepository<ReportExpe
     @Query("UPDATE ReportExpenseRevenue r SET r.categoryId = null WHERE r.categoryId = :categoryId and r.type='expense'")
     void unsetDictionaryExpenseById(@Param("categoryId") String categoryId);
 
+    @Modifying
+    @Transactional
+    @Query("Delete from ReportExpenseRevenue r where r.bucketPaymentId = :bucketPaymentId")
+    void deleteByBucketPaymentId(@Param("bucketPaymentId") String bucketPaymentId);
+
     @Query(value = "SELECT COALESCE(SUM(er.amount), 0)\n" +
             "FROM expense_regular er\n" +
             "JOIN dictionary_bucket_payment dbp ON dbp.id = er.dictionary_bucket_payment_id\n" +

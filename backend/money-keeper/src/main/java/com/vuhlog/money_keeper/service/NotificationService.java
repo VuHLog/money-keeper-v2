@@ -4,6 +4,7 @@ import com.vuhlog.money_keeper.dto.request.NotificationRequest;
 import com.vuhlog.money_keeper.dto.response.NotificationResponse;
 import com.vuhlog.money_keeper.dto.response.responseinterface.ExpenseLimitNotification;
 import com.vuhlog.money_keeper.entity.ExpenseRegular;
+import com.vuhlog.money_keeper.entity.FinancialGoal;
 import com.vuhlog.money_keeper.entity.RevenueRegular;
 import org.springframework.data.domain.Page;
 
@@ -15,6 +16,10 @@ public interface NotificationService {
     NotificationResponse revenueNotification(RevenueRegular revenueRegular, Boolean isCreate);
 
     NotificationResponse expenseNotification(ExpenseRegular expenseRegular, Boolean isCreate);
+
+    NotificationResponse expenseForGoalNotification(ExpenseRegular expenseRegular);
+
+    NotificationResponse financialGoalDeadlineExpired(FinancialGoal financialGoal);
 
     NotificationResponse deleteRevenueNotification(RevenueRegular revenueRegular);
 

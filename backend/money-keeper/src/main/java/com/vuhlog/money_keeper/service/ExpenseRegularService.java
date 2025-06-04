@@ -12,11 +12,15 @@ import java.util.List;
 public interface ExpenseRegularService {
     List<ExpenseRegularResponse> getAllMyExpenseRegular(String dictionaryBucketPaymentId);
     Page<ExpenseRegularResponse> getAllMyExpenseRegularPagination(String field, Integer pageNumber, Integer pageSize, String sort, String search);
+    List<ExpenseRegularResponse> getByFinancialGoal(String financialGoalId);
+    Page<ExpenseRegularResponse> getByFinancialGoalPagination(String field, Integer pageNumber, Integer pageSize, String sort, String search, String financialGoalId);
     List<TotalExpenseByDateResponse> getTotalExpenseByExpenseLimit(String expenseLimitId, String startDate, String endDate);
     ExpenseRegularResponse createExpenseRegular(ExpenseRegularRequest request);
+    ExpenseRegularResponse createExpenseRegularForGoal(ExpenseRegularRequest request);
     ExpenseRegularResponse createExpenseRegularFromTransferRequest(TransferRequest request);
 //    ExpenseRegularResponse updateExpenseRegularFromTransferRequest(String id, TransferRequest request);
     void deleteExpenseRegular(String id);
+    void deleteExpenseRegularNoNotify(String id);
     void deleteExpenseRegularByTransferType(String id);
     ExpenseRegularResponse updateExpenseRegular(String id, ExpenseRegularRequest request);
     ExpenseRegularResponse getExpenseRegularById(String id);

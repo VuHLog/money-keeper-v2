@@ -32,6 +32,7 @@ public enum ErrorCode {
     INVALID_OTP_EMAIL(12001, "Invalid OTP for email", HttpStatus.NOT_FOUND),
     OTP_EXPIRED(12002, "OTP has expired!", HttpStatus.BAD_REQUEST),
     EMAIL_SENDING_FAILED(12003, "Email sending failed!", HttpStatus.BAD_REQUEST),
+    FINANCIAL_GOAL_NOT_EXISTED(13001, "Financial goal not existed", HttpStatus.BAD_REQUEST),
     ;
     ErrorCode(int code, String message, HttpStatusCode statusCode) {
         this.code = code;

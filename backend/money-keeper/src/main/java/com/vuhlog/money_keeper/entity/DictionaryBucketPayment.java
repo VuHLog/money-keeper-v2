@@ -36,7 +36,7 @@ public class DictionaryBucketPayment {
     @JoinColumn(name = "user_id")
     private Users user;
 
-    @OneToMany(mappedBy = "dictionaryBucketPayment")
+    @OneToMany(mappedBy = "dictionaryBucketPayment", cascade = CascadeType.REMOVE)
     @JsonIgnore
     private Set<ExpenseRegular> expenseRegulars;
 
@@ -48,13 +48,17 @@ public class DictionaryBucketPayment {
     @JsonIgnore
     private Set<RevenueRegular> revenueRegularsForSenderAccount;
 
-    @OneToMany(mappedBy = "dictionaryBucketPayment")
+    @OneToMany(mappedBy = "dictionaryBucketPayment", cascade = CascadeType.REMOVE)
     @JsonIgnore
     private Set<RevenueRegular> revenueRegulars;
 
     @OneToMany(mappedBy = "bucketPayment")
     @JsonIgnore
     private Set<TransactionHistory> transactionHistories;
+
+    @OneToMany(mappedBy = "bucketPayment", cascade = CascadeType.REMOVE)
+    @JsonIgnore
+    private Set<FinancialGoal> financialGoals;
 
     @PrePersist
     public void prePersist() {

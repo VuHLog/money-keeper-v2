@@ -202,6 +202,15 @@ const handleAddCategory = async () => {
     return
   }
 
+  if (newCategory.value.name.toLowerCase() === "phát triển bản thân".toLowerCase()) {
+    Swal.fire({
+      icon: 'info',
+      title: 'Thông tin',
+      text: 'Danh mục "Phát triển bản thân" không được phép tạo. Vui lòng chọn tên khác.'
+    })
+    return
+  }
+
   try {
     let response
     if (activeTab.value === 'income') {
@@ -286,6 +295,15 @@ const handleUpdateCategory = async () => {
 // Handle deleting a category
 const handleDeleteCategory = async () => {
   if (!deletingCategory.value) return
+
+  if (deletingCategory.value.name === "Phát triển bản thân") {
+    Swal.fire({
+      icon: 'info',
+      title: 'Thông tin',
+      text: 'Danh mục "Phát triển bản thân" không được phép xóa'
+    })
+    return
+  }
 
   try {
     let response

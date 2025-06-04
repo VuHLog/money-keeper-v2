@@ -5,6 +5,8 @@ import com.vuhlog.money_keeper.dto.response.responseinterface.ExpenseLimitNotifi
 import com.vuhlog.money_keeper.dto.response.responseinterface.HistoryExpenseResponse;
 import com.vuhlog.money_keeper.dto.response.responseinterface.TotalExpenseByExpenseLimit;
 import com.vuhlog.money_keeper.entity.ExpenseRegular;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Modifying;
@@ -25,6 +27,10 @@ public interface ExpenseRegularRepository extends JpaRepository<ExpenseRegular, 
     @Transactional
     @Query("UPDATE ExpenseRegular e SET e.dictionaryBucketPayment = NULL WHERE e.dictionaryBucketPayment.id = :dictionaryBucketPaymentId")
     void unsetDictionaryBucketPaymentInExpenseRegular(@Param("dictionaryBucketPaymentId") String dictionaryBucketPaymentId);
+
+    List<ExpenseRegular> findByFinancialGoal_id(String financialGoalId);
+
+    Page<ExpenseRegular> findByFinancialGoal_id(String financialGoalId, Pageable pageable);
 
 //    @Modifying
 //    @Transactional

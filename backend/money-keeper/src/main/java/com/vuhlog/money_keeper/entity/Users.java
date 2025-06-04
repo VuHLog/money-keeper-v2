@@ -80,6 +80,10 @@ public class Users {
     @JsonIgnore
     private ForgotPassword forgotPassword;
 
+    @OneToMany(mappedBy = "user")
+    @JsonIgnore
+    private Set<FinancialGoal> financialGoals;
+
     @PrePersist
     public void onCreate() {
         if(oAuth2 == null) {

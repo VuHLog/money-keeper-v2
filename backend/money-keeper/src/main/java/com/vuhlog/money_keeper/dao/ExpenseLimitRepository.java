@@ -4,8 +4,10 @@ import com.vuhlog.money_keeper.dto.response.responseinterface.ExpenseLimitDetail
 import com.vuhlog.money_keeper.entity.ExpenseLimit;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.sql.Timestamp;
 import java.util.List;
@@ -26,4 +28,9 @@ public interface ExpenseLimitRepository extends JpaRepository<ExpenseLimit, Stri
             @Param("startDate") Timestamp startDate,
             @Param("endDate") Timestamp endDate
     );
+
+    @Modifying
+    @Transactional
+    @Query("Delete from ExpenseLimit e where e.bucketPaymentIds = :bucketPaymentId")
+    void deleteByBucketPaymentId(@Param("bucketPaymentId") String bucketPaymentId);
 }
