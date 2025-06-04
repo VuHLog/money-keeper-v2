@@ -30,6 +30,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.sql.Timestamp;
 import java.util.ArrayList;
@@ -42,6 +43,8 @@ import java.util.stream.Collectors;
 public class DictionaryBucketPaymentServiceImpl implements DictionaryBucketPaymentService {
     private final DictionaryBucketPaymentRepository dictionaryBucketPaymentRepository;
     private final ReportExpenseRevenueRepository reportExpenseRevenueRepository;
+    private final ExpenseRegularRepository expenseRegularRepository;
+    private final RevenueRegularRepository revenueRegularRepository;
     private final ExpenseLimitRepository expenseLimitRepository;
     private final BankRepository bankRepository;
     private final UsersRepository usersRepository;
@@ -89,8 +92,11 @@ public class DictionaryBucketPaymentServiceImpl implements DictionaryBucketPayme
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public void deleteDictionaryBucketPayment(String id) {
         DictionaryBucketPayment dictionaryBucketPayment = dictionaryBucketPaymentRepository.findById(id).orElseThrow(() -> new AppException(ErrorCode.BUCKET_PAYMENT_NOT_EXISTED));
+        expenseRegularRepository.unsetBeneficiaryAccountInExpenseRegular(id);
+        revenueRegularRepository.unsetSenderAccountInRevenueRegular(id);
         reportExpenseRevenueRepository.deleteByBucketPaymentId(id);
         expenseLimitRepository.deleteByBucketPaymentId(id);
         dictionaryBucketPaymentRepository.deleteById(id);
@@ -127,6 +133,23 @@ public class DictionaryBucketPaymentServiceImpl implements DictionaryBucketPayme
         Sort sortable = Sort.by(field).ascending();
         Pageable pageable = PageRequest.of(pageNumber, pageSize, sortable);
         return dictionaryBucketPaymentRepository.findAll(specs, pageable).map(dictionaryBucketPaymentMapper::toDictionaryBucketResponse);
+    }
+
+    @Override
+    public Long getTotalBalanceBySearch(String search) {
+        Specification<DictionaryBucketPayment> specs = Specification.where(null);
+        specs = specs.and(DictionaryBucketPaymentSpecification.filterByUserId(userCommon.getMyUserInfo().getId()));
+
+        if (search != null && !search.isEmpty()) {
+            specs = specs.and(DictionaryBucketPaymentSpecification.filterByName(search));
+        }
+        AtomicReference<Double> totalBalance = new AtomicReference<>(0.0);
+        dictionaryBucketPaymentRepository.findAll(specs).forEach(dictionaryBucketPayment -> {
+            ExchangeRateResponse exchangeRateResponse = currencyClient.exchangeRate("VND", dictionaryBucketPayment.getCurrency(), 1L);
+            Double rate = exchangeRateResponse.getRate();
+            totalBalance.updateAndGet(v -> v + (dictionaryBucketPayment.getBalance() * rate));
+        });
+        return Math.round(totalBalance.get());
     }
 
     @Override

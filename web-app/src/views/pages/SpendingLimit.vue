@@ -29,6 +29,15 @@ const toastManagerRef = ref(null)
 
 // Computed properties for pagination
 const paginationInfo = computed(() => {
+  if(expenseLimitStore.pagination.totalElements === 0){
+    return {
+      start: 0,
+      end: 0,
+      total: 0,
+      currentPage: 1,
+      totalPages: 1
+    }
+  }
   const start = ((expenseLimitStore.pagination.pageNumber - 1) * expenseLimitStore.pagination.pageSize) + 1
   const end = Math.min(start + expenseLimitStore.pagination.pageSize - 1, expenseLimitStore.pagination.totalElements)
   return {
@@ -407,12 +416,21 @@ const style = `
                 </button>
               </td>
             </tr>
+
+            <tr v-if="spendingLimits.length === 0">
+              <td colspan="7" class="px-6 py-8 text-center text-gray-500">
+                <div class="flex flex-col items-center justify-center">
+                  <font-awesome-icon :icon="['fas', 'money-bill-wave']" class="text-3xl mb-2 text-gray-300" />
+                  <p>Không có hạn mức chi nào</p>
+                </div>
+              </td>
+            </tr>
           </tbody>
         </table>
       </div>
 
       <!-- Add pagination section after the table -->
-      <div class="mt-4 flex justify-between items-center px-6 py-3 border-t border-gray-200">
+      <div class="mt-4 flex justify-between items-center px-6 py-3 border-t border-gray-200" v-if="paginationInfo.totalElements > 0">
         <!-- Pagination info -->
         <div class="text-sm text-gray-500">
           Hiển thị {{ paginationInfo.start }} đến {{ paginationInfo.end }}

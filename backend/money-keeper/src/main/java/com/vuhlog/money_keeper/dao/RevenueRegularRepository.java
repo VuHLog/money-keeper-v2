@@ -23,6 +23,11 @@ public interface RevenueRegularRepository extends JpaRepository<RevenueRegular, 
     @Query("UPDATE RevenueRegular e SET e.dictionaryBucketPayment = NULL WHERE e.dictionaryBucketPayment.id = :dictionaryBucketPaymentId")
     void unsetDictionaryBucketPaymentInRevenueRegular(@Param("dictionaryBucketPaymentId") String dictionaryBucketPaymentId);
 
+    @Modifying
+    @Transactional
+    @Query("UPDATE RevenueRegular e SET e.senderAccount = NULL WHERE e.senderAccount.id = :dictionaryBucketPaymentId")
+    void unsetSenderAccountInRevenueRegular(@Param("dictionaryBucketPaymentId") String dictionaryBucketPaymentId);
+
 //    @Modifying
 //    @Transactional
 //    @Query("UPDATE RevenueRegular e SET e.tripEvent = NULL WHERE e.tripEvent.id = :tripEventId")

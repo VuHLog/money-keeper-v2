@@ -28,6 +28,11 @@ public interface ExpenseRegularRepository extends JpaRepository<ExpenseRegular, 
     @Query("UPDATE ExpenseRegular e SET e.dictionaryBucketPayment = NULL WHERE e.dictionaryBucketPayment.id = :dictionaryBucketPaymentId")
     void unsetDictionaryBucketPaymentInExpenseRegular(@Param("dictionaryBucketPaymentId") String dictionaryBucketPaymentId);
 
+    @Modifying
+    @Transactional
+    @Query("UPDATE ExpenseRegular e SET e.beneficiaryAccount = NULL WHERE e.beneficiaryAccount.id = :dictionaryBucketPaymentId")
+    void unsetBeneficiaryAccountInExpenseRegular(@Param("dictionaryBucketPaymentId") String dictionaryBucketPaymentId);
+
     List<ExpenseRegular> findByFinancialGoal_id(String financialGoalId);
 
     Page<ExpenseRegular> findByFinancialGoal_id(String financialGoalId, Pageable pageable);

@@ -46,6 +46,13 @@ public class DictionaryBucketPaymentController {
                 .build();
     }
 
+    @GetMapping("/total-balance")
+    public ApiResponse<Long> getMyTotalBalance(@RequestParam(name = "search", required = false, defaultValue = "") String search) {
+        return ApiResponse.<Long>builder()
+                .result(dictionaryBucketPaymentService.getTotalBalanceBySearch(search))
+                .build();
+    }
+
     @GetMapping("/{id}")
     public ApiResponse<DictionaryBucketPaymentResponse> getDictionaryBucketPaymentById(
             @PathVariable(name = "id") String id) {
