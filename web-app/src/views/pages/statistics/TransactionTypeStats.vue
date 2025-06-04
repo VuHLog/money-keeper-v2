@@ -252,7 +252,19 @@ const transactionCountChart = ref({
     },
     min: 0 // Đảm bảo hiển thị giá trị 0
   },
-  colors: ['#3B82F6']
+  colors: ['#3B82F6'],
+  noData: {
+    text: "Không có dữ liệu",
+    align: 'center',
+    verticalAlign: 'middle',
+    offsetX: 0,
+    offsetY: 0,
+    style: {
+      color: undefined,
+      fontSize: '16px',
+      fontFamily: undefined
+    }
+  }
 })
 
 const incomeVsExpenseChart = ref({
@@ -353,27 +365,35 @@ const getData = async () => {
 }
 
 const updateTransactionData = (data) => {
+  // Kiểm tra xem có dữ liệu thực sự hay không
+  const hasData = data && data.length > 0;
+  
   // Prepare data first
-  const incomeData = chartCategories.value.map((category) => {
+  const incomeData = hasData ? chartCategories.value.map((category) => {
     let dataItem = data.find((item) => category === item.time);
     return dataItem ? dataItem.totalRevenue : 0;
-  });
+  }) : [];
   
-  const expenseData = chartCategories.value.map((category) => {
+  const expenseData = hasData ? chartCategories.value.map((category) => {
     let dataItem = data.find((item) => category === item.time);
     return dataItem ? dataItem.totalExpense : 0;
-  });
+  }) : [];
   
-  const transactionCountData = chartCategories.value.map((category) => {
+  const transactionCountData = hasData ? chartCategories.value.map((category) => {
     let dataItem = data.find((item) => category === item.time);
     return dataItem ? dataItem.totalTransaction : 0;
-  });
+  }) : [];
+  
+  // Kiểm tra xem tất cả giá trị có đều bằng 0 hay không
+  const allIncomeZero = incomeData.length > 0 && incomeData.every(val => val === 0);
+  const allExpenseZero = expenseData.length > 0 && expenseData.every(val => val === 0);
+  const allTransactionZero = transactionCountData.length > 0 && transactionCountData.every(val => val === 0);
   
   // Update charts while preserving animation settings
   const incomeChartSettings = preserveChartSettings(incomeChart.value);
   
   // Update income chart
-  incomeChart.value.series[0].data = incomeData;
+  incomeChart.value.series[0].data = allIncomeZero ? [] : incomeData;
   incomeChart.value = {
     ...incomeChart.value,
     xaxis: {
@@ -387,7 +407,7 @@ const updateTransactionData = (data) => {
   
   // Update expense chart
   const expenseChartSettings = preserveChartSettings(expenseChart.value);
-  expenseChart.value.series[0].data = expenseData;
+  expenseChart.value.series[0].data = allExpenseZero ? [] : expenseData;
   expenseChart.value = {
     ...expenseChart.value,
     xaxis: {
@@ -401,7 +421,7 @@ const updateTransactionData = (data) => {
   
   // Update transaction count chart
   const transactionCountChartSettings = preserveChartSettings(transactionCountChart.value);
-  transactionCountChart.value.series[0].data = transactionCountData;
+  transactionCountChart.value.series[0].data = allTransactionZero ? [] : transactionCountData;
   transactionCountChart.value = {
     ...transactionCountChart.value,
     xaxis: {
@@ -413,12 +433,14 @@ const updateTransactionData = (data) => {
     }
   };
   
-  // Update donut chart
+  // Update donut chart - kiểm tra xem có tổng thu nhập và chi tiêu hay không
   const incomeVsExpenseChartSettings = preserveChartSettings(incomeVsExpenseChart.value);
-  incomeVsExpenseChart.value.series = [
+  const hasIncomeOrExpense = totalIncome.value > 0 || totalExpense.value > 0;
+  
+  incomeVsExpenseChart.value.series = hasIncomeOrExpense ? [
     totalIncome.value, 
     totalExpense.value
-  ];
+  ] : [];
   incomeVsExpenseChart.value = {
     ...incomeVsExpenseChart.value,
     chart: {

@@ -15,6 +15,7 @@
         <button 
           @click="exportExcel" 
           class="px-3 py-2 bg-green-50 text-green-600 rounded-lg hover:bg-green-100 transition-colors flex items-center text-sm"
+          v-if="paginatedCategoryData.length > 0"
         >
           <font-awesome-icon :icon="['fas', 'file-excel']" class="mr-2" />
           Xuất Excel
