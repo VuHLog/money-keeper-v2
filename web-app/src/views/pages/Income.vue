@@ -701,11 +701,12 @@ const handleConfirmDelete = async () => {
     </div>
 
     <!-- detail transaction modal -->
-    <TransactionDetailModal :isOpen="isDetailModalOpen" :transaction="selectedTransaction" :transactionType="'revenue'"
+    <TransactionDetailModal v-if="isDetailModalOpen" :isOpen="isDetailModalOpen" :transaction="selectedTransaction" :transactionType="'revenue'"
       @close="isDetailModalOpen = false" />
 
     <!-- Add delete modal -->
     <DeleteTransactionModal
+      v-if="isDeleteModalOpen"
       :is-open="isDeleteModalOpen"
       :transaction="deletingTransaction"
       :transaction-type="'revenue'"

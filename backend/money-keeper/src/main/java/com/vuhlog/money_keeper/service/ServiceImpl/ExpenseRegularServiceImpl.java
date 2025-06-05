@@ -246,7 +246,7 @@ public class ExpenseRegularServiceImpl implements ExpenseRegularService {
 
         //save revenue for received account
         RevenueRegular revenueRegular = revenueRegularMapper.toRevenueRegularFromTransferRequest(request);
-        revenueRegular.setCurrency(dictionaryBucketPayment.getCurrency());
+        revenueRegular.setCurrency(beneficiaryAccount.getCurrency());
         revenueRegular.setConvertedAmount(expenseRegular.getConvertedAmount());
         revenueRegular.setAmount(Math.round(request.getAmount() * rate));
         revenueRegular.setExchangeRate(rate);
@@ -278,7 +278,7 @@ public class ExpenseRegularServiceImpl implements ExpenseRegularService {
 
         Double convertedBalanceRevenue =  getBalanceWhenCreate(beneficiaryAccount, expenseRegular.getExpenseDate(), - expenseRegular.getConvertedAmount());
         revenueRegular.setConvertedBalance(convertedBalanceRevenue);
-        revenueRegular.setBalance(convertedBalance * rate);
+        revenueRegular.setBalance(convertedBalanceRevenue * rate);
         revenueRegular.setCurrencySymbol(beneficiaryAccount.getCurrencySymbol());
         revenueRegularRepository.save(revenueRegular);
 
