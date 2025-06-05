@@ -326,6 +326,7 @@ const handleClose = () => {
   newAccount.value = {
     accountName: '',
     accountType: 'Tiền mặt',
+    iconUrl: "https://res.cloudinary.com/cloud1412/image/upload/v1741273907/cash_ifor6b.png",
     balance: '',
     interpretation: '',
     bankId: '',

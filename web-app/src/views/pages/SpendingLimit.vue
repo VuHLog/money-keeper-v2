@@ -487,16 +487,16 @@ const style = `
     </div>
 
     <!-- Modals -->
-    <AddSpendingLimitModal :show="showAddModal" :categories="categories" :accounts="accounts"
+    <AddSpendingLimitModal v-if="showAddModal" :show="showAddModal" :categories="categories" :accounts="accounts"
       @close="showAddModal = false" @submit="handleAddLimit" />
 
     <EditSpendingLimitModal v-if="selectedLimit" :show="showEditModal" :categories="categories" :accounts="accounts"
       :limit="selectedLimit" @close="showEditModal = false" @submit="handleEditLimit" />
 
-    <DeleteSpendingLimitModal :is-open="showDeleteModal" :limit="limitToDelete" @close="showDeleteModal = false"
+    <DeleteSpendingLimitModal v-if="showDeleteModal" :is-open="showDeleteModal" :limit="limitToDelete" @close="showDeleteModal = false"
       @confirm="handleConfirmDelete" />
 
-    <SpendingLimitDetailModal :is-open="showDetailModal" :limit="selectedLimitForDetail"
+    <SpendingLimitDetailModal v-if="showDetailModal" :is-open="showDetailModal" :limit="selectedLimitForDetail"
       @close="showDetailModal = false" />
   </div>
 </template>

@@ -672,6 +672,7 @@ const exportExcel = async () => {
 
     <!-- Sử dụng component TransactionActionModal -->
     <TransactionActionModal
+      v-if="showActionModal"
       :transaction="selectedTransaction"
       :isOpen="showActionModal"
       :mode="modalMode"
@@ -682,6 +683,7 @@ const exportExcel = async () => {
 
     <!-- Sử dụng component TransactionDetailModal -->
     <TransactionDetailModal
+      v-if="showDetailModal"
       :transaction="selectedTransaction"
       :isOpen="showDetailModal"
       :transactionType="selectedTransaction?.transactionType || 'expense'"
@@ -690,6 +692,7 @@ const exportExcel = async () => {
 
     <!-- Sử dụng component DeleteTransactionModal -->
     <DeleteTransactionModal
+      v-if="showDeleteModal"
       :transaction="selectedTransaction"
       :transactionType="selectedTransaction?.transactionType || 'expense'"
       :isOpen="showDeleteModal"

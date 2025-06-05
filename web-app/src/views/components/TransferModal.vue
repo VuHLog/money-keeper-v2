@@ -68,6 +68,16 @@ watch(() => props.initialFromAccount, (newVal) => {
   }
 }, { immediate: true })
 
+// Watch for fromAccount changes to reset toAccount if currencies don't match
+watch(() => transferData.value.fromAccount, (newFromAccount, oldFromAccount) => {
+  if (newFromAccount && transferData.value.toAccount) {
+    // Reset toAccount if currencies are different
+    if (newFromAccount.currency !== transferData.value.toAccount.currency) {
+      transferData.value.toAccount = null
+    }
+  }
+})
+
 const formattedTransferAmount = computed({
   get: () => {
     if (!transferData.value.amount) return ''
@@ -134,6 +144,13 @@ const validateForm = () => {
   if (transferData.value.fromAccount && transferData.value.toAccount && 
       transferData.value.fromAccount.id === transferData.value.toAccount.id) {
     errors.value.toAccount = 'Tài khoản nhận phải khác tài khoản chuyển'
+    isValid = false
+  }
+
+  // Validate currency compatibility
+  if (transferData.value.fromAccount && transferData.value.toAccount && 
+      transferData.value.fromAccount.currency !== transferData.value.toAccount.currency) {
+    errors.value.toAccount = 'Tài khoản nhận phải có cùng loại tiền tệ với tài khoản chuyển'
     isValid = false
   }
 
@@ -339,7 +356,6 @@ onUnmounted(() => {
                 <div 
                   class="w-full px-3 py-2 border border-gray-100 rounded-lg cursor-pointer hover:border-gray-200"
                   :class="[
-
                     {'ring-1 ring-primary/20 border-primary/50': isToAccountDropdownOpen},
                     errors.toAccount ? 'border-danger/50' : ''
                   ]"
@@ -349,7 +365,7 @@ onUnmounted(() => {
                     <div class="flex items-center space-x-2">
                       <div v-if="transferData.toAccount" class="flex items-center space-x-2">
                         <Avatar :src="transferData.toAccount.iconUrl" :alt="transferData.toAccount.accountName" size="m" />
-                        <span>{{ transferData.toAccount.accountName }} ({{ formatCurrency(transferData.toAccount.balance) }})</span>
+                        <span>{{ transferData.toAccount.accountName }} ({{ formatCurrencyWithSymbol(transferData.toAccount.balance, transferData.toAccount.currency, transferData.toAccount.currencySymbol) }})</span>
                       </div>
                       <span v-else class="text-text-secondary">Chọn tài khoản nhận</span>
                     </div>
@@ -370,19 +386,22 @@ onUnmounted(() => {
                     :key="account.id"
                     class="flex items-center px-3 py-2 cursor-pointer hover:bg-gray-50"
                     :class="[
-
                       {'bg-primary/5': account.id === transferData.toAccount?.id},
-                      {'opacity-50 cursor-not-allowed': account.id === transferData.fromAccount?.id}
+                      {'opacity-50 cursor-not-allowed': 
+                        account.id === transferData.fromAccount?.id || 
+                        (transferData.fromAccount && account.currency !== transferData.fromAccount.currency)
+                      }
                     ]"
                     @click="() => {
-                      if (account.id !== transferData.fromAccount?.id) {
+                      if (account.id !== transferData.fromAccount?.id && 
+                          (!transferData.fromAccount || account.currency === transferData.fromAccount.currency)) {
                         transferData.toAccount = account;
                         isToAccountDropdownOpen = false;
                       }
                     }"
                   >
                     <Avatar :src="account.iconUrl" :alt="account.accountName" size="m" />
-                    <span>{{ account.accountName }} ({{ formatCurrency(account.balance) }})</span>
+                    <span>{{ account.accountName }} ({{ formatCurrencyWithSymbol(account.balance, account.currency, account.currencySymbol) }})</span>
                   </div>
                 </div>
               </div>

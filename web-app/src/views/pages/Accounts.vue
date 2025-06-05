@@ -96,24 +96,28 @@ const handleSearch = async () => {
   totalBalance.value = await dictionaryBucketPaymentStore.getTotalBalance(searchQuery.value);
 }
 
-const handleTransfer = (account) => {
+const handleTransfer = async (account) => {
   selectedAccount.value = account
   isTransferModalOpen.value = true
+  myAllAccounts.value = await dictionaryBucketPaymentStore.getMyBucketPayments();
 }
 
-const handleEdit = (account) => {
+const handleEdit = async (account) => {
   editingAccount.value = account
   isEditModalOpen.value = true
+  myAllAccounts.value = await dictionaryBucketPaymentStore.getMyBucketPayments();
 }
 
-const handleDelete = (account) => {
+const handleDelete = async (account) => {
   deletingAccount.value = account
   isDeleteModalOpen.value = true
+  myAllAccounts.value = await dictionaryBucketPaymentStore.getMyBucketPayments();
 }
 
 const handleAddAccount = async () => {
   await loadData();
   totalBalance.value = await dictionaryBucketPaymentStore.getTotalBalance(searchQuery.value);
+  myAllAccounts.value = await dictionaryBucketPaymentStore.getMyBucketPayments();
 }
 
 const handleUpdateAccount = async () => {
@@ -333,6 +337,7 @@ const handleTransferConfirm = async (data) => {
 
     <!-- Keep existing modals -->
     <AddAccountModal
+      v-if="isAddModalOpen"
       :is-open="isAddModalOpen"
       @close="isAddModalOpen = false"
       @add="handleAddAccount"
@@ -347,6 +352,7 @@ const handleTransferConfirm = async (data) => {
     />
 
     <DeleteAccountModal
+      v-if="isDeleteModalOpen"
       :is-open="isDeleteModalOpen"
       :account="deletingAccount"
       @close="isDeleteModalOpen = false"
@@ -354,6 +360,7 @@ const handleTransferConfirm = async (data) => {
     />
 
     <TransferModal
+      v-if="isTransferModalOpen"
       :is-open="isTransferModalOpen"
       :initial-from-account="selectedAccount"
       :accounts="myAllAccounts"

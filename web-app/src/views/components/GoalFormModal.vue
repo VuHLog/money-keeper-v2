@@ -71,13 +71,6 @@ onMounted(async () => {
   }
 })
 
-// Watch for goal changes to populate form in edit mode
-watch(() => props.goal, (newGoal) => {
-  if (newGoal && props.mode === 'edit') {
-    populateFormWithGoal(newGoal)
-  }
-}, { immediate: true })
-
 // Populate form with goal data for editing
 const populateFormWithGoal = (goal) => {
   console.log('Populating form with goal:', goal) // Debug log
@@ -93,6 +86,13 @@ const populateFormWithGoal = (goal) => {
   
   console.log('Form data populated:', formData.value) // Debug log
 }
+
+// Watch for goal changes to populate form in edit mode
+watch(() => props.goal, (newGoal) => {
+  if (newGoal && props.mode === 'edit') {
+    populateFormWithGoal(newGoal)
+  }
+}, { immediate: true })
 
 // Helper function to format currency based on currency code
 const formatWithCurrency = (value, currencyCode, currencySymbol) => {

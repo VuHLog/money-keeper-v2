@@ -117,8 +117,6 @@ const loadGoals = async (status = null) => {
         bucketPaymentId: goal.bucketPayment?.id,
         createdDate: goal.createdAt
       }))
-
-      totalElements.value = response.totalElements
       
       if (currentPage.value === 1) {
         displayedGoals.value = mappedGoals
@@ -131,6 +129,7 @@ const loadGoals = async (status = null) => {
     } else {
       hasMore.value = false
     }
+    totalElements.value = response.totalElements
   } catch (error) {
     console.error('Error loading goals:', error)
     hasMore.value = false
@@ -579,7 +578,8 @@ const handleTabChange = (tabIndex) => {
     </div>
 
     <!-- Goal Modal (Create/Edit) -->
-    <GoalFormModal 
+    <GoalFormModal
+      v-if="isGoalModalOpen"
       :is-open="isGoalModalOpen"
       :mode="goalModalMode"
       :goal="selectedGoal"
@@ -590,6 +590,7 @@ const handleTabChange = (tabIndex) => {
 
     <!-- Goal Detail Modal -->
     <GoalDetailModal 
+      v-if="isDetailModalOpen"
       ref="goalDetailModalRef"
       :is-open="isDetailModalOpen"
       :goal="selectedGoal"
@@ -603,6 +604,7 @@ const handleTabChange = (tabIndex) => {
 
     <!-- Add Money Modal -->
     <AddMoneyModal 
+      v-if="isAddMoneyModalOpen"
       :is-open="isAddMoneyModalOpen"
       :goal="selectedGoal"
       @close="handleCloseAddMoneyModal"
@@ -611,6 +613,7 @@ const handleTabChange = (tabIndex) => {
 
     <!-- Extend Goal Modal -->
     <ExtendGoalModal 
+      v-if="isExtendModalOpen"
       :is-open="isExtendModalOpen"
       :goal="selectedGoal"
       @close="handleCloseExtendModal"
