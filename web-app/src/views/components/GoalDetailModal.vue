@@ -84,11 +84,13 @@ const depositPagination = ref({
 })
 const isLoadingDeposits = ref(false)
 const deletingDepositId = ref(null)
+const currentAmount = ref(0)
 
 // Load accounts when component mounts
 onMounted(async () => {
   try {
     accounts.value = await dictionaryBucketPaymentStore.getMyBucketPayments()
+    currentAmount.value = props.goal.currentAmount
   } catch (error) {
     console.error('Error loading accounts:', error)
   }
@@ -162,13 +164,13 @@ const formatDate = (dateString) => {
 // Calculate remaining amount
 const remainingAmount = computed(() => {
   if (!props.goal) return 0
-  return Math.max(0, props.goal.targetAmount - props.goal.currentAmount)
+  return Math.max(0, props.goal.targetAmount - currentAmount.value)
 })
 
 // Check if goal is completed
 const isCompleted = computed(() => {
   if (!props.goal) return false
-  return props.goal.currentAmount >= props.goal.targetAmount
+  return currentAmount.value >= props.goal.targetAmount
 })
 
 // Check if goal status is completed (status = 1)
@@ -294,6 +296,9 @@ const handleDeleteDeposit = async (deposit) => {
     if (depositHistory.value.length === 0 && depositPagination.value.pageNumber > 1) {
       await loadDepositHistory(depositPagination.value.pageNumber - 1)
     }
+
+    debugger
+    currentAmount.value = currentAmount.value - deposit.amount
     
     // Emit event to parent to refresh goal data
     emit('deposit-deleted', deposit)
@@ -371,12 +376,12 @@ defineExpose({
           <div>
             <div class="flex items-center justify-between mb-2">
               <span class="text-text-secondary">Tiến độ:</span>
-              <span class="font-semibold text-primary">{{ getProgress(goal.currentAmount, goal.targetAmount) }}%</span>
+              <span class="font-semibold text-primary">{{ getProgress(currentAmount, goal.targetAmount) }}%</span>
             </div>
             <div class="w-full bg-gray-200 rounded-full h-4 overflow-hidden">
               <div 
                 class="h-full bg-gradient-to-r from-primary to-success transition-all duration-500"
-                :style="{ width: `${getProgress(goal.currentAmount, goal.targetAmount)}%` }"
+                :style="{ width: `${getProgress(currentAmount, goal.targetAmount)}%` }"
               ></div>
             </div>
           </div>
@@ -385,7 +390,7 @@ defineExpose({
           <div class="grid grid-cols-2 gap-4">
             <div class="text-center">
               <div class="text-text-secondary text-sm">Đã nạp</div>
-              <div class="font-semibold text-success text-lg">{{ formatCurrencyWithSymbol(goal.currentAmount, goal.currency, goal.currencySymbol) }}</div>
+              <div class="font-semibold text-success text-lg">{{ formatCurrencyWithSymbol(currentAmount, goal.currency, goal.currencySymbol) }}</div>
             </div>
             <div class="text-center">
               <div class="text-text-secondary text-sm">Còn thiếu</div>
@@ -557,7 +562,7 @@ defineExpose({
           </div>
           <div class="bg-gray-50 rounded-lg p-3">
             <div class="text-sm text-text-secondary space-y-1">
-              <div>• Số tiền đã tiết kiệm: <span class="font-medium text-text">{{ formatCurrencyWithSymbol(goal?.currentAmount || 0, goal?.currency, goal?.currencySymbol) }}</span></div>
+              <div>• Số tiền đã tiết kiệm: <span class="font-medium text-text">{{ formatCurrencyWithSymbol(currentAmount || 0, goal?.currency, goal?.currencySymbol) }}</span></div>
               <div>• Mục tiêu: <span class="font-medium text-text">{{ formatCurrencyWithSymbol(goal?.targetAmount || 0, goal?.currency, goal?.currencySymbol) }}</span></div>
               <div>• Lịch sử giao dịch: <span class="font-medium text-text">{{ depositPagination.totalElements }} giao dịch</span></div>
             </div>
