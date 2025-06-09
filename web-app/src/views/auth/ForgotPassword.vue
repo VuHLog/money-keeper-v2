@@ -116,10 +116,10 @@ async function resetPassword() {
             type: 'success',
             title: 'Thành công!',
             content: 'Đặt lại mật khẩu thành công!'
-            }, 3000);
+            }, 2000);
             setTimeout(() => {
                 router.push("/auth/sign-in");
-            }, 3000);
+            }, 2000);
     }).catch((error) => {
       if(error.response.data.code === 1010){
         errMsg.value = "Mail chưa được sử dụng";
