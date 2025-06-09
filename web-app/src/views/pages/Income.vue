@@ -256,10 +256,10 @@ const handleEditTransaction = (transaction) => {
     accountId = transaction.dictionaryBucketPaymentId
   }else accountId = accounts.value.find(acc => acc.id === transaction.dictionaryBucketPayment.id)?.id
 
-  if(transaction.dictionaryRevenueId){
-    categoryId = transaction.dictionaryRevenueId
+  if(transaction.dictionaryRevenue){
+    categoryId = transaction.dictionaryRevenue.id
   } else {
-    categoryId = categories.value.find(cat => cat.id === transaction.dictionaryRevenue.id)?.id
+    categoryId = null
   }
 
   // update form data with transaction information

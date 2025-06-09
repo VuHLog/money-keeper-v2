@@ -197,7 +197,7 @@ public class ExpenseRegularServiceImpl implements ExpenseRegularService {
         updateBalance(dictionaryBucketPayment, Math.round(expenseRegular.getConvertedAmount()), rate, expenseRegular.getExpenseDate(), null, true);
 
         //update report expense revenue
-        updateTotalExpenseForReportExpenseRevenue(expenseRegular.getExpenseDate(), dictionaryBucketPayment, expenseRegular.getAmount(), expenseRegular.getConvertedAmount(), request.getDictionaryExpenseId(), 1);
+        updateTotalExpenseForReportExpenseRevenue(expenseRegular.getExpenseDate(), dictionaryBucketPayment, expenseRegular.getAmount(), expenseRegular.getConvertedAmount(), dictionaryExpense.getId(), 1);
 
         Double convertedBalance =  getBalanceWhenCreate(dictionaryBucketPayment, expenseRegular.getExpenseDate(), expenseRegular.getConvertedAmount());
         expenseRegular.setConvertedBalance(convertedBalance);

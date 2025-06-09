@@ -193,7 +193,7 @@ public class TransactionHistoryExcelExporter {
 
         String[] headers = {
                 "Ngày giao dịch", "Số tiền", "Loại giao dịch",
-                "Danh mục", "Tài khoản", "Loại chuyển khoản", "Người thụ hưởng",
+                "Danh mục", "Tài khoản", "Mục tiêu", "Loại chuyển khoản", "Người thụ hưởng",
                 "Nhận tiền từ", "Tài khoản thụ hưởng", "Tài khoản gửi tiền",
                 "Chuyến đi/Sự kiện", "Địa điểm", "Ghi chú"
         };
@@ -232,85 +232,107 @@ public class TransactionHistoryExcelExporter {
             String currencySymbol = transaction.getCurrencySymbol();
             Boolean isVND = currency.equals("VND");
 
+            int i=0;
+
             // Ngày giao dịch
-            Cell cell = row.createCell(0);
+            Cell cell = row.createCell(i);
             cell.setCellValue(transaction.getDate());
             cell.setCellStyle(dateStyle);
-            sheet.autoSizeColumn(0);
+            sheet.autoSizeColumn(i);
+            i++;
 
             // Số tiền
-            cell = row.createCell(1);
+            cell = row.createCell(i);
             cell.setCellValue(isVND? (formatter.format(transaction.getConvertedAmount()) + " ₫") : (currencySymbol + formatter.format(transaction.getConvertedAmount()) + " ~ " + formatter.format(transaction.getAmount()) + " ₫"));
             cell.setCellStyle(isExpense ? amountExpenseStyle : amountRevenueStyle);
-            sheet.autoSizeColumn(1);
+            sheet.autoSizeColumn(i);
+            i++;
 
             // Loại giao dịch
-            cell = row.createCell(2);
+            cell = row.createCell(i);
             cell.setCellValue(isExpense ? "Chi tiêu" : "Thu nhập");
             cell.setCellStyle(isExpense ? expenseStyle : revenueStyle);
-            sheet.autoSizeColumn(2);
+            sheet.autoSizeColumn(i);
+            i++;
 
             // Tên danh mục
-            cell = row.createCell(3);
+            cell = row.createCell(i);
             cell.setCellValue(transaction.getCategoryName() != null ? transaction.getCategoryName() : "Danh mục không xác định");
             cell.setCellStyle(baseStyle);
-            sheet.autoSizeColumn(3);
+            sheet.autoSizeColumn(i);
+            i++;
 
             // Tên tài khoản
-            cell = row.createCell(4);
+            cell = row.createCell(i);
             cell.setCellValue(transaction.getAccountName());
             cell.setCellStyle(baseStyle);
-            sheet.autoSizeColumn(4);
+            sheet.autoSizeColumn(i);
+            i++;
+
+            // Tên tài khoản
+            cell = row.createCell(i);
+            cell.setCellValue(transaction.getFinancialGoalName() != null ? transaction.getFinancialGoalName() : "Không có thông tin");
+            cell.setCellStyle(baseStyle);
+            sheet.autoSizeColumn(i);
+            i++;
 
             // Loại chuyển khoản
-            cell = row.createCell(5);
+            cell = row.createCell(i);
             cell.setCellValue(transaction.getTransferType().equals(TransferType.NORMAL.getType()) ?
                     "Thông thường" : "Chuyển khoản");
             cell.setCellStyle(baseStyle);
-            sheet.autoSizeColumn(5);
+            sheet.autoSizeColumn(i);
+            i++;
 
             // Người thụ hưởng
-            cell = row.createCell(6);
-            cell.setCellValue(transaction.getBeneficiary());
+            cell = row.createCell(i);
+            cell.setCellValue(transaction.getBeneficiary() != null && !transaction.getBeneficiary().isEmpty()? transaction.getBeneficiary() : "Không có thông tin");
             cell.setCellStyle(baseStyle);
-            sheet.autoSizeColumn(6);
+            sheet.autoSizeColumn(i);
+            i++;
 
             // Nhận tiền từ
-            cell = row.createCell(7);
-            cell.setCellValue(transaction.getCollectMoneyWho());
+            cell = row.createCell(i);
+            cell.setCellValue(transaction.getCollectMoneyWho() != null && !transaction.getCollectMoneyWho().isEmpty()? transaction.getCollectMoneyWho() : "Không có thông tin");
             cell.setCellStyle(baseStyle);
-            sheet.autoSizeColumn(7);
+            sheet.autoSizeColumn(i);
+            i++;
 
 
             // Tên tài khoản thụ hưởng
-            cell = row.createCell(8);
-            cell.setCellValue(transaction.getBeneficiaryAccountName());
+            cell = row.createCell(i);
+            cell.setCellValue(transaction.getBeneficiaryAccountName() != null ? transaction.getBeneficiaryAccountName() : "Không có thông tin");
             cell.setCellStyle(baseStyle);
-            sheet.autoSizeColumn(8);
+            sheet.autoSizeColumn(i);
+            i++;
 
             // Tên tài khoản gửi tiền
-            cell = row.createCell(9);
-            cell.setCellValue(transaction.getSenderAccountName());
+            cell = row.createCell(i);
+            cell.setCellValue(transaction.getSenderAccountName() != null ? transaction.getSenderAccountName() : "Không có thông tin");
             cell.setCellStyle(baseStyle);
-            sheet.autoSizeColumn(9);
+            sheet.autoSizeColumn(i);
+            i++;
 
             // Chuyến đi/Sự kiện
-            cell = row.createCell(10);
-            cell.setCellValue(transaction.getTripEvent());
+            cell = row.createCell(i);
+            cell.setCellValue(transaction.getTripEvent() != null && !transaction.getTripEvent().isEmpty() ? transaction.getTripEvent() : "Không có thông tin");
             cell.setCellStyle(baseStyle);
-            sheet.autoSizeColumn(10);
+            sheet.autoSizeColumn(i);
+            i++;
 
             // Địa điểm
-            cell = row.createCell(11);
-            cell.setCellValue(transaction.getLocation());
+            cell = row.createCell(i);
+            cell.setCellValue(transaction.getLocation() != null && !transaction.getLocation().isEmpty() ? transaction.getLocation() : "Không có thông tin");
             cell.setCellStyle(baseStyle);
-            sheet.autoSizeColumn(11);
+            sheet.autoSizeColumn(i);
+            i++;
 
             // Ghi chú
-            cell = row.createCell(12);
-            cell.setCellValue(transaction.getInterpretation());
+            cell = row.createCell(i);
+            cell.setCellValue(transaction.getInterpretation() != null && !transaction.getInterpretation().isEmpty() ? transaction.getInterpretation() : "Không có ghi chú");
             cell.setCellStyle(baseStyle);
-            sheet.autoSizeColumn(12);
+            sheet.autoSizeColumn(i);
+
 
             rowCount++;
         }
@@ -446,7 +468,7 @@ public class TransactionHistoryExcelExporter {
         Cell titleCell = titleRow.createCell(0);
         titleCell.setCellValue("BÁO CÁO THU CHI");
         titleCell.setCellStyle(titleStyle);
-        sheet.addMergedRegion(new CellRangeAddress(0, 0, 0, 13));
+        sheet.addMergedRegion(new CellRangeAddress(0, 0, 0, 14));
 
         // Nếu có request, tạo dòng phụ đề với thông tin khoảng thời gian
         if (request != null && request.getCustomTimeRange() != null) {
@@ -469,7 +491,7 @@ public class TransactionHistoryExcelExporter {
 
             subtitleCell.setCellValue(timeRangeTitle);
             subtitleCell.setCellStyle(subtitleStyle);
-            sheet.addMergedRegion(new CellRangeAddress(1, 1, 0, 13));
+            sheet.addMergedRegion(new CellRangeAddress(1, 1, 0, 14));
 
             // Thêm dòng trống sau tiêu đề
             sheet.createRow(2);

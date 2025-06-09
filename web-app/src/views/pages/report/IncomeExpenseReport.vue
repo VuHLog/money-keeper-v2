@@ -72,6 +72,9 @@
                 Tài khoản
               </th>
               <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Mục tiêu
+              </th>
+              <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Loại chuyển khoản
               </th>
               <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -124,6 +127,11 @@
               <td class="px-4 py-3 whitespace-nowrap text-sm">
                 <div class="flex items-center">
                   <span>{{ getAccountName(transaction) }}</span>
+                </div>
+              </td>
+              <td class="px-4 py-3 whitespace-nowrap text-sm">
+                <div class="flex items-center">
+                  <span>{{ transaction.financialGoalName || 'Không có thông tin' }}</span>
                 </div>
               </td>
               <td class="px-4 py-3 whitespace-nowrap text-sm">

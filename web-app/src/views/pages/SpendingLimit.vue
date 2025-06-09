@@ -11,11 +11,11 @@ import { useExpenseLimitStore } from '@/store/ExpenseLimitStore.js'
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
 import { library } from '@fortawesome/fontawesome-svg-core'
 import Avatar from '@/views/components/Avatar.vue'
-import { faPlus, faEdit, faTrash, faUtensils, faCar, faHome, faGamepad, faInfoCircle, faCoffee } from '@fortawesome/free-solid-svg-icons'
+import { faPlus, faEdit, faTrash, faUtensils, faCar, faHome, faGamepad, faInfoCircle, faCoffee, faChevronLeft, faChevronRight } from '@fortawesome/free-solid-svg-icons'
 import ToastManager from '@/views/components/ToastManager.vue'
 import { formatCurrencyWithSymbol } from '@/utils/formatters'
 
-library.add(faPlus, faEdit, faTrash, faUtensils, faCar, faHome, faGamepad, faInfoCircle, faCoffee)
+library.add(faPlus, faEdit, faTrash, faUtensils, faCar, faHome, faGamepad, faInfoCircle, faCoffee, faChevronLeft, faChevronRight)
 
 const expenseLimitStore = useExpenseLimitStore()
 const dictionaryBucketPaymentStore = useDictionaryBucketPaymentStore()
@@ -71,8 +71,10 @@ const getData = async () => {
 }
 
 const handlePageChange = async (newPage) => {
-  expenseLimitStore.pagination.pageNumber = newPage
-  await getData()
+  if (newPage >= 1 && newPage <= paginationInfo.value.totalPages) {
+    expenseLimitStore.pagination.pageNumber = newPage
+    await getData()
+  }
 }
 
 // Methods
@@ -277,7 +279,7 @@ const style = `
     <ToastManager ref="toastManagerRef" />
     
     <!-- Filter Options -->
-    <FilterOptions :show-time-range="false" :show-revenue-category="false" @filter-change="handleFilterChange" @filter-reset="handleFilterReset"
+    <FilterOptions :show-time-range="false" :show-revenue-category="false" :show-transaction-type="false" @filter-change="handleFilterChange" @filter-reset="handleFilterReset"
       @apply-filter="handleApplyFilter" />
 
     <!-- Spending Limits Table -->
@@ -430,7 +432,7 @@ const style = `
       </div>
 
       <!-- Add pagination section after the table -->
-      <div class="mt-4 flex justify-between items-center px-6 py-3 border-t border-gray-200" v-if="paginationInfo.totalElements > 0">
+      <div v-if="spendingLimits.length > 0" class="mt-4 flex justify-between items-center px-6 py-3 border-t border-gray-200">
         <!-- Pagination info -->
         <div class="text-sm text-gray-500">
           Hiển thị {{ paginationInfo.start }} đến {{ paginationInfo.end }}

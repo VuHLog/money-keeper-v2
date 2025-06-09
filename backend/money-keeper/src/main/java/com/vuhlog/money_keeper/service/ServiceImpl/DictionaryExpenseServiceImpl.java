@@ -1,13 +1,11 @@
 package com.vuhlog.money_keeper.service.ServiceImpl;
 
-import com.vuhlog.money_keeper.dao.DictionaryExpenseRepository;
-import com.vuhlog.money_keeper.dao.ExpenseRegularRepository;
-import com.vuhlog.money_keeper.dao.ReportExpenseRevenueRepository;
-import com.vuhlog.money_keeper.dao.UsersRepository;
+import com.vuhlog.money_keeper.dao.*;
 import com.vuhlog.money_keeper.dao.specification.DictionaryExpenseSpecification;
 import com.vuhlog.money_keeper.dto.request.DictionaryExpenseRequest;
 import com.vuhlog.money_keeper.dto.response.DictionaryExpenseResponse;
 import com.vuhlog.money_keeper.entity.DictionaryExpense;
+import com.vuhlog.money_keeper.entity.ExpenseLimit;
 import com.vuhlog.money_keeper.entity.Users;
 import com.vuhlog.money_keeper.exception.AppException;
 import com.vuhlog.money_keeper.exception.ErrorCode;
@@ -18,7 +16,9 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -29,8 +29,10 @@ public class DictionaryExpenseServiceImpl implements DictionaryExpenseService {
     private final UsersRepository usersRepository;
     private final DictionaryExpenseMapper dictionaryExpenseMapper;
     private final ReportExpenseRevenueRepository reportExpenseRevenueRepository;
+    private final ExpenseLimitRepository expenseLimitRepository;
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public DictionaryExpenseResponse createDictionaryExpense(DictionaryExpenseRequest request) {
         DictionaryExpense dictionaryExpense = dictionaryExpenseMapper.toDictionaryExpense(request);
         dictionaryExpense.setSystemDefault(false);
@@ -40,6 +42,7 @@ public class DictionaryExpenseServiceImpl implements DictionaryExpenseService {
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public DictionaryExpenseResponse updateDictionaryExpense(String id, DictionaryExpenseRequest request) {
         DictionaryExpense dictionaryExpense = dictionaryExpenseRepository.findById(id).orElseThrow( () -> new AppException(ErrorCode.DICTIONARY_EXPENSE_NOT_EXISTED));
         dictionaryExpenseMapper.updateDictionaryExpenseFromRequest(request, dictionaryExpense);
@@ -49,10 +52,25 @@ public class DictionaryExpenseServiceImpl implements DictionaryExpenseService {
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public void deleteDictionaryExpenseItem(String id) {
         dictionaryExpenseRepository.findById(id).orElseThrow( () -> new AppException(ErrorCode.DICTIONARY_EXPENSE_NOT_EXISTED));
         reportExpenseRevenueRepository.unsetDictionaryExpenseById(id);
         expenseRegularRepository.unsetDictionaryExpenseInExpenseRegular(id);
+        List<ExpenseLimit> expenseLimits = expenseLimitRepository.getExpenseLimitByCategories(id);
+        if(expenseLimits != null && !expenseLimits.isEmpty()) {
+            for(ExpenseLimit expenseLimit : expenseLimits) {
+                String categoriesId = expenseLimit.getCategoriesId();
+                if(categoriesId != null && !categoriesId.isEmpty()) {
+                    List<String> categoriesList = new ArrayList<>(List.of(categoriesId.split(",")));
+                    if(categoriesList.contains(id)){
+                        categoriesList.remove(id);
+                        expenseLimit.setCategoriesId(String.join(",", categoriesList));
+                        expenseLimitRepository.save(expenseLimit);
+                    }
+                }
+            }
+        }
         dictionaryExpenseRepository.deleteById(id);
     }
 

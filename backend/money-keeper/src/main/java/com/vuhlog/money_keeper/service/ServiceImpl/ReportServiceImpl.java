@@ -475,7 +475,7 @@ public class ReportServiceImpl implements ReportService {
                     ExchangeRateResponse exchangeRateResponse = currencyClient.exchangeRate("VND", bucketPayment.getCurrency(), 1L);
                     Double rate = exchangeRateResponse.getRate();
                     final String bucketPaymentId = bucketPayment.getId();
-                    Long balanceValue = Math.round(bucketPayment.getInitialBalance());
+                    Long balanceValue = Math.round(bucketPayment.getInitialBalance() * rate);
                     
                     // Tìm giá trị trong initial (nếu có)
                     for (AccountBalanceFluctuation initialItem : initial) {
