@@ -138,6 +138,16 @@ const getCategoryName = computed(() => {
               </div>
             </div>
 
+            <div v-if="transaction.financialGoal" class="flex items-start">
+              <div class="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0 mr-3">
+                <font-awesome-icon :icon="['fas', 'bullseye']" class="text-primary" />
+              </div>
+              <div>
+                <p class="text-sm text-text-secondary">Mục tiêu</p>
+                <p class="font-medium">{{transaction.financialGoal.name}}</p>
+              </div>
+            </div>
+
             <!-- Nhận từ ai/Chi cho ai (nếu có) -->
             <div v-if="transaction.beneficiaryAccount || transaction.senderAccount" class="flex items-start">
               <div class="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0 mr-3">

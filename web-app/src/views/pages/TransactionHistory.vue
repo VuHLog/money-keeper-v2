@@ -564,18 +564,18 @@ const exportExcel = async () => {
                     <font-awesome-icon :icon="['fas', 'eye']" />
                   </button>
                   <button
-                    @click="transaction.transferType !== 'transfer' && handleEditTransaction(transaction)"
+                    @click="transaction.transferType !== 'transfer' && transaction.financialGoalName === null && handleEditTransaction(transaction)"
                     class="text-warning hover:text-warning/80"
-                    :class="{'opacity-50 cursor-not-allowed': transaction.transferType === 'transfer'}"
-                    :title="transaction.transferType === 'transfer' ? 'Không thể sửa giao dịch chuyển khoản' : 'Sửa giao dịch'"
+                    :class="{'opacity-50 cursor-not-allowed': transaction.transferType === 'transfer' || transaction.financialGoalName !== null}"
+                    :title="transaction.transferType === 'transfer' ? 'Không thể sửa giao dịch chuyển khoản' : transaction.financialGoalName !== null ? 'Không thể sửa giao dịch có mục tiêu' : 'Sửa giao dịch'"
                   >
                     <font-awesome-icon :icon="['fas', 'edit']" />
                   </button>
                   <button
-                    @click="transaction.transferType !== 'transfer' && handleDeleteTransaction(transaction)"
+                    @click="transaction.transferType !== 'transfer' && transaction.financialGoalName === null && handleDeleteTransaction(transaction)"
                     class="text-danger hover:text-danger/80"
-                    :class="{'opacity-50 cursor-not-allowed': transaction.transferType === 'transfer'}"
-                    :title="transaction.transferType === 'transfer' ? 'Không thể xóa giao dịch chuyển khoản' : 'Xóa giao dịch'"
+                    :class="{'opacity-50 cursor-not-allowed': transaction.transferType === 'transfer' || transaction.financialGoalName !== null}"
+                    :title="transaction.transferType === 'transfer' ? 'Không thể xóa giao dịch chuyển khoản' : transaction.financialGoalName !== null ? 'Không thể xóa giao dịch có mục tiêu' : 'Xóa giao dịch'"
                   >
                     <font-awesome-icon :icon="['fas', 'trash']" />
                   </button>

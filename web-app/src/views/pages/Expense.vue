@@ -275,7 +275,7 @@ const handleViewDetail = (transaction) => {
 
 // function to handle edit transaction
 const handleEditTransaction = (transaction) => {
-  if (transaction.transferType === 'transfer') return;
+  if (transaction.transferType === 'transfer' || transaction.financialGoal !== null) return;
 
   // switch to edit mode
   isEditMode.value = true
@@ -290,7 +290,7 @@ const handleEditTransaction = (transaction) => {
   if(transaction.dictionaryExpenseId){
     categoryId = transaction.dictionaryExpenseId
   } else {
-    categoryId = categories.value.find(cat => cat.id === transaction.dictionaryExpense.id)?.id
+    categoryId = null
   }
 
   // update form data with transaction information
@@ -415,7 +415,7 @@ const deletingTransaction = ref(null)
 
 // Update delete handler
 const handleDeleteTransaction = (transaction) => {
-  if (transaction.transferType === 'transfer') return;
+  if (transaction.transferType === 'transfer' || transaction.financialGoal !== null) return;
   deletingTransaction.value = transaction
   isDeleteModalOpen.value = true
 }
@@ -692,14 +692,14 @@ const handleConfirmDelete = async () => {
                   <button
                     @click="() => handleEditTransaction(transaction)"
                     class="text-warning bg-warning/5 hover:bg-warning/10 rounded px-2 py-1 flex items-center text-sm space-x-1 transition-colors"
-                    :class="{ 'opacity-50 cursor-not-allowed': transaction.transferType === 'transfer' }">
+                    :class="{ 'opacity-50 cursor-not-allowed': transaction.transferType === 'transfer' || transaction.financialGoal !== null }">
                     <font-awesome-icon :icon="['fas', 'pen']" class="text-xs" />
                     <span>Sửa</span>
                   </button>
                   <button
                     @click="() => handleDeleteTransaction(transaction)"
                     class="text-danger bg-danger/5 hover:bg-danger/10 rounded px-2 py-1 flex items-center text-sm space-x-1 transition-colors"
-                    :class="{ 'opacity-50 cursor-not-allowed': transaction.transferType === 'transfer' }">
+                    :class="{ 'opacity-50 cursor-not-allowed': transaction.transferType === 'transfer' || transaction.financialGoal !== null }">
                     <font-awesome-icon :icon="['fas', 'trash']" class="text-xs" />
                     <span>Xóa</span>
                   </button>

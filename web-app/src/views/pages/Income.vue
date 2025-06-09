@@ -259,7 +259,7 @@ const handleEditTransaction = (transaction) => {
   if(transaction.dictionaryRevenueId){
     categoryId = transaction.dictionaryRevenueId
   } else {
-    categoryId = categories.value.find(cat => cat.id === transaction.dictionaryRevenue.id)?.id
+    categoryId = null
   }
 
   // update form data with transaction information

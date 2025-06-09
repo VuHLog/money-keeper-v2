@@ -42,4 +42,6 @@ public interface TransactionHistory {
     String getSenderAccountName();
 
     String getSenderAccountIconUrl();
+
+    String getFinancialGoalName();
 }
