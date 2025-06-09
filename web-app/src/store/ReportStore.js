@@ -573,9 +573,11 @@ export const useReportStore = defineStore("report", {
     },
     async exportExcelForReportBucketPayment(filters){
       let response = null;
+      let bucketPaymentIds = (filters.account === null || filters.account.length === 0 || filters.account[0] === "all") ? null : filters.account.join(",");
       let request = {
         timeOption: filters.timeOption,
         customTimeRange: filters.customTimeRange,
+        bucketPaymentIds,
       }
       try {
         response = await instance.post(`/report/bucket-payment/export-excel`,request, {

@@ -287,8 +287,8 @@ const handleEditTransaction = (transaction) => {
     accountId = transaction.dictionaryBucketPaymentId
   }else accountId = accounts.value.find(acc => acc.id === transaction.dictionaryBucketPayment.id)?.id
 
-  if(transaction.dictionaryExpenseId){
-    categoryId = transaction.dictionaryExpenseId
+  if(transaction.dictionaryExpense){
+    categoryId = transaction.dictionaryExpense.id
   } else {
     categoryId = null
   }

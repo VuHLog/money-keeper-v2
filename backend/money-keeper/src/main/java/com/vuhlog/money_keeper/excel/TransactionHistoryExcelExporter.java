@@ -286,14 +286,14 @@ public class TransactionHistoryExcelExporter {
 
             // Người thụ hưởng
             cell = row.createCell(i);
-            cell.setCellValue(transaction.getBeneficiary());
+            cell.setCellValue(transaction.getBeneficiary() != null && !transaction.getBeneficiary().isEmpty()? transaction.getBeneficiary() : "Không có thông tin");
             cell.setCellStyle(baseStyle);
             sheet.autoSizeColumn(i);
             i++;
 
             // Nhận tiền từ
             cell = row.createCell(i);
-            cell.setCellValue(transaction.getCollectMoneyWho());
+            cell.setCellValue(transaction.getCollectMoneyWho() != null && !transaction.getCollectMoneyWho().isEmpty()? transaction.getCollectMoneyWho() : "Không có thông tin");
             cell.setCellStyle(baseStyle);
             sheet.autoSizeColumn(i);
             i++;
@@ -301,35 +301,35 @@ public class TransactionHistoryExcelExporter {
 
             // Tên tài khoản thụ hưởng
             cell = row.createCell(i);
-            cell.setCellValue(transaction.getBeneficiaryAccountName());
+            cell.setCellValue(transaction.getBeneficiaryAccountName() != null ? transaction.getBeneficiaryAccountName() : "Không có thông tin");
             cell.setCellStyle(baseStyle);
             sheet.autoSizeColumn(i);
             i++;
 
             // Tên tài khoản gửi tiền
             cell = row.createCell(i);
-            cell.setCellValue(transaction.getSenderAccountName());
+            cell.setCellValue(transaction.getSenderAccountName() != null ? transaction.getSenderAccountName() : "Không có thông tin");
             cell.setCellStyle(baseStyle);
             sheet.autoSizeColumn(i);
             i++;
 
             // Chuyến đi/Sự kiện
             cell = row.createCell(i);
-            cell.setCellValue(transaction.getTripEvent());
+            cell.setCellValue(transaction.getTripEvent() != null && !transaction.getTripEvent().isEmpty() ? transaction.getTripEvent() : "Không có thông tin");
             cell.setCellStyle(baseStyle);
             sheet.autoSizeColumn(i);
             i++;
 
             // Địa điểm
             cell = row.createCell(i);
-            cell.setCellValue(transaction.getLocation());
+            cell.setCellValue(transaction.getLocation() != null && !transaction.getLocation().isEmpty() ? transaction.getLocation() : "Không có thông tin");
             cell.setCellStyle(baseStyle);
             sheet.autoSizeColumn(i);
             i++;
 
             // Ghi chú
             cell = row.createCell(i);
-            cell.setCellValue(transaction.getInterpretation());
+            cell.setCellValue(transaction.getInterpretation() != null && !transaction.getInterpretation().isEmpty() ? transaction.getInterpretation() : "Không có ghi chú");
             cell.setCellStyle(baseStyle);
             sheet.autoSizeColumn(i);
 

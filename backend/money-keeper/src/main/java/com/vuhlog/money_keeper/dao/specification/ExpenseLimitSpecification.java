@@ -23,7 +23,7 @@ public class ExpenseLimitSpecification {
             for (String id : ids) {
                 predicates.add(criteriaBuilder.greaterThan(criteriaBuilder.function("FIND_IN_SET", Integer.class, criteriaBuilder.literal(id.trim()), root.get("categoriesId")), 0));
             }
-            return criteriaBuilder.and(predicates.toArray(new Predicate[0]));
+            return criteriaBuilder.or(predicates.toArray(new Predicate[0]));
         };
     }
 
