@@ -197,7 +197,7 @@ public class NotificationServiceImpl implements NotificationService {
     public NotificationResponse revenueNotification(RevenueRegular revenueRegular, Boolean isCreate) {
         Users user = userCommon.getMyUserInfo();
         Notification notification = Notification.builder()
-                .title(isCreate?"Thu nhập":"Điều chỉnh thu nhập")
+                .title(isCreate?"Thêm mới thu nhập":"Điều chỉnh thu nhập")
                 .content( "Tài khoản <strong class='text-primary'>" + (revenueRegular.getDictionaryBucketPayment() == null? "không xác định" : revenueRegular.getDictionaryBucketPayment().getAccountName()) + "</strong> đã nhận số tiền là " + "<span class='text-success'>" + formatCurrency(revenueRegular.getAmount(), revenueRegular.getCurrency(), revenueRegular.getCurrencySymbol()) + "</span>. Số dư hiện tại là " + "<strong>" + formatCurrency(Math.round(revenueRegular.getConvertedBalance()), revenueRegular.getCurrency(), revenueRegular.getCurrencySymbol()) + "</strong>")
                 .type("revenue")
                 .readStatus(0)
