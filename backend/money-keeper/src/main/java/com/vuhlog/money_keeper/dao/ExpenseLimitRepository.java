@@ -33,4 +33,11 @@ public interface ExpenseLimitRepository extends JpaRepository<ExpenseLimit, Stri
     @Transactional
     @Query("Delete from ExpenseLimit e where e.bucketPaymentIds = :bucketPaymentId")
     void deleteByBucketPaymentId(@Param("bucketPaymentId") String bucketPaymentId);
+
+    @Query(value = "SELECT *\n" +
+            "FROM expense_limit el\n" +
+            "where FIND_IN_SET(:categoryId, el.categories_id)", nativeQuery = true)
+    List<ExpenseLimit> getExpenseLimitByCategories(
+            @Param("categoryId") String categoryId
+    );
 }
