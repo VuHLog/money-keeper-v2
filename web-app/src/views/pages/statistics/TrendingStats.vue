@@ -393,7 +393,7 @@ const exportExcelForYearlyTrend = async () => {
       <!-- Daily Trends -->
       <div class="bg-surface rounded-xl p-4 shadow-sm">
       <div class="flex justify-between items-center mb-4">
-        <h3 class="text-lg font-medium text-text">Xu hướng {{ transactionType === 'expense' ? 'chi tiêu' : 'thu nhập' }} theo ngày</h3>
+        <h3 class="text-lg font-medium text-text">Xu hướng {{ transactionType === 'expense' || transactionType === '' || transactionType === 'all' ? 'chi tiêu' : 'thu nhập' }} theo ngày</h3>
         <!-- <div class="flex justify-end items-center"> -->
           <!-- Export Excel button -->
           <!-- <button
@@ -416,7 +416,7 @@ const exportExcelForYearlyTrend = async () => {
       <!-- Weekly Trends -->
       <div class="bg-surface rounded-xl p-4 shadow-sm">
         <div class="flex justify-between items-center mb-4">
-          <h3 class="text-lg font-medium text-text">Xu hướng {{ transactionType === 'expense' ? 'chi tiêu' : 'thu nhập' }} theo tuần</h3>
+          <h3 class="text-lg font-medium text-text">Xu hướng {{ transactionType === 'expense' || transactionType === '' || transactionType === 'all' ? 'chi tiêu' : 'thu nhập' }} theo tuần</h3>
           <!-- <div class="flex justify-end items-center"> -->
             <!-- Export Excel button -->
             <!-- <button
@@ -439,7 +439,7 @@ const exportExcelForYearlyTrend = async () => {
       <!-- Monthly Trends -->
       <div class="bg-surface rounded-xl p-4 shadow-sm">
         <div class="flex justify-between items-center mb-4">
-          <h3 class="text-lg font-medium text-text">Xu hướng {{ transactionType === 'expense' ? 'chi tiêu' : 'thu nhập' }} theo tháng</h3>
+          <h3 class="text-lg font-medium text-text">Xu hướng {{ transactionType === 'expense' || transactionType === '' || transactionType === 'all' ? 'chi tiêu' : 'thu nhập' }} theo tháng</h3>
           <!-- <div class="flex justify-end items-center"> -->
             <!-- Export Excel button -->
             <!-- <button
@@ -462,7 +462,7 @@ const exportExcelForYearlyTrend = async () => {
       <!-- Yearly Trends -->
       <div class="bg-surface rounded-xl p-4 shadow-sm">
         <div class="flex justify-between items-center mb-4">
-          <h3 class="text-lg font-medium text-text">Xu hướng {{ transactionType === 'expense' ? 'chi tiêu' : 'thu nhập' }} 5 năm gần nhất</h3>
+          <h3 class="text-lg font-medium text-text">Xu hướng {{ transactionType === 'expense' || transactionType === '' || transactionType === 'all' ? 'chi tiêu' : 'thu nhập' }} 5 năm gần nhất</h3>
           <!-- <div class="flex justify-end items-center"> -->
             <!-- Export Excel button -->
             <!-- <button

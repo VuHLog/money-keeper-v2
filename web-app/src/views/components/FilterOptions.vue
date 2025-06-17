@@ -83,7 +83,7 @@ const customTimeRange = ref([new Date().toISOString().slice(0, 7), new Date().to
 // Store original values for reset
 const originalValues = {
   timeRange: 'month',
-  transactionType: ['expense'],
+  transactionType: 'all',
   account: ['all'],
   expenseCategory: ['all'],
   revenueCategory: ['all'],
@@ -187,7 +187,7 @@ const handleReset = () => {
   selectedExpenseCategory.value = reportStore.expenseCategoriesId || [...originalValues.expenseCategory]
   selectedRevenueCategory.value = reportStore.revenueCategoriesId || [...originalValues.revenueCategory]
   customTimeRange.value = originalValues.customTimeRange
-  selectedTransactionType.value = props.isReset ? '' : [...originalValues.transactionType]
+  selectedTransactionType.value = props.isReset ? '' : originalValues.transactionType
   emit('filter-reset')
 }
 

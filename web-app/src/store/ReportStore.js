@@ -121,11 +121,11 @@ export const useReportStore = defineStore("report", {
     async getReportExpenseCategory(filters) {
       let response = null;
       let bucketPaymentIds = (filters.account === null || filters.account.length === 0 || filters.account[0] === "all") ? null : filters.account.join(",");
-      let categoriesId = (filters.expenseCategory === null || filters.expenseCategory.length === 0 || filters.expenseCategory[0] === "all") ? null : filters.expenseCategory.join(",");
+      let expenseCategoriesId = (filters.expenseCategory === null || filters.expenseCategory.length === 0 || filters.expenseCategory[0] === "all") ? null : filters.expenseCategory.join(",");
       let request = {
         timeOption: filters.timeOption,
         bucketPaymentIds,
-        categoriesId,
+        expenseCategoriesId,
         customTimeRange: filters.customTimeRange,
       }
       await base
@@ -141,11 +141,11 @@ export const useReportStore = defineStore("report", {
     async exportExcelForExpenseCategory(filters){
       let response = null;
       let bucketPaymentIds = (filters.account === null || filters.account.length === 0 || filters.account[0] === "all") ? null : filters.account.join(",");
-      let categoriesId = (filters.expenseCategory === null || filters.expenseCategory.length === 0 || filters.expenseCategory[0] === "all") ? null : filters.expenseCategory.join(",");
+      let expenseCategoriesId = (filters.expenseCategory === null || filters.expenseCategory.length === 0 || filters.expenseCategory[0] === "all") ? null : filters.expenseCategory.join(",");
       let request = {
         timeOption: filters.timeOption,
         bucketPaymentIds,
-        categoriesId,
+        expenseCategoriesId,
         customTimeRange: filters.customTimeRange,
       }
       try {
@@ -195,11 +195,11 @@ export const useReportStore = defineStore("report", {
     async getReportRevenueCategory(filters) {
       let response = null;
       let bucketPaymentIds = (filters.account === null || filters.account.length === 0 || filters.account[0] === "all") ? null : filters.account.join(",");
-      let categoriesId = (filters.revenueCategory === null || filters.revenueCategory.length === 0 || filters.revenueCategory[0] === "all") ? null : filters.revenueCategory.join(",");
+      let revenueCategoriesId = (filters.revenueCategory === null || filters.revenueCategory.length === 0 || filters.revenueCategory[0] === "all") ? null : filters.revenueCategory.join(",");
       let request = {
         timeOption: filters.timeOption,
         bucketPaymentIds,
-        categoriesId,
+        revenueCategoriesId,
         customTimeRange: filters.customTimeRange,
       }
       await base
@@ -215,11 +215,11 @@ export const useReportStore = defineStore("report", {
     async exportExcelForRevenueCategory(filters){
       let response = null;
       let bucketPaymentIds = (filters.account === null || filters.account.length === 0 || filters.account[0] === "all") ? null : filters.account.join(",");
-      let categoriesId = (filters.revenueCategory === null || filters.revenueCategory.length === 0 || filters.revenueCategory[0] === "all") ? null : filters.revenueCategory.join(",");
+      let revenueCategoriesId = (filters.revenueCategory === null || filters.revenueCategory.length === 0 || filters.revenueCategory[0] === "all") ? null : filters.revenueCategory.join(",");
       let request = {
         timeOption: filters.timeOption,
         bucketPaymentIds,
-        categoriesId,
+        revenueCategoriesId,
         customTimeRange: filters.customTimeRange,
       }
       try {

@@ -169,7 +169,7 @@ public class ReportServiceImpl implements ReportService {
         String timeOption = request.getTimeOption();
         String userId = userCommon.getMyUserInfo().getId();
         String bucketPaymentIds = request.getBucketPaymentIds();
-        String categoriesId = request.getExpenseCategoriesId();
+        String categoriesId = request.getRevenueCategoriesId();
         List<ReportRevenueCategory> response = new ArrayList<>();
         String start = request.getCustomTimeRange().get(0);
         String end = request.getCustomTimeRange().get(1);
@@ -195,10 +195,10 @@ public class ReportServiceImpl implements ReportService {
         String transactionType = request.getTransactionType();
         String bucketPaymentIds = request.getBucketPaymentIds();
         List<ReportDailyTrend> response = new ArrayList<>();
-        if(transactionType.equals(TransactionType.EXPENSE.getType())){
-            response = reportExpenseRevenueRepository.getReportExpenseDailyTrend(userId, bucketPaymentIds);
-        }else if(transactionType.equals(TransactionType.REVENUE.getType())){
+        if(transactionType.equals(TransactionType.REVENUE.getType())){
             response = reportExpenseRevenueRepository.getReportRevenueDailyTrend(userId, bucketPaymentIds);
+        }else{
+            response = reportExpenseRevenueRepository.getReportExpenseDailyTrend(userId, bucketPaymentIds);
         }
         return response;
     }
@@ -209,10 +209,10 @@ public class ReportServiceImpl implements ReportService {
         String transactionType = request.getTransactionType();
         String bucketPaymentIds = request.getBucketPaymentIds();
         List<ReportWeeklyTrend> response = new ArrayList<>();
-        if(transactionType.equals(TransactionType.EXPENSE.getType())){
-            response = reportExpenseRevenueRepository.getReportExpenseWeeklyTrend(userId, bucketPaymentIds);
-        }else if(transactionType.equals(TransactionType.REVENUE.getType())){
+        if(transactionType.equals(TransactionType.REVENUE.getType())){
             response = reportExpenseRevenueRepository.getReportRevenueWeeklyTrend(userId, bucketPaymentIds);
+        }else{
+            response = reportExpenseRevenueRepository.getReportExpenseWeeklyTrend(userId, bucketPaymentIds);
         }
         return response;
     }
@@ -223,10 +223,10 @@ public class ReportServiceImpl implements ReportService {
         String transactionType = request.getTransactionType();
         String bucketPaymentIds = request.getBucketPaymentIds();
         List<ReportMonthlyTrend> response = new ArrayList<>();
-        if(transactionType.equals(TransactionType.EXPENSE.getType())){
-            response = reportExpenseRevenueRepository.getReportExpenseMonthlyTrend(userId, bucketPaymentIds);
-        }else if(transactionType.equals(TransactionType.REVENUE.getType())){
+        if(transactionType.equals(TransactionType.REVENUE.getType())){
             response = reportExpenseRevenueRepository.getReportRevenueMonthlyTrend(userId, bucketPaymentIds);
+        }else{
+            response = reportExpenseRevenueRepository.getReportExpenseMonthlyTrend(userId, bucketPaymentIds);
         }
         return response;
     }
@@ -237,10 +237,10 @@ public class ReportServiceImpl implements ReportService {
         String transactionType = request.getTransactionType();
         String bucketPaymentIds = request.getBucketPaymentIds();
         List<ReportYearlyTrend> response = new ArrayList<>();
-        if(transactionType.equals(TransactionType.EXPENSE.getType())){
-            response = reportExpenseRevenueRepository.getReportExpenseYearlyTrend(userId, bucketPaymentIds);
-        }else if(transactionType.equals(TransactionType.REVENUE.getType())){
+        if(transactionType.equals(TransactionType.REVENUE.getType())){
             response = reportExpenseRevenueRepository.getReportRevenueYearlyTrend(userId, bucketPaymentIds);
+        }else{
+            response = reportExpenseRevenueRepository.getReportExpenseYearlyTrend(userId, bucketPaymentIds);
         }
         return response;
     }
