@@ -488,7 +488,7 @@ const handleTabChange = (tabIndex) => {
           </div>
 
           <!-- Warning (if at risk) -->
-          <div v-if="isAtRisk(goal)" class="flex items-center space-x-2 mb-4 p-3 bg-warning/10 border border-warning/20 rounded-lg">
+          <div v-if="activeTab === 0 && isAtRisk(goal)" class="flex items-center space-x-2 mb-4 p-3 bg-warning/10 border border-warning/20 rounded-lg">
             <span class="text-xl">⚠️</span>
             <span class="text-warning font-medium">Cảnh báo:</span>
             <span class="text-warning text-sm">{{ getWarningMessage(goal) }}</span>

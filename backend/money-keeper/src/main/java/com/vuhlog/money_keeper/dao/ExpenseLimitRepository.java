@@ -15,7 +15,7 @@ import java.util.List;
 public interface ExpenseLimitRepository extends JpaRepository<ExpenseLimit, String>, JpaSpecificationExecutor<ExpenseLimit> {
     @Query(value = "SELECT de.name as name, de.icon_url as iconUrl, er.expense_date as expenseDate, er.amount as amount, er.converted_amount, er.currency, er.currency_symbol, dbp.account_name AS bucketPaymentName\n" +
             "FROM expense_regular er\n" +
-            "JOIN dictionary_expense de ON er.dictionary_expense_id = de.id\n" +
+            "LEFT JOIN dictionary_expense de ON er.dictionary_expense_id = de.id\n" +
             "JOIN dictionary_bucket_payment dbp ON er.dictionary_bucket_payment_id = dbp.id\n" +
             "WHERE er.dictionary_bucket_payment_id = :bucketPaymentId\n" +
             "AND (:categoriesId IS NULL OR FIND_IN_SET(er.dictionary_expense_id, :categoriesId))\n" +

@@ -425,7 +425,7 @@ public class ExpenseRegularServiceImpl implements ExpenseRegularService {
 
         int year = calendar.get(Calendar.YEAR);
         ReportExpenseRevenue reportExpenseRevenue;
-        Optional<ReportExpenseRevenue> optionalReportExpenseRevenue = reportExpenseRevenueRepository.findByMonthAndYearAndBucketPaymentIdAndCategoryIdAndType(month, year, bucketPayment.getId(), categoryId, "expense");
+        Optional<ReportExpenseRevenue> optionalReportExpenseRevenue = reportExpenseRevenueRepository.findTop1ByMonthAndYearAndBucketPaymentIdAndCategoryIdAndType(month, year, bucketPayment.getId(), categoryId, "expense");
         if(optionalReportExpenseRevenue.isPresent()) {
             reportExpenseRevenue = optionalReportExpenseRevenue.get();
             reportExpenseRevenue.setTotalExpense(reportExpenseRevenue.getTotalExpense() + amount);
@@ -460,7 +460,7 @@ public class ExpenseRegularServiceImpl implements ExpenseRegularService {
 
         int year = calendar.get(Calendar.YEAR);
         ReportExpenseRevenue reportExpenseRevenue;
-        Optional<ReportExpenseRevenue> optionalReportExpenseRevenue = reportExpenseRevenueRepository.findByMonthAndYearAndBucketPaymentIdAndCategoryIdAndType(month, year, bucketPayment.getId(), categoryId, "revenue");
+        Optional<ReportExpenseRevenue> optionalReportExpenseRevenue = reportExpenseRevenueRepository.findTop1ByMonthAndYearAndBucketPaymentIdAndCategoryIdAndType(month, year, bucketPayment.getId(), categoryId, "revenue");
         if(optionalReportExpenseRevenue.isPresent()) {
             reportExpenseRevenue = optionalReportExpenseRevenue.get();
             reportExpenseRevenue.setTotalRevenue(reportExpenseRevenue.getTotalRevenue() + amount);

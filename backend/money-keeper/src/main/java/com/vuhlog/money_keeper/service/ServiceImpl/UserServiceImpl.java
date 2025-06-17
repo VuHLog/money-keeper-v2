@@ -167,9 +167,10 @@ public class UserServiceImpl implements UserService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public UserResponse updateUser(String userId, UserUpdateRequest request) {
-        if(usersRepository.findByEmailAndOAuth2(request.getEmail(), false) != null)
-            throw new AppException(ErrorCode.EMAIL_EXISTED);
         Users user = usersRepository.findById(userId).get();
+        if(!user.getEmail().equals(request.getEmail()) && usersRepository.findByEmailAndOAuth2(request.getEmail(), false) != null) {
+            throw new AppException(ErrorCode.EMAIL_EXISTED);
+        }
         userMapper.updateUser(user, request);
 
         return userMapper.toUserResponse(usersRepository.saveAndFlush(user));

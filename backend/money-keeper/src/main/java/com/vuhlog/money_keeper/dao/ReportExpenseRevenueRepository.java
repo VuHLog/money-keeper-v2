@@ -61,7 +61,7 @@ public interface ReportExpenseRevenueRepository extends JpaRepository<ReportExpe
             @Param("endDate") LocalDate endDate
     );
 
-    Optional<ReportExpenseRevenue> findByMonthAndYearAndBucketPaymentIdAndCategoryIdAndType(int month, int year, String bucketPaymentId, String categoryId, String type);
+    Optional<ReportExpenseRevenue> findTop1ByMonthAndYearAndBucketPaymentIdAndCategoryIdAndType(int month, int year, String bucketPaymentId, String categoryId, String type);
 
     @Query(value = "SELECT COALESCE(SUM(total_expense), 0) AS totalExpense, COALESCE(SUM(total_revenue), 0) AS totalRevenue \n" +
             "FROM report_expense_revenue rer \n" +
@@ -74,8 +74,11 @@ public interface ReportExpenseRevenueRepository extends JpaRepository<ReportExpe
             "FROM expense_regular er " +
             "JOIN dictionary_bucket_payment dbp ON dbp.id = er.dictionary_bucket_payment_id " +
             "JOIN dictionary_expense de ON de.id = er.dictionary_expense_id " +
+            "JOIN users u ON dbp.user_id = u.id\n" +
+            "JOIN expense_limit el ON u.id = el.user_id and el.bucket_payment_ids = :bucketPayment\n" +
             "WHERE dbp.user_id = :userId " +
             "AND er.dictionary_bucket_payment_id = :bucketPayment \n" +
+            "AND FIND_IN_SET(er.dictionary_expense_id,el.categories_id)\n" +
             "AND (:categoriesId IS NULL OR FIND_IN_SET(er.dictionary_expense_id, :categoriesId)) " +
             "AND DATE(er.expense_date) >= :startDate AND DATE(er.expense_date) <= :endOfStartMonth " +
             "UNION ALL " +
@@ -83,16 +86,22 @@ public interface ReportExpenseRevenueRepository extends JpaRepository<ReportExpe
             "FROM expense_regular er " +
             "JOIN dictionary_bucket_payment dbp ON dbp.id = er.dictionary_bucket_payment_id " +
             "JOIN dictionary_expense de ON de.id = er.dictionary_expense_id " +
+            "JOIN users u ON dbp.user_id = u.id\n" +
+            "JOIN expense_limit el ON u.id = el.user_id and el.bucket_payment_ids = :bucketPayment\n" +
             "WHERE dbp.user_id = :userId " +
             "AND er.dictionary_bucket_payment_id = :bucketPayment\n" +
+            "AND FIND_IN_SET(er.dictionary_expense_id,el.categories_id)\n" +
             "AND (:categoriesId IS NULL OR FIND_IN_SET(er.dictionary_expense_id, :categoriesId)) " +
             "AND DATE(er.expense_date) >= :startDateOfMonthEndDate AND DATE(er.expense_date) <= :endDate " +
             "UNION ALL " +
             "SELECT COALESCE(SUM(rer.converted_total_expense), 0) AS totalExpense " +
             "FROM report_expense_revenue rer " +
             "JOIN dictionary_expense de ON (rer.type = 'expense' AND rer.category_id = de.id) " +
+            "JOIN users u ON rer.user_id = u.id\n" +
+            "JOIN expense_limit el ON u.id = el.user_id and el.bucket_payment_ids = :bucketPayment\n" +
             "WHERE rer.user_id = :userId " +
             "AND rer.bucket_payment_id = :bucketPayment \n" +
+            "AND FIND_IN_SET(rer.category_id,el.categories_id)\n" +
             "AND (:categoriesId IS NULL OR FIND_IN_SET(rer.category_id, :categoriesId)) " +
             "AND (DATE(CONCAT(year, '-', LPAD(month, 2, '0'), '-01')) BETWEEN :startDateBetween AND :endDateBetween) " +
             ") AS combined",
