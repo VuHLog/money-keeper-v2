@@ -1,7 +1,7 @@
 <script setup>
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
 import { formatCurrency, formatCurrencyWithSymbol } from '@/utils/formatters'
-import { useExpenseLimitStore } from '@/store/expenseLimitStore'
+import { useExpenseLimitStore } from '@/store/ExpenseLimitStore'
 
 const props = defineProps({
   isOpen: Boolean,
