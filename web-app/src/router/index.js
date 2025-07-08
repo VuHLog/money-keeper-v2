@@ -85,6 +85,12 @@ const routes = [
     meta: { requiresAuth: true }
   },
   {
+    path: '/modal-fix-demo',
+    name: 'ModalFixDemo',
+    component: () => import('@pages/ModalFixDemo.vue'),
+    meta: { requiresAuth: false }
+  },
+  {
     path: "/:pathMatch(.*)*",
     redirect: "/dashboard",
   },
